@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blueport 레시피 검색</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
+  .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  h1 { font-size: 26px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; }
+  .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .search-row input {
+    flex: 1; padding: 10px 14px; font-size: 15px;
+    border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; outline: none; transition: border 0.15s;
+  }
+  .search-row input:focus { border-color: #aaa; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .chip {
+    font-size: 13px; padding: 5px 12px; border-radius: 99px;
+    border: 1px solid #ddd; color: #666; background: #fff;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .chip:hover { background: #f0ede8; border-color: #bbb; color: #333; }
+  .chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .results { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: #fff; border: 1px solid #e8e5e0;
+    border-radius: 14px; padding: 1rem 1.25rem;
+  }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
+  .cat-커피        { background: #FEF3C7; color: #92400E; }
+  .cat-논커피      { background: #D1FAE5; color: #065F46; }
+  .cat-에이드주스  { background: #FFE4E6; color: #9F1239; }
+  .cat-스무디프라페{ background: #EDE9FE; color: #5B21B6; }
+  .cat-베이스      { background: #E0F2FE; color: #075985; }
+  .base-recipe-block {
+    border: 1px solid #f0ede8; border-radius: 10px;
+    padding: 12px 14px; background: #fafaf8;
+    font-size: 13px; color: #333; line-height: 1.7;
+  }
+  .base-recipe-label {
+    font-size: 11px; font-weight: 700; color: #aaa;
+    letter-spacing: 0.06em; margin-bottom: 6px;
+  }
+  .menu-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+  .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .size-block { border: 1px solid #f0ede8; border-radius: 10px; padding: 10px 12px; background: #fafaf8; }
+  .size-label { font-size: 11px; font-weight: 700; color: #aaa; margin-bottom: 8px; letter-spacing: 0.06em; }
+  .reset-btn {
+    padding: 10px 14px; font-size: 13px; font-weight: 600;
+    border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; color: #666; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .reset-btn:hover { background: #f0ede8; border-color: #bbb; color: #333; }
+  .temp-row { margin-bottom: 5px; cursor: pointer; border-radius: 6px; padding: 2px 4px; transition: background 0.12s; }
+  .temp-row:hover { background: #f5f4f0; }
+  .temp-row.focused { background: transparent; }
+  .card.dimmed { opacity: 0.25; cursor: pointer; }
+  .size-block.dimmed { opacity: 0.2; }
+  .size-block.focused-block {
+    border-color: #1a1a1a;
+    grid-column: 1 / -1;
+    padding: 16px 20px;
+  }
+  .size-block.focused-block .size-label { font-size: 13px; margin-bottom: 12px; color: #555; }
+  .size-block.focused-block .recipe-text { font-size: 14px; color: #1a1a1a; }
+  .size-block.focused-block .temp-tag { font-size: 12px; padding: 3px 8px; }
+  .size-block.focused-block .temp-row { margin-bottom: 0; }
+  .back-btn {
+    display: none; margin-bottom: 1rem;
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; color: #444; cursor: pointer; transition: all 0.15s;
+  }
+  .back-btn:hover { background: #f0ede8; }
+  .back-btn.visible { display: inline-flex; align-items: center; gap: 6px; }
+  .temp-tag {
+    font-size: 10px; font-weight: 700; padding: 2px 6px;
+    border-radius: 4px; margin-right: 5px; display: inline-block; vertical-align: middle;
+  }
+  .hot-tag { background: #FEE2E2; color: #B91C1C; }
+  .ice-tag { background: #DBEAFE; color: #1D4ED8; }
+  .recipe-text { font-size: 12px; color: #555; line-height: 1.55; display: inline; vertical-align: middle; }
+  .none-text { font-size: 12px; color: #ccc; }
+  .note-bar { margin-top: 10px; padding: 7px 10px; background: #fffbf0; border: 1px solid #f0e5c0; border-radius: 8px; font-size: 12px; color: #7a5c00; }
+  .note-label { font-weight: 700; margin-right: 4px; }
+  .empty { text-align: center; padding: 4rem 0; color: #aaa; font-size: 15px; }
+  @media (max-width: 500px) {
+    .size-grid { grid-template-columns: 1fr; }
+    .temp-row { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+    .temp-tag { margin-right: 0; }
+    .recipe-text { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="brand">Blueport Cafe</div>
+  <h1>레시피 검색</h1>
+  <div class="search-row">
+    <input type="text" id="q" placeholder="메뉴명 또는 초성 검색 (예: ㄱㄱㅁㄹㄸ)" oninput="render()" onkeydown="handleEnter(event)" />
+    <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
+  </div>
+  <div class="chips">
+    <button class="chip active" onclick="setFilter('전체')">전체</button>
+    <button class="chip" onclick="setFilter('커피')">커피</button>
+    <button class="chip" onclick="setFilter('논커피')">논커피</button>
+    <button class="chip" onclick="setFilter('에이드/주스')">에이드/주스</button>
+    <button class="chip" onclick="setFilter('스무디/프라페')">스무디/프라페</button>
+    <button class="chip" onclick="setFilter('베이스')">베이스</button>
+  </div>
+  <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
+  <div class="results" id="results"></div>
+</div>
+
+<script>
+const menus = [
+  { name: "아메리카노", cat: "커피",
+    R: { hot: "온수 1번 + 샷 2", ice: "얼음 + 정수 + 샷 2" },
+    L: { hot: "온수 2번 + 샷 3", ice: "얼음 + 정수 + 샷 3" },
+    D: { hot: "온수 2번 + 샷 4", ice: "얼음 + 정수 + 샷 4" } },
+  { name: "카페라떼", cat: "커피",
+    R: { hot: "샷 2 + 스팀밀크", ice: "얼음 + 우유 + 샷 2" },
+    L: { hot: "샷 3 + 스팀밀크", ice: "얼음 + 우유 + 샷 3" },
+    D: { hot: "샷 4 + 스팀밀크", ice: "얼음 + 우유 + 샷 4" } },
+  { name: "카페라떼 (바닐라/카라멜/헤이즐넛)", cat: "커피",
+    R: { hot: "설탕시럽 1p + 해당시럽 2p + 카페라떼 R", ice: "설탕시럽 1p + 해당시럽 2p + 아이스라떼 R" },
+    L: { hot: "설탕시럽 1p + 해당시럽 3p + 카페라떼 L", ice: "설탕시럽 1p + 해당시럽 3p + 아이스라떼 L" },
+    D: { hot: "설탕시럽 1p + 해당시럽 3p + 카페라떼 D", ice: "설탕시럽 1p + 해당시럽 3p + 아이스라떼 D" } },
+  { name: "카푸치노", cat: "커피", note: "+ 시나몬파우더(선택)",
+    R: { hot: "카페라떼 R(우유적게) + 우유거품 가득", ice: "아이스라떼 R(우유적게) + 우유거품 가득 + 시나몬파우더(선택)" },
+    L: { hot: "카페라떼 L(우유적게) + 우유거품 가득", ice: "아이스라떼 L(우유적게) + 우유거품 가득" },
+    D: { hot: "카페라떼 D(우유적게) + 우유거품 가득", ice: "아이스라떼 D(우유적게) + 우유거품 가득" } },
+  { name: "카라멜 마끼아또", cat: "커피", note: "+ 우유거품 + 카라멜드리즐",
+    R: { hot: "종이컵[카라멜소스 1p + 카라멜시럽 1p] + 카페라떼 R", ice: "얼음 + 우유 + 섞기[카라멜소스 1p + 카라멜시럽 1p + 샷2]" },
+    L: { hot: "종이컵[카라멜소스 1p + 카라멜시럽 2p] + 카페라떼 L", ice: "얼음 + 우유 + 섞기[카라멜소스 1p + 카라멜시럽 2p + 샷3]" },
+    D: { hot: "종이컵[카라멜소스 1p + 카라멜시럽 3p] + 카페라떼 D", ice: "얼음 + 우유 + 섞기[카라멜소스 1p + 카라멜시럽 3p + 샷4]" } },
+  { name: "카페모카 (다크)", cat: "커피", note: "+ 휘핑(선택) + 초코드리즐",
+    R: { hot: "초코소스 1p + 카페라떼 R", ice: "얼음 + 우유 + 섞기[초코소스 1p + 샷2]" },
+    L: { hot: "초코소스 1p + 초코파우더 1s + 카페라떼 L", ice: "얼음 + 우유 + 섞기[초코소스 1p + 초코파우더 1s + 샷3]" },
+    D: { hot: "초코소스 1p + 초코파우더 2s + 카페라떼 D", ice: "얼음 + 우유 + 섞기[초코소스 1p + 초코파우더 2s + 샷4]" } },
+  { name: "카페모카 (카라멜)", cat: "커피", note: "+ 휘핑(선택) + 카라멜드리즐",
+    R: { hot: "카라멜소스 0.5p + 초코파우더 1s + 카페라떼 R", ice: "얼음 + 우유 + 섞기[카라멜소스 0.5p + 초코파우더 1s]" },
+    L: { hot: "카라멜소스 1p + 초코파우더 1s + 카페라떼 L", ice: "얼음 + 우유 + 섞기[카라멜소스 1p + 초코파우더 1s]" },
+    D: { hot: "카라멜소스 1p + 카라멜시럽 1p + 초코파우더 1s + 카페라떼 D", ice: "얼음 + 우유 + 섞기[카라멜소스 1p + 카라멜시럽 1p + 초코파우더 1s]" } },
+  { name: "아인슈페너", cat: "커피", note: "+ 초코파우더(토핑)",
+    R: { hot: "뜨아 R + 크림베이스 2스푼", ice: "아아 R + 크림베이스 2스푼" },
+    L: { hot: "뜨아 L + 크림베이스 2스푼", ice: "아아 L + 크림베이스 2스푼" },
+    D: { hot: "-", ice: "-" } },
+  { name: "아인슈페너 라떼", cat: "커피", note: "+ 초코파우더(토핑)",
+    R: { hot: "카페라떼 R + 크림베이스 2스푼", ice: "아이스라떼 R + 크림베이스 2스푼" },
+    L: { hot: "카페라떼 L + 크림베이스 2스푼", ice: "아이스라떼 L + 크림베이스 2스푼" },
+    D: { hot: "-", ice: "-" } },
+  { name: "아인슈페너 초코", cat: "커피", note: "+ 초코파우더(토핑)",
+    R: { hot: "초코파우더 2s + 스팀밀크 + 크림베이스 2s", ice: "얼음 + 초코베이스 + 크림베이스 2s" },
+    L: { hot: "초코파우더 3s + 스팀밀크 + 크림베이스 2s", ice: "얼음 + 초코베이스 + 크림베이스 2s" },
+    D: { hot: "-", ice: "-" } },
+  { name: "더블크림라떼", cat: "커피", note: "R : 우유 60g + 크림 40g , L : 우유 90g + 크림 50g",
+    R: { hot: "-", ice: "설탕시럽 1p + 얼음 + 더블베이스 + 샷 2" },
+    L: { hot: "-", ice: "설탕시럽 2p + 얼음 + 더블베이스 + 샷 3" },
+    D: { hot: "-", ice: "-" } },
+  { name: "더블크림 바닐라라떼", cat: "커피", note: "R : 우유 60g + 크림 40g , L : 우유 90g + 크림 50g",
+    R: { hot: "-", ice: "바닐라시럽 1p + 얼음 + 더블베이스 + 샷 2" },
+    L: { hot: "-", ice: "바닐라시럽 2p + 얼음 + 더블베이스 + 샷 3" },
+    D: { hot: "-", ice: "-" } },
+  { name: "콜드브루", cat: "커피",
+    R: { hot: "-", ice: "얼음 + 정수 + 콜드브루 70ml" },
+    L: { hot: "-", ice: "얼음 + 정수 + 콜드브루 100ml" },
+    D: { hot: "-", ice: "얼음 + 정수 + 콜드브루 100ml" } },
+  { name: "콜드브루 라떼", cat: "커피",
+    R: { hot: "-", ice: "얼음 + 우유 + 콜드브루 70ml" },
+    L: { hot: "-", ice: "얼음 + 우유 + 콜드브루 100ml" },
+    D: { hot: "-", ice: "얼음 + 우유 + 콜드브루 100ml" } },
+  { name: "콜드브루 바닐라라떼", cat: "커피",
+    R: { hot: "-", ice: "바닐라시럽 2p + 얼음 + 우유 + 콜드브루 70ml" },
+    L: { hot: "-", ice: "바닐라시럽 3p + 얼음 + 우유 + 콜드브루 100ml" },
+    D: { hot: "-", ice: "바닐라시럽 3p + 설탕시럽 1p + 얼음 + 우유 + 콜드브루 100ml" } },
+  { name: "아이스티", cat: "논커피",
+    R: { hot: "-", ice: "얼음 + 아이스티 베이스" },
+    L: { hot: "-", ice: "얼음 + 아이스티 베이스" },
+    D: { hot: "-", ice: "얼음 + 아이스티 베이스" } },
+  { name: "아샷추", cat: "논커피", note: "+ 샷 1 추가 (선택)",
+    R: { hot: "-", ice: "얼음 + 아이스티 베이스 + 샷 1" },
+    L: { hot: "-", ice: "얼음 + 아이스티 베이스 + 샷 1" },
+    D: { hot: "-", ice: "얼음 + 아이스티 베이스 + 샷 1" } },
+  { name: "초코라떼", cat: "논커피",
+    R: { hot: "초코파우더 2s + 스팀밀크", ice: "얼음 + 초코 베이스" },
+    L: { hot: "초코파우더 3s + 스팀밀크", ice: "얼음 + 초코 베이스" },
+    D: { hot: "초코파우더 4s + 스팀밀크", ice: "얼음 + 초코 베이스" } },
+  { name: "제주말차라떼", cat: "논커피",
+    R: { hot: "말차파우더 1s + 설탕시럽 1p + 스팀밀크", ice: "얼음 + 말차 베이스" },
+    L: { hot: "말차파우더 1.5s + 설탕시럽 1p + 스팀밀크", ice: "얼음 + 말차 베이스" },
+    D: { hot: "말차파우더 2s + 설탕시럽 1p + 스팀밀크", ice: "얼음 + 말차 베이스" } },
+  { name: "곡물라떼", cat: "논커피",
+    R: { hot: "곡물파우더 2s + 설탕시럽 1p + 스팀밀크", ice: "섞기[곡물파우더 2s + 설탕시럽 1p + 온수] + 얼음 + 우유" },
+    L: { hot: "곡물파우더 3s + 설탕시럽 1p + 스팀밀크", ice: "섞기[곡물파우더 3s + 설탕시럽 1p + 온수] + 얼음 + 우유" },
+    D: { hot: "-", ice: "-" } },
+  { name: "민트초코라떼", cat: "논커피",
+    R: { hot: "민트초코파우더 2s + 스팀밀크", ice: "섞기[민트초코파우더 2s + 온수] + 얼음 + 우유" },
+    L: { hot: "민트초코파우더 3s + 스팀밀크", ice: "섞기[민트초코파우더 3s + 온수] + 얼음 + 우유" },
+    D: { hot: "-", ice: "-" } },
+  { name: "고구마라떼", cat: "논커피",
+    R: { hot: "고구마페이스트 1.5s + 설탕시럽 1p + 스팀밀크", ice: "섞기[고구마페이스트 1.5s + 설탕시럽 1p + 온수] + 얼음 + 우유" },
+    L: { hot: "고구마페이스트 2s + 설탕시럽 1p + 스팀밀크", ice: "섞기[고구마페이스트 2s + 설탕시럽 1p + 온수] + 얼음 + 우유" },
+    D: { hot: "-", ice: "-" } },
+  { name: "딸기라떼", cat: "논커피",
+    R: { hot: "-", ice: "딸기 스무디 소스 1p + 딸기 리플잼 1.5s + 얼음 + 우유" },
+    L: { hot: "-", ice: "딸기 스무디 소스 1p + 딸기 리플잼 2s + 얼음 + 우유" },
+    D: { hot: "-", ice: "딸기 스무디 소스 1p + 딸기 리플잼 3s + 얼음 + 우유" } },
+  { name: "히비스커스", cat: "논커피",
+    R: { hot: "히비스커스 티백 1 + 온수", ice: "얼음 + 히비스커스 베이스" },
+    L: { hot: "히비스커스 티백 1 + 온수", ice: "얼음 + 히비스커스 베이스" },
+    D: { hot: "히비스커스 티백 2 + 온수", ice: "얼음 + 히비스커스 베이스" } },
+  { name: "히비스커스 유자/레몬", cat: "논커피",
+    R: { hot: "설탕시럽 2p + 해당 청 2s + 티백 1 + 온수", ice: "설탕시럽 2p + 해당 청 2s + 얼음 + 히비스커스 베이스" },
+    L: { hot: "설탕시럽 2p + 해당 청 3s + 티백 1 + 온수", ice: "설탕시럽 2p + 해당 청 3s + 얼음 + 히비스커스 베이스" },
+    D: { hot: "-", ice: "-" } },
+  { name: "히비스커스 패션프룻", cat: "논커피",
+    R: { hot: "패션프룻 2s + 설탕시럽 2p + 히비스커스 티백 1 + 온수", ice: "패션프룻 2s + 설탕시럽 2p + 얼음 + 히비스커스 베이스" },
+    L: { hot: "패션프룻 3s + 설탕시럽 2p + 히비스커스 티백 1 + 온수", ice: "패션프룻 3s + 설탕시럽 2p + 얼음 + 히비스커스 베이스" },
+    D: { hot: "-", ice: "-" } },
+  { name: "수제차 (유자/레몬/자몽/대추/진저)", cat: "논커피",
+    R: { hot: "설탕시럽 2p + 해당 청 2s + 온수", ice: "설탕시럽 2p + 해당 청 2s + 얼음 + 정수" },
+    L: { hot: "설탕시럽 2p + 해당 청 3s + 온수", ice: "설탕시럽 2p + 해당 청 3s + 얼음 + 정수" },
+    D: { hot: "-", ice: "-" } },
+  { name: "엘리자베스 스페셜 티", cat: "논커피",
+    R: { hot: "엘리자베스 베이스 250ml 스팀", ice: "얼음 + 엘리자베스 베이스" },
+    L: { hot: "엘리자베스 베이스 330ml 스팀", ice: "얼음 + 엘리자베스 베이스" },
+    D: { hot: "엘리자베스 베이스 400ml 스팀", ice: "얼음 + 엘리자베스 베이스" } },
+  { name: "엘리자베스 레몬/딸기 티", cat: "논커피",
+    R: { hot: "-", ice: "해당 청 0.5s + 얼음 + 엘리자베스 베이스" },
+    L: { hot: "-", ice: "해당 청 1s + 얼음 + 엘리자베스 베이스" },
+    D: { hot: "-", ice: "-" } },
+  { name: "타이거슈가 밀크티", cat: "논커피",
+    R: { hot: "-", ice: "-" },
+    L: { hot: "-", ice: "흑당시럽 30g(컵 벽) + 얼음 + 엘리자베스 베이스" },
+    D: { hot: "-", ice: "-" } },
+  { name: "달고나 밀크티", cat: "논커피",
+    R: { hot: "-", ice: "-" },
+    L: { hot: "-", ice: "얼음 + 엘리자베스 베이스 + 달고나 30g(토핑)" },
+    D: { hot: "-", ice: "-" } },
+  { name: "꿀자몽블랙티", cat: "논커피",
+    R: { hot: "설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수", ice: "설탕시럽 2p + 자몽청 2s + 얼음 + 잉글리쉬 티 베이스" },
+    L: { hot: "설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수", ice: "설탕시럽 2p + 자몽청 3s + 얼음 + 잉글리쉬 티 베이스" },
+    D: { hot: "-", ice: "-" } },
+  { name: "페퍼민트 라임", cat: "논커피",
+    R: { hot: "라임 3p + 페퍼민트 티 R", ice: "페퍼민트 베이스 + 라임 3p + 얼음" },
+    L: { hot: "라임 4.5p + 페퍼민트 티 L", ice: "페퍼민트 베이스 + 라임 4.5p + 얼음" },
+    D: { hot: "-", ice: "-" } },
+  { name: "캐모마일 핑크리치", cat: "논커피",
+    R: { hot: "리치파우더 1.5s + 설탕시럽 1p + 캐모마일 티 R", ice: "캐모마일 베이스 + 섞기[리치파우더 1.5s + 설탕시럽 1p + 온수] + 얼음" },
+    L: { hot: "리치파우더 2s + 설탕시럽 1p + 캐모마일 티 L", ice: "캐모마일 베이스 + 섞기[리치파우더 2s + 설탕시럽 1p + 온수] + 얼음" },
+    D: { hot: "-", ice: "-" } },
+  { name: "그린 청귤 깔라만시", cat: "논커피",
+    R: { hot: "청귤파우더 1s + 설탕시럽 1p + 깔라만시 1s + 녹차 R", ice: "녹차 베이스 + 섞기[청귤파우더 1s + 설탕시럽 1p + 온수] + 깔라만시 1s + 얼음" },
+    L: { hot: "청귤파우더 1.5s + 설탕시럽 1p + 깔라만시 1.5s + 녹차 L", ice: "녹차 베이스 + 섞기[청귤파우더 1.5s + 설탕시럽 1p + 온수] + 깔라만시 1.5s + 얼음" },
+    D: { hot: "-", ice: "-" } },
+  { name: "에이드 (레몬/자몽/청포도/한라봉)", cat: "에이드/주스",
+    R: { hot: "-", ice: "해당 퓨레 1p + 얼음 + 사이다" },
+    L: { hot: "-", ice: "해당 퓨레 1.5p + 얼음 + 사이다" },
+    D: { hot: "-", ice: "해당 퓨레 1.5p + 나타드코코 1s + 얼음 + 사이다" } },
+  { name: "블루 레몬에이드", cat: "에이드/주스",
+    R: { hot: "-", ice: "레몬 퓨레 1p + 얼음 + 사이다 + 블루레몬시럽 2p" },
+    L: { hot: "-", ice: "레몬 퓨레 1.5p + 얼음 + 사이다 + 블루레몬시럽 2p" },
+    D: { hot: "-", ice: "레몬 퓨레 1.5p + 나타드코코 1s + 얼음 + 사이다 + 블루레몬시럽 2p" } },
+  { name: "딸기 에이드", cat: "에이드/주스",
+    R: { hot: "-", ice: "딸기 스무디 1p + 딸기 리플잼 1s + 얼음 + 사이다" },
+    L: { hot: "-", ice: "딸기 스무디 1p + 딸기 리플잼 2s + 얼음 + 사이다" },
+    D: { hot: "-", ice: "-" } },
+  { name: "딸기/망고 주스", cat: "에이드/주스", note: "+ 얼음조금",
+    R: { hot: "-", ice: "블렌더 2번[정수 2번 + 해당과일 100g + 설탕시럽 5p]" },
+    L: { hot: "-", ice: "블렌더 2번[정수 2번 + 해당과일 130g + 설탕시럽 6p]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "바나나 주스", cat: "에이드/주스", note: "+ 얼음조금",
+    R: { hot: "-", ice: "블렌더 2번[우유 150ml + 바나나 80g + 설탕시럽 5p]" },
+    L: { hot: "-", ice: "블렌더 2번[우유 200ml + 바나나 110g + 설탕시럽 6p]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "초코바나나 주스", cat: "에이드/주스", note: "+ 얼음조금",
+    R: { hot: "-", ice: "블렌더 2번[우유 150ml + 초코소스 1p + 바나나 60g + 설탕시럽 3p]" },
+    L: { hot: "-", ice: "블렌더 2번[우유 200ml + 초코소스 1p + 바나나 80g + 설탕시럽 3p]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "딸기바나나 주스", cat: "에이드/주스", note: "+ 얼음조금",
+    R: { hot: "-", ice: "블렌더 2번[우유 150ml + 딸기 40g + 바나나 40g + 설탕시럽 5p]" },
+    L: { hot: "-", ice: "블렌더 2번[우유 200ml + 딸기 60g + 바나나 60g + 설탕시럽 6p]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "아보카도바나나 주스", cat: "에이드/주스", note: "+ 얼음조금",
+    R: { hot: "-", ice: "블렌더 2번[우유 180ml + 아보카도 50g + 바나나 50g + 설탕시럽 5p]" },
+    L: { hot: "-", ice: "블렌더 2번[우유 230ml + 아보카도 65g + 바나나 65g + 설탕시럽 6p]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "플레인 요거트", cat: "스무디/프라페",
+    R: { hot: "-", ice: "블렌더 4번[우유 150ml + 요거트파우더 3s + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[우유 180ml + 요거트파우더 4s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "과일 요거트 (키위/블루베리/딸기)", cat: "스무디/프라페",
+    R: { hot: "-", ice: "블렌더 4번[우유 150ml + 요거트파우더 2s + 해당소스 2p + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[우유 180ml + 요거트파우더 3s + 해당소스 3p + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "파인애플 요거트", cat: "스무디/프라페", note: "+ 파인애플청 1s(토핑)",
+    R: { hot: "-", ice: "블렌더 4번[우유 100ml + 설탕시럽 5p + 요거트파우더 1s + 파인애플청 3s + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[우유 120ml + 설탕시럽 5p + 요거트파우더 1.5s + 파인애플청 4s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "살구크러쉬", cat: "스무디/프라페", note: "+ 살구청 1s(토핑)",
+    R: { hot: "-", ice: "블렌더 4번[정수 1번 + 설탕시럽 5p + 살구청 3s + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[정수 2번 + 설탕시럽 5p + 살구청 4s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "프라페 (모카/카라멜)", cat: "스무디/프라페", note: "+ 휘핑(선택) + 해당드리즐",
+    R: { hot: "-", ice: "블렌더 4번[우유 100ml + 샷 1 + 설탕시럽 5p + 해당소스 1p + 바닐라파우더 2s + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[우유 120ml + 샷 2 + 설탕시럽 5p + 해당소스 2p + 바닐라파우더 3s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "프라페 (바닐라/자바칩/민트초코/쿠앤크/제주말차)", cat: "스무디/프라페", note: "+ 휘핑(선택)",
+    R: { hot: "-", ice: "블렌더 4번[우유 150ml + 설탕시럽 5p + 해당파우더 3s + 얼음 1컵]" },
+    L: { hot: "-", ice: "블렌더 4번[우유 180ml + 설탕시럽 5p + 해당파우더 4s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "미드나잇초코 프라페", cat: "스무디/프라페", note: "+ 휘핑(선택)",
+    R: { hot: "-", ice: "-" },
+    L: { hot: "-", ice: "블렌더 4번[우유 150ml + 설탕시럽 5p + 미드나잇 파우더 3s + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "죠리퐁 프라페", cat: "스무디/프라페", note: "+ 죠리퐁 뚜껑가득",
+    R: { hot: "-", ice: "-" },
+    L: { hot: "-", ice: "블렌더 4번[우유 180ml + 바닐라 파우더 2s + 죠리퐁 3스푼 + 얼음 1컵]" },
+    D: { hot: "-", ice: "-" } },
+  { name: "설탕시럽 베이스", cat: "베이스", storage: "냉장보관",
+    recipe: "설탕 400g + 뜨거운 물 400g",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "엘리자베스 베이스", cat: "베이스", storage: "냉장보관",
+    recipe: "5분 우려내기[얼그레이 잎 30g + 뜨거운 물 240g] + 우유 1200g + 연유 60g + 설탕시럽 10번",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "타이거슈가 시럽 베이스", cat: "베이스", storage: "냉동고 30분 → 냉장보관",
+    recipe: "블랙슈가 파우더 300g + 뜨거운 물 120g (블랙슈가 1 : 뜨거운 물 0.4) + 블랜딩",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "아인슈페너 크림 베이스", cat: "베이스", storage: "BMP(스텐통) 랩 밀봉 후 냉장보관",
+    recipe: "달럽 100g + 우유 70g + 설탕 5g + 바닐라시럽 1번 + 5번 버튼 1회 + 1번 버튼 2회",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "아인슈페너 크림 베이스(대용량)", cat: "베이스", storage: "BMP(스텐통) 랩 밀봉 후 냉장보관",
+    recipe: "달럽 300g + 우유 210g + 설탕 15g + 바닐라시럽 2번 + 5번 버튼 1회 + 1번 버튼 2회",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "더블크림 베이스", cat: "베이스", storage: "보관통 냉장보관",
+    recipe: "우유 600g + 달럽 100g + 1번 버튼으로 블랜딩 후 보관통에 옮기기",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "콜드브루 베이스", cat: "베이스", storage: "12시간 이상 추출 후 냉장보관",
+    recipe: "간 원두 400g + 물 2L (그라인더 굵기 : 3.5)",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "아이스티 베이스", cat: "베이스", storage: "냉장보관",
+    recipe: "아이스티 원액 400 ml + 물 1.5L (정수 3번째 버튼 3번)",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "말차 베이스", cat: "베이스", storage: "냉장보관",
+    recipe: "말차 120g + 설탕시럽 12번 + 물 160ml + 우유 1250ml + 블렌딩",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+  { name: "초코 베이스", cat: "베이스", storage: "냉장보관",
+    recipe: "초코 파우더 210g + 온수 140ml + 우유 1250ml + 블렌딩",
+    R: { hot: "-", ice: "-" }, L: { hot: "-", ice: "-" }, D: { hot: "-", ice: "-" } },
+];
+
+let activeFilter = '전체';
+
+// ─── 초성 검색 ───────────────────────────────────────────────
+const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+// 겹받침(복합 자모) → 낱자 두 개로 분해
+// 예: ㄻ(U+11B1) → ㄹㅁ, ㄳ → ㄱㅅ 등
+const DOUBLE_JAMO = {
+  'ㄳ': 'ㄱㅅ', 'ㄵ': 'ㄴㅈ', 'ㄶ': 'ㄴㅎ',
+  'ㄺ': 'ㄹㄱ', 'ㄻ': 'ㄹㅁ', 'ㄼ': 'ㄹㅂ',
+  'ㄽ': 'ㄹㅅ', 'ㄾ': 'ㄹㅌ', 'ㄿ': 'ㄹㅍ',
+  'ㅀ': 'ㄹㅎ', 'ㅄ': 'ㅂㅅ',
+};
+
+// NFC 조합된 겹받침 자모를 낱자로 풀기
+function decomposeDoubleJamo(str) {
+  return [...str].map(ch => DOUBLE_JAMO[ch] || ch).join('');
+}
+
+function getChosung(str) {
+  return [...str].map(ch => {
+    const code = ch.charCodeAt(0) - 0xAC00;
+    if (code < 0 || code > 11171) return ch;
+    return CHO[Math.floor(code / (21 * 28))];
+  }).join('');
+}
+
+// 낱자 자음(초성 + 겹받침 분해 후 낱자)인지 확인
+const ALL_JAMO = new Set([...CHO, ...Object.keys(DOUBLE_JAMO)]);
+function isChosungOnly(str) {
+  return [...str].every(ch => ALL_JAMO.has(ch) || /\s/.test(ch));
+}
+
+function matchesChosung(menu, query) {
+  // 겹받침 분해 후 비교 (예: ㄻ → ㄹㅁ)
+  const cleanedQuery = decomposeDoubleJamo(query.replace(/\s/g, ''));
+  const tokens = buildSearchTokens(menu.name);
+  return tokens.some(tok => getChosung(tok).includes(cleanedQuery));
+}
+// ─────────────────────────────────────────────────────────────
+
+// 엔터 누르면 모바일 키보드 내리기
+function handleEnter(e) {
+  if (e.key === 'Enter') {
+    e.target.blur();
+  }
+}
+
+
+
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.textContent === f));
+  render();
+}
+
+function catKey(cat) {
+  return cat.replace(/[\/\s]/g, '');
+}
+
+function parseQuery(raw) {
+  const tokens = raw.trim().toLowerCase().split(/\s+/);
+  const sizeKeywords = { r: 'R', l: 'L', d: 'D' };
+  // partial prefix match: 아 -> 아이스, h -> hot, ic -> ice 등
+  function matchTemp(t) {
+    if ('hot'.startsWith(t) || '핫'.startsWith(t)) return 'hot';
+    if ('ice'.startsWith(t) || 'iced'.startsWith(t) || '아이스'.startsWith(t)) return 'ice';
+    return null;
+  }
+
+  let sizes = [], temps = [], nameTokens = [];
+  tokens.forEach(t => {
+    if (sizeKeywords[t]) sizes.push(sizeKeywords[t]);
+    else if (t.length >= 1 && matchTemp(t)) temps.push(matchTemp(t));
+    else if (t) nameTokens.push(t);
+  });
+  return {
+    name: nameTokens.join(' '),
+    sizes: sizes.length ? sizes : ['R', 'L', 'D'],
+    temps: temps.length ? temps : ['hot', 'ice'],
+  };
+}
+
+// 메뉴명에서 검색 가능한 키워드 토큰 목록을 생성
+// 예: "카페라떼 (바닐라/카라멜/헤이즐넛)" → ["카페라떼", "바닐라카페라떼", "카라멜카페라떼", "헤이즐넛카페라떼", "바닐라라떼", "카라멜라떼", "헤이즐넛라떼"]
+// 예: "수제차 (유자/레몬/자몽/대추/진저)" → ["수제차", "유자차", "레몬차", "자몽차", "대추차", "진저차", "유자수제차", ...]
+function buildSearchTokens(menuName) {
+  const lower = menuName.toLowerCase().replace(/\s/g, '');
+  const tokens = [lower];
+
+  // 괄호 안의 옵션 추출
+  const parenMatch = menuName.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    const options = parenMatch[1].split('/').map(o => o.trim().toLowerCase().replace(/\s/g, ''));
+    const baseName = menuName.replace(/\s*\([^)]+\)/, '').toLowerCase().replace(/\s/g, '');
+
+    options.forEach(opt => {
+      // 옵션 단독 (예: "헤이즐넛")
+      tokens.push(opt);
+      // 옵션 + 베이스명 (예: "헤이즐넛카페라떼")
+      tokens.push(opt + baseName);
+      // 베이스명 + 옵션 (예: "카페라떼헤이즐넛")
+      tokens.push(baseName + opt);
+
+      // 베이스명에서 공통 접미사 추출해서 조합 (예: "라떼", "차", "티" 등)
+      const suffixes = ['라떼', '차', '티', '에이드', '주스', '스무디', '프라페', '요거트'];
+      suffixes.forEach(suf => {
+        if (baseName.endsWith(suf)) {
+          // 옵션 + 접미사 (예: "레몬차", "헤이즐넛라떼")
+          tokens.push(opt + suf);
+        }
+      });
+    });
+  }
+
+  return tokens;
+}
+
+// 섞기[...], 블렌더 N번[...] 패턴에서 레이블(대괄호 포함)만 굵게, 내용은 일반 텍스트로
+function formatRecipe(text) {
+  return text.replace(/((?:블렌더\s*\d*번?|섞기)\s*)\[([^\]]+)\]/g, (_, label, content) => {
+    return `<b>${label.trim()}[</b>${content}<b>]</b>`;
+  });
+}
+
+// 검색어가 메뉴 토큰 중 하나에 포함되는지, 또는 메뉴 토큰이 검색어를 포함하는지 확인
+// 초성만 입력된 경우 초성 검색도 지원
+function matchesSearch(menu, nameNoSpace) {
+  if (!nameNoSpace) return true;
+
+  // 초성만 입력된 경우 → 초성 검색
+  if (isChosungOnly(nameNoSpace)) {
+    return matchesChosung(menu, nameNoSpace);
+  }
+
+  const searchLower = nameNoSpace.toLowerCase();
+  const tokens = buildSearchTokens(menu.name);
+  return tokens.some(tok => tok.includes(searchLower) || searchLower.includes(tok));
+}
+
+function render() {
+  const raw = document.getElementById('q').value;
+  const { name, sizes, temps } = parseQuery(raw);
+  // 메뉴명 띄어쓰기 무시: 검색어와 메뉴명 모두 공백 제거 후 비교
+  const nameNoSpace = name.replace(/\s/g, '');
+
+  const filtered = menus.filter(m => {
+    const matchName = matchesSearch(m, nameNoSpace);
+    const matchCat = activeFilter === '전체' || m.cat === activeFilter;
+    if (m.cat === '베이스') return matchName && matchCat;
+    const hasData = sizes.some(s => temps.some(t => m[s][t] !== '-'));
+    return matchName && matchCat && (raw.trim() === '' || hasData);
+  });
+
+  const el = document.getElementById('results');
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty">검색 결과가 없어요 🔍</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(m => {
+    const ck = catKey(m.cat);
+
+    // 베이스 카테고리: 사이즈/온도 없이 단일 블록 + 비고는 별도 표시
+    if (m.cat === '베이스') {
+      const noteHtml = m.note ? `<div class="note-bar"><span class="note-label">📌 비고</span>${m.note}</div>` : '';
+      const storageText = m.storage || '냉장보관';
+      const recipeText = m.recipe || '';
+      return `<div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-${ck}">${m.cat}</span>
+          <span class="menu-name">${m.name}</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 ${storageText}</div>
+          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${recipeText}</div>` : ''}
+        </div>
+        ${noteHtml}
+      </div>`;
+    }
+
+    const sizeBlocks = sizes.map(s => {
+      const d = m[s];
+      const hotLine = temps.includes('hot') && d.hot !== '-'
+        ? `<div class="temp-row" onclick="focusRecipe(this)""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">${formatRecipe(d.hot)}</span></div>`
+        : '';
+      const iceLine = temps.includes('ice') && d.ice !== '-'
+        ? `<div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">${formatRecipe(d.ice)}</span></div>`
+        : '';
+      const content = hotLine + iceLine || '<span class="none-text">해당 없음</span>';
+      return `<div class="size-block">
+        <div class="size-label">${s} 사이즈</div>
+        ${content}
+      </div>`;
+    }).join('');
+
+    const gridCols = sizes.length === 1 ? '1fr' : sizes.length === 2 ? 'repeat(2,1fr)' : 'repeat(3,1fr)';
+    const noteHtml = m.note ? `<div class="note-bar"><span class="note-label">📌 비고</span>${m.note}</div>` : '';
+    return `<div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-${ck}">${m.cat}</span>
+        <span class="menu-name">${m.name}</span>
+      </div>
+      <div class="size-grid" style="grid-template-columns:${gridCols}">${sizeBlocks}</div>
+      ${noteHtml}
+    </div>`;
+  }).join('');
+}
+
+function resetAll() {
+  document.getElementById('q').value = '';
+  activeFilter = '전체';
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.textContent === '전체'));
+  clearFocus();
+  render();
+}
+
+function focusRecipe(row) {
+  if (row.classList.contains('focused')) { clearFocus(); return; }
+  document.querySelectorAll('.card').forEach(card => card.classList.add('dimmed'));
+  document.querySelectorAll('.size-block').forEach(b => b.classList.add('dimmed'));
+  const sizeBlock = row.closest('.size-block');
+  const card = row.closest('.card');
+  const grid = card.querySelector('.size-grid');
+  card.classList.remove('dimmed');
+  sizeBlock.classList.remove('dimmed');
+  sizeBlock.classList.add('focused-block');
+  // dimmed된 카드 클릭하면 clearFocus
+  document.querySelectorAll('.card.dimmed').forEach(c => c.onclick = () => clearFocus());
+  card.classList.remove('dimmed');
+  sizeBlock.classList.remove('dimmed');
+  sizeBlock.classList.add('focused-block');
+  // 그리드를 1칸으로 바꿔서 focused-block이 전체 너비 차지
+  grid._origCols = grid.style.gridTemplateColumns;
+  grid.style.gridTemplateColumns = '1fr';
+  card.querySelectorAll('.temp-row').forEach(r => { if (r !== row) r.style.display = 'none'; });
+  card.querySelectorAll('.size-block').forEach(b => { if (b !== sizeBlock) b.style.display = 'none'; });
+  row.classList.add('focused');
+  document.getElementById('backBtn').classList.add('visible');
+}
+
+function clearFocus() {
+  document.querySelectorAll('.card').forEach(card => {
+    card.classList.remove('dimmed');
+    card.onclick = null;
+  });
+  document.querySelectorAll('.size-block').forEach(b => {
+    b.classList.remove('dimmed', 'focused-block');
+    b.style.display = '';
+  });
+  document.querySelectorAll('.size-grid').forEach(g => {
+    if (g._origCols !== undefined) { g.style.gridTemplateColumns = g._origCols; delete g._origCols; }
+  });
+  document.querySelectorAll('.temp-row').forEach(r => {
+    r.classList.remove('focused');
+    r.style.display = '';
+  });
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) backBtn.classList.remove('visible');
+}
+
+render();
+</script>
+</body>
+</html>
