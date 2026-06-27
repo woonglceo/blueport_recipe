@@ -185,6 +185,62 @@
   .checklist-page .item.checked .item-label { color: #aaa; text-decoration: line-through; }
   .checklist-page .item-label { font-size: 15px; color: #1a1a1a; flex: 1; line-height: 1.4; }
   .checklist-page .empty { text-align: center; padding: 4rem 0; color: #aaa; font-size: 15px; }
+  .checklist-page .day-tab-bar { display: flex; gap: 5px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .checklist-page .day-tab {
+    flex: 1; min-width: 30px; padding: 6px 0; font-size: 12px; font-weight: 700;
+    text-align: center; border: 1px solid #ddd; border-radius: 8px;
+    background: #fff; color: #888; cursor: pointer; transition: all 0.15s;
+  }
+  .checklist-page .day-tab:hover { background: #f0ede8; color: #444; }
+  .checklist-page .day-tab.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .checklist-page .today-dot {
+    display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+    background: #1a1a1a; margin-left: 3px; vertical-align: middle;
+  }
+  .checklist-page .day-tab.active .today-dot { background: #fff; }
+  @media (max-width: 500px) {
+    .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
+  }
+  /* 재고표 전용 - 바둑판(그리드) 체크리스트 */
+  .inventory-page .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .inventory-page .grid-item {
+    background: #fff; border: 1px solid #e8e5e0; border-radius: 12px;
+    padding: 10px 8px 8px; min-height: 60px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.12s;
+  }
+  .inventory-page .grid-item.removing { opacity: 0; transform: scale(0.8); }
+  .inventory-page .grid-item-label {
+    flex: 1; text-align: center; font-size: 13.5px; font-weight: 600; color: #1a1a1a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; user-select: none; border-radius: 8px; padding: 6px 2px;
+    transition: background 0.12s;
+  }
+  .inventory-page .grid-item-label:hover { background: #faf9f6; }
+  .inventory-page .grid-item-label:active { transform: scale(0.95); }
+  .inventory-page .grid-icon { font-size: 17px; opacity: 0.35; }
+  .inventory-page .grid-input {
+    width: 100%; font-size: 12.5px; padding: 6px 6px; text-align: center;
+    border: 1px solid #e8e5e0; border-radius: 8px; background: #fafaf8;
+    color: #1a1a1a; outline: none; transition: border 0.15s, background 0.15s;
+  }
+  .inventory-page .grid-input:focus { border-color: #aaa; background: #fff; }
+  .inventory-page .grid-input::placeholder { color: #c9c5bc; }
+  .inventory-page .done-section { margin-top: 0.5rem; }
+  .inventory-page .done-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
+  .inventory-page .done-chip {
+    font-size: 12.5px; padding: 6px 12px; border-radius: 99px;
+    background: #f0ede8; color: #999; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    text-decoration: line-through; transition: all 0.15s;
+  }
+  .inventory-page .done-chip:hover { background: #e5e1da; color: #666; }
+  .inventory-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; }
+  @media (max-width: 500px) {
+    .inventory-page .grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
@@ -194,6 +250,7 @@
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오프닝 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
+    <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
   </div>
 
   <div id="view-recipe">
@@ -217,6 +274,7 @@
   <div id="view-opening" class="checklist-page" style="display:none;">
     <h1>오프닝 체크리스트</h1>
     <div class="subtitle" id="dateLabel-opening"></div>
+    <div class="day-tab-bar" id="dayTabs-opening"></div>
     <div class="progress-wrap">
       <div class="progress-track"><div class="progress-fill" id="progressFill-opening"></div></div>
       <div class="progress-text" id="progressText-opening">0 / 0</div>
@@ -230,6 +288,7 @@
   <div id="view-closing" class="checklist-page" style="display:none;">
     <h1>마감 체크리스트</h1>
     <div class="subtitle" id="dateLabel-closing"></div>
+    <div class="day-tab-bar" id="dayTabs-closing"></div>
     <div class="progress-wrap">
       <div class="progress-track"><div class="progress-fill" id="progressFill-closing"></div></div>
       <div class="progress-text" id="progressText-closing">0 / 0</div>
@@ -238,6 +297,23 @@
       <button class="reset-btn" onclick="resetChecklist('closing')">↺ 전체 초기화</button>
     </div>
     <div id="sections-closing"></div>
+  </div>
+
+  <div id="view-inventory" class="checklist-page inventory-page" style="display:none;">
+    <h1>재고표</h1>
+    <div class="subtitle" id="dateLabel-inventory"></div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill-inventory"></div></div>
+      <div class="progress-text" id="progressText-inventory">0 / 0</div>
+    </div>
+    <div class="top-actions">
+      <button class="reset-btn" onclick="resetInventory()">↺ 전체 초기화</button>
+    </div>
+    <div id="inventory-sections"></div>
+    <div class="section done-section" id="inventory-done-section" style="display:none;">
+      <div class="section-title">✅ 확인완료</div>
+      <div class="card" id="inventory-done-list"></div>
+    </div>
   </div>
 </div>
 
@@ -794,124 +870,271 @@ updateUndoBtn();
 
 /* ============================================================
    체크리스트 (오프닝/마감) - 아래 항목만 직접 수정하면 됩니다.
+   요일별(월/화/수/목/금/토/일)로 항목을 각각 다르게 만들 수 있습니다.
    각 섹션은 { title: "섹션명", items: ["항목1", "항목2", ...] } 형식입니다.
+   필요 없는 요일은 그냥 그대로 두거나, 항목을 비워([]) 두면 됩니다.
 ============================================================ */
+const DAYS = [
+  { key: "mon", label: "월" },
+  { key: "tue", label: "화" },
+  { key: "wed", label: "수" },
+  { key: "thu", label: "목" },
+  { key: "fri", label: "금" },
+  { key: "sat", label: "토" },
+  { key: "sun", label: "일" }
+];
+
+// 기본 항목 (요일별로 다르게 하고 싶으면 아래에서 mon/tue/... 항목을 직접 수정하세요)
+function defaultOpeningSections() {
+  return [
+    { title: "오픈 기본사항", items: [
+      "키오스크 켜기",
+      "쪽문 열기",
+      "블렌더 켜기",
+      "포스 켜기",
+      "캠플기기 켜기",
+      "커피머신 윗쪽 마른 설거지들 정리하기",
+      "토스트 세팅하기(가루받이, 도마)",
+      "행주 소독하기",
+      "베이커리 해동하기",
+      "리플잼 세팅하기",
+      "아이스티 꺼내기",
+      "에이드 펌프 꺼내기",
+      "컵 채우기",
+      "뚜껑 채우기",
+      "빨대 채우기",
+      "베이스 있는지 확인하기",
+      "메뉴판 모니터 켜기",
+      "음악 켜기"
+    ]}
+  ];
+}
+
+function defaultClosingSections() {
+  return [
+    { title: "장비/머신", items: [
+      "커피머신 청소 및 전원 OFF",
+      "그라인더 청소 및 원두통 비우기",
+      "블렌더 세척",
+      "제빙기 점검"
+    ]},
+    { title: "재고/식자재", items: [
+      "우유/시럽 유통기한 확인",
+      "냉장/냉장고 재고 정리",
+      "베이스류 라벨링 및 보관",
+      "다음날 사용할 원두 계량"
+    ]},
+    { title: "매장 정리", items: [
+      "테이블/의자 정리",
+      "바닥 청소",
+      "쓰레기통 비우기",
+      "조명 및 에어컨/난방 OFF"
+    ]},
+    { title: "마감 정산", items: [
+      "POS 마감 정산",
+      "현금 시재 확인",
+      "마감 보고서 작성",
+      "출입문 잠금 확인"
+    ]}
+  ];
+}
+
+// 요일별 항목: 평일(월~금)은 기본 항목 + 요일 특이사항, 주말(토/일)은 별도 항목으로 예시를 넣어뒀습니다.
+// 특정 요일만 다르게 하고 싶으면 해당 day의 배열만 직접 바꿔주세요.
+// 예) opening.wed = [ { title: "수요일 전용", items: ["재고 실사"] } ];
+// 평일(월~금)도 기본 항목 + 요일별 특이사항 한 섹션을 예시로 추가했습니다.
+// extraTitle/extraItems 부분만 바꾸면 해당 요일만 다르게 바뀝니다.
+function weekdayOpeningSections(extraTitle, extraItems) {
+  return [
+    { title: extraTitle, items: extraItems },
+    ...defaultOpeningSections()
+  ];
+}
+
+function weekendOpeningSections() {
+  return [
+    { title: "주말 오픈 준비", items: [
+      "주말 추가 인력 출근 확인",
+      "테이크아웃 잔/캐리어 재고 보충",
+      "원두/시럽 주말 소진량 대비 여유분 확인",
+      "포스기 결제 단말기 영수증 용지 점검"
+    ]},
+    { title: "장비/머신", items: [
+      "커피머신 청소 및 전원 OFF",
+      "그라인더 청소 및 원두통 비우기",
+      "블렌더 세척",
+      "제빙기 점검 (주말 사용량 多 - 얼음 여유분 확인)"
+    ]},
+    { title: "매장 정리", items: [
+      "테이블/의자 정리",
+      "바닥 청소",
+      "쓰레기통 비우기 (주말 2회 이상 점검)",
+      "조명 및 에어컨/난방 OFF"
+    ]}
+  ];
+}
+
+function weekendClosingSections() {
+  return [
+    { title: "주말 마감 정산", items: [
+      "POS 마감 정산 (주말 매출 별도 기록)",
+      "현금 시재 확인",
+      "마감 보고서 작성",
+      "출입문 잠금 확인"
+    ]},
+    { title: "장비/머신", items: [
+      "커피머신 청소 및 전원 OFF",
+      "그라인더 청소 및 원두통 비우기",
+      "블렌더 세척",
+      "제빙기 점검"
+    ]},
+    { title: "재고/식자재", items: [
+      "주말 소진 재고 리스트 작성",
+      "월요일 발주 필요 품목 체크",
+      "베이스류 라벨링 및 보관",
+      "다음날 사용할 원두 계량"
+    ]}
+  ];
+}
+
 const checklistData = {
-  opening: [
-    {
-      title: "장비/머신",
-      items: [
-        "커피머신 청소 및 전원 OFF",
-        "그라인더 청소 및 원두통 비우기",
-        "블렌더 세척",
-        "제빙기 점검"
-      ]
-    },
-    {
-      title: "재고/식자재",
-      items: [
-        "우유/시럽 유통기한 확인",
-        "냉장/냉장고 재고 정리",
-        "베이스류 라벨링 및 보관",
-        "다음날 사용할 원두 계량"
-      ]
-    },
-    {
-      title: "매장 정리",
-      items: [
-        "테이블/의자 정리",
-        "바닥 청소",
-        "쓰레기통 비우기",
-        "조명 및 에어컨/난방 OFF"
-      ]
-    },
-    {
-      title: "마감 정산",
-      items: [
-        "POS 마감 정산",
-        "현금 시재 확인",
-        "마감 보고서 작성",
-        "출입문 잠금 확인"
-      ]
-    }
-  ],
-  closing: [
-    {
-      title: "장비/머신",
-      items: [
-        "커피머신 청소 및 전원 OFF",
-        "그라인더 청소 및 원두통 비우기",
-        "블렌더 세척",
-        "제빙기 점검"
-      ]
-    },
-    {
-      title: "재고/식자재",
-      items: [
-        "우유/시럽 유통기한 확인",
-        "냉장/냉장고 재고 정리",
-        "베이스류 라벨링 및 보관",
-        "다음날 사용할 원두 계량"
-      ]
-    },
-    {
-      title: "매장 정리",
-      items: [
-        "테이블/의자 정리",
-        "바닥 청소",
-        "쓰레기통 비우기",
-        "조명 및 에어컨/난방 OFF"
-      ]
-    },
-    {
-      title: "마감 정산",
-      items: [
-        "POS 마감 정산",
-        "현금 시재 확인",
-        "마감 보고서 작성",
-        "출입문 잠금 확인"
-      ]
-    }
-  ]
+  opening: {
+    mon: weekdayOpeningSections("월요일 특이사항", [
+      "제일 바쁜 날이니 물건 넉넉하게 준비"
+    ]),
+    tue: weekdayOpeningSections("화요일 특이사항", [
+      "디카페인 원두 정기 입고 확인"
+    ]),
+    wed: weekdayOpeningSections("수요일 특이사항", [
+      "주간 재고 실사 준비",
+      "유통기한 임박 재료 체크"
+    ]),
+    thu: weekdayOpeningSections("목요일 특이사항", [
+      "주말 대비 원두/시럽 추가 발주 확인"
+    ]),
+    fri: weekdayOpeningSections("금요일 특이사항", [
+      "주말 인력 스케줄 재확인",
+      "테이크아웃 잔/캐리어 재고 보충"
+    ]),
+    sat: weekendOpeningSections(),
+    sun: weekendOpeningSections()
+  },
+  closing: {
+    mon: defaultClosingSections(),
+    tue: defaultClosingSections(),
+    wed: defaultClosingSections(),
+    thu: defaultClosingSections(),
+    fri: defaultClosingSections(),
+    sat: weekendClosingSections(),
+    sun: weekendClosingSections()
+  }
 };
 /* ============================================================ */
 
 const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
-const checklistState = { opening: {}, closing: {} };
+/* ============================================================
+   오래된 localStorage 데이터 정리 (2주 = 14일 지난 데이터 삭제)
+   오프닝/마감 체크리스트("opening-월-2026-6-1" 형식)와
+   재고표("inventory-2026-6-1" 형식) 저장 키를 검사해서
+   14일보다 오래된 항목은 자동으로 지워 브라우저 저장공간을 유지합니다.
+============================================================ */
+function cleanupOldChecklistStorage() {
+  const RETENTION_DAYS = 14;
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - RETENTION_DAYS);
 
-function checklistTodayKey(type) {
-  const d = new Date();
-  return `${type}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  const checklistKeyPattern = /^(opening|closing)-(mon|tue|wed|thu|fri|sat|sun)-(\d{4})-(\d{1,2})-(\d{1,2})$/;
+  const inventoryKeyPattern = /^inventory-(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+
+    let y, mo, da;
+    const m1 = key.match(checklistKeyPattern);
+    const m2 = key.match(inventoryKeyPattern);
+    if (m1) { y = +m1[3]; mo = +m1[4]; da = +m1[5]; }
+    else if (m2) { y = +m2[1]; mo = +m2[2]; da = +m2[3]; }
+    else continue;
+
+    const keyDate = new Date(y, mo - 1, da);
+    if (keyDate < cutoff) keysToRemove.push(key);
+  }
+
+  keysToRemove.forEach(k => {
+    try { localStorage.removeItem(k); } catch (e) {}
+  });
 }
 
-function loadChecklistState(type) {
+cleanupOldChecklistStorage();
+
+const checklistState = { opening: {}, closing: {} };
+
+function checklistTodayDayKey() {
+  const dayMap = ['sun','mon','tue','wed','thu','fri','sat'];
+  return dayMap[new Date().getDay()];
+}
+
+const checklistActiveDay = {
+  opening: checklistTodayDayKey(),
+  closing: checklistTodayDayKey()
+};
+
+function checklistStorageKey(type, day) {
+  const d = new Date();
+  return `${type}-${day}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function loadChecklistState(type, day) {
   try {
-    const raw = localStorage.getItem(checklistTodayKey(type));
+    const raw = localStorage.getItem(checklistStorageKey(type, day));
     return raw ? JSON.parse(raw) : {};
   } catch (e) { return {}; }
 }
 
-function saveChecklistState(type) {
-  try { localStorage.setItem(checklistTodayKey(type), JSON.stringify(checklistState[type])); } catch (e) {}
+function saveChecklistState(type, day) {
+  try { localStorage.setItem(checklistStorageKey(type, day), JSON.stringify(checklistState[type][day] || {})); } catch (e) {}
+}
+
+function renderDayTabs(type) {
+  const wrap = document.getElementById('dayTabs-' + type);
+  const todayKey = checklistTodayDayKey();
+  wrap.innerHTML = DAYS.map(d => {
+    const isActive = checklistActiveDay[type] === d.key;
+    const isToday = d.key === todayKey;
+    return `<button class="day-tab ${isActive ? 'active' : ''}" onclick="switchChecklistDay('${type}','${d.key}')">${d.label}${isToday ? '<span class="today-dot"></span>' : ''}</button>`;
+  }).join('');
+}
+
+function switchChecklistDay(type, day) {
+  checklistActiveDay[type] = day;
+  if (!checklistState[type][day]) {
+    checklistState[type][day] = loadChecklistState(type, day);
+  }
+  renderDayTabs(type);
+  renderChecklist(type);
 }
 
 function renderChecklist(type) {
+  const day = checklistActiveDay[type];
   const wrap = document.getElementById('sections-' + type);
-  const data = checklistData[type];
+  const data = checklistData[type][day] || [];
 
   if (!data.length) {
-    wrap.innerHTML = '<div class="empty">체크리스트 항목이 없어요</div>';
+    wrap.innerHTML = '<div class="empty">이 요일에는 체크리스트 항목이 없어요</div>';
     updateChecklistProgress(type, 0, 0);
     return;
   }
 
   let total = 0, checked = 0;
+  const state = checklistState[type][day] || {};
 
   wrap.innerHTML = data.map((section, sIdx) => {
     const itemsHtml = section.items.map((label, iIdx) => {
       const id = `${sIdx}-${iIdx}`;
-      const isChecked = !!checklistState[type][id];
+      const isChecked = !!state[id];
       total++;
       if (isChecked) checked++;
       return `<div class="item ${isChecked ? 'checked' : ''}" onclick="toggleChecklistItem('${type}','${id}')">
@@ -930,8 +1153,10 @@ function renderChecklist(type) {
 }
 
 function toggleChecklistItem(type, id) {
-  checklistState[type][id] = !checklistState[type][id];
-  saveChecklistState(type);
+  const day = checklistActiveDay[type];
+  if (!checklistState[type][day]) checklistState[type][day] = {};
+  checklistState[type][day][id] = !checklistState[type][day][id];
+  saveChecklistState(type, day);
   renderChecklist(type);
 }
 
@@ -942,9 +1167,10 @@ function updateChecklistProgress(type, checked, total) {
 }
 
 function resetChecklist(type) {
-  if (!confirm('체크 상태를 모두 초기화할까요?')) return;
-  checklistState[type] = {};
-  saveChecklistState(type);
+  if (!confirm('현재 요일의 체크 상태를 모두 초기화할까요?')) return;
+  const day = checklistActiveDay[type];
+  checklistState[type][day] = {};
+  saveChecklistState(type, day);
   renderChecklist(type);
 }
 
@@ -955,16 +1181,183 @@ function setChecklistDateLabel(type, suffix) {
     `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} (${days[d.getDay()]}) ${suffix}`;
 }
 
-checklistState.opening = loadChecklistState('opening');
-checklistState.closing = loadChecklistState('closing');
+checklistState.opening[checklistActiveDay.opening] = loadChecklistState('opening', checklistActiveDay.opening);
+checklistState.closing[checklistActiveDay.closing] = loadChecklistState('closing', checklistActiveDay.closing);
 setChecklistDateLabel('opening', '오프닝');
 setChecklistDateLabel('closing', '마감');
+renderDayTabs('opening');
+renderDayTabs('closing');
 renderChecklist('opening');
 renderChecklist('closing');
 
+/* ============================================================
+   재고표 (바둑판 체크리스트) - 아래 inventoryData만 수정하면 됩니다.
+   { category: "분류명", items: ["품목1", "품목2", ...] } 형식입니다.
+   분류를 더 추가하거나, 품목을 자유롭게 추가/삭제하세요.
+   터치(클릭)하면 항목이 사라지고 하단 "확인완료"로 이동합니다.
+   다시 누르면 확인완료에서 빠져나와 원래 자리로 돌아옵니다.
+   날짜가 바뀌면 자동으로 초기화됩니다.
+============================================================ */
+const inventoryData = [
+  { category: "원두/커피", items: [
+    "에스프레소 원두", "디카페인 원두", "콜드브루 원액"
+  ]},
+  { category: "유제품", items: [
+    "우유", "휘핑크림", "크림베이스"
+  ]},
+  { category: "시럽/소스", items: [
+    "바닐라시럽", "카라멜시럽", "헤이즐넛시럽", "초코소스", "카라멜소스", "설탕시럽"
+  ]},
+  { category: "베이스류", items: [
+    "아이스티 베이스", "초코베이스", "더블베이스"
+  ]},
+  { category: "기타 식자재", items: [
+    "얼음", "생수/정수", "베이커리류", "리플잼"
+  ]},
+  { category: "포장/소모품", items: [
+    "테이크아웃 컵", "뚜껑", "빨대", "캐리어", "영수증 용지"
+  ]}
+];
+
+let inventoryState = {};   // 체크 여부 { "0-1": true, ... }
+let inventoryNotes = {};   // 수량/메모  { "0-1": "2개", ... }
+
+function inventoryStorageKey() {
+  const d = new Date();
+  return `inventory-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function loadInventoryData() {
+  try {
+    const raw = localStorage.getItem(inventoryStorageKey());
+    if (!raw) return { checked: {}, notes: {} };
+    const parsed = JSON.parse(raw);
+    return { checked: parsed.checked || {}, notes: parsed.notes || {} };
+  } catch (e) { return { checked: {}, notes: {} }; }
+}
+
+function saveInventoryData() {
+  try {
+    localStorage.setItem(inventoryStorageKey(), JSON.stringify({ checked: inventoryState, notes: inventoryNotes }));
+  } catch (e) {}
+}
+
+function setInventoryDateLabel() {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('dateLabel-inventory').textContent =
+    `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} (${days[d.getDay()]}) 재고 점검`;
+}
+
+function renderInventory() {
+  const wrap = document.getElementById('inventory-sections');
+  let total = 0, checked = 0;
+  let html = '';
+
+  inventoryData.forEach((cat, cIdx) => {
+    const unchecked = cat.items
+      .map((label, iIdx) => ({ label, id: `${cIdx}-${iIdx}` }))
+      .filter(it => !inventoryState[it.id]);
+
+    total += cat.items.length;
+    checked += cat.items.length - unchecked.length;
+
+    if (!unchecked.length) return;
+
+    html += `<div class="section">
+      <div class="section-title">${cat.category}</div>
+      <div class="grid">
+        ${unchecked.map(it => `
+          <div class="grid-item" id="inv-${it.id}">
+            <div class="grid-item-label" onclick="toggleInventoryItem('${it.id}')">
+              <span class="grid-icon">📦</span>${it.label}
+            </div>
+            <input type="text" class="grid-input" placeholder="수량/메모"
+              value="${(inventoryNotes[it.id] || '').replace(/"/g, '&quot;')}"
+              onclick="event.stopPropagation()"
+              oninput="updateInventoryNote('${it.id}', this.value)" />
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  wrap.innerHTML = html || '<div class="empty">모든 품목을 확인했어요 🎉</div>';
+
+  renderInventoryDone();
+  updateInventoryProgress(checked, total);
+}
+
+function renderInventoryDone() {
+  const doneSection = document.getElementById('inventory-done-section');
+  const doneList = document.getElementById('inventory-done-list');
+  const doneItems = [];
+
+  inventoryData.forEach((cat, cIdx) => {
+    cat.items.forEach((label, iIdx) => {
+      const id = `${cIdx}-${iIdx}`;
+      if (inventoryState[id]) doneItems.push({ label, id, note: inventoryNotes[id] || '' });
+    });
+  });
+
+  if (!doneItems.length) {
+    doneSection.style.display = 'none';
+    return;
+  }
+  doneSection.style.display = '';
+  doneList.innerHTML = `<div class="done-list">
+    ${doneItems.map(it => `<span class="done-chip" onclick="toggleInventoryItem('${it.id}')">${it.label}${it.note ? ' · ' + it.note : ''} <span class="undo-icon">↺</span></span>`).join('')}
+  </div>`;
+}
+
+function updateInventoryNote(id, value) {
+  inventoryNotes[id] = value;
+  saveInventoryData();
+}
+
+function toggleInventoryItem(id) {
+  const wasChecked = !!inventoryState[id];
+  if (!wasChecked) {
+    const el = document.getElementById('inv-' + id);
+    if (el) {
+      el.classList.add('removing');
+      setTimeout(() => {
+        inventoryState[id] = true;
+        saveInventoryData();
+        renderInventory();
+      }, 170);
+      return;
+    }
+  }
+  inventoryState[id] = !wasChecked;
+  saveInventoryData();
+  renderInventory();
+}
+
+function updateInventoryProgress(checked, total) {
+  const pct = total ? Math.round((checked / total) * 100) : 0;
+  document.getElementById('progressFill-inventory').style.width = pct + '%';
+  document.getElementById('progressText-inventory').textContent = `${checked} / ${total}`;
+}
+
+function resetInventory() {
+  if (!confirm('재고표 체크 상태와 메모를 모두 초기화할까요?')) return;
+  inventoryState = {};
+  inventoryNotes = {};
+  saveInventoryData();
+  renderInventory();
+}
+
+{
+  const loaded = loadInventoryData();
+  inventoryState = loaded.checked;
+  inventoryNotes = loaded.notes;
+}
+setInventoryDateLabel();
+renderInventory();
+
 
 function switchTab(tab) {
-  ['recipe', 'opening', 'closing'].forEach(t => {
+  ['recipe', 'opening', 'closing', 'inventory'].forEach(t => {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
