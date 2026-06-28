@@ -269,7 +269,7 @@
   <div class="brand">Blueport Cafe</div>
   <div class="tab-bar">
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
-    <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오프닝 체크리스트</button>
+    <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
   </div>
@@ -293,7 +293,7 @@
   </div>
 
   <div id="view-opening" class="checklist-page" style="display:none;">
-    <h1>오프닝 체크리스트</h1>
+    <h1>오픈 체크리스트</h1>
     <div class="subtitle" id="dateLabel-opening"></div>
     <div class="day-tab-bar" id="dayTabs-opening"></div>
     <div class="progress-wrap">
@@ -919,7 +919,7 @@ render();
 updateUndoBtn();
 
 /* ============================================================
-   체크리스트 (오프닝/마감) - 아래 항목만 직접 수정하면 됩니다.
+   체크리스트 (오픈/마감) - 아래 항목만 직접 수정하면 됩니다.
    요일별(월/화/수/목/금/토/일)로 항목을 각각 다르게 만들 수 있습니다.
    각 섹션은 { title: "섹션명", items: ["항목1", "항목2", ...] } 형식입니다.
    필요 없는 요일은 그냥 그대로 두거나, 항목을 비워([]) 두면 됩니다.
@@ -934,17 +934,17 @@ const DAYS = [
   { key: "sun", label: "일" }
 ];
 
-// ─── 오프닝 체크리스트 섹션 빌더 ────────────────────────────────
+// ─── 오픈 체크리스트 섹션 빌더 ────────────────────────────────
 
-// 오프닝 기본 항목을 반환합니다. 모든 요일에 공통으로 적용됩니다.
+// 오픈 기본 항목을 반환합니다. 모든 요일에 공통으로 적용됩니다.
 function defaultOpeningSections() {
   return [
     { title: "오픈 기본사항", items: [
       "키오스크 켜기",
       "쪽문 열기",
-      "블렌더 켜기",
       "포스 켜기",
       "캠플기기 켜기",
+      "블렌더 켜기",
       "커피머신 윗쪽 마른 설거지들 정리하기",
       "토스트 세팅하기(가루받이, 도마)",
       "행주 소독하기",
@@ -962,7 +962,7 @@ function defaultOpeningSections() {
   ];
 }
 
-// 평일 오프닝 섹션을 반환합니다.
+// 평일 오픈 섹션을 반환합니다.
 // 요일별 특이사항 섹션을 기본 항목 앞에 추가합니다.
 // extraTitle: 특이사항 섹션 제목, extraItems: 특이사항 항목 배열
 function weekdayOpeningSections(extraTitle, extraItems) {
@@ -972,27 +972,22 @@ function weekdayOpeningSections(extraTitle, extraItems) {
   ];
 }
 
-// 주말 오프닝 섹션을 반환합니다.
-// 주말 전용 준비사항, 장비/머신, 매장 정리 섹션으로 구성됩니다.
-function weekendOpeningSections() {
+// 주말 공통 체크리스트 섹션을 반환합니다.
+// 주말에는 오픈/마감 구분 없이 이 항목을 오픈·마감 탭 모두에서 공유합니다.
+function weekendSections() {
   return [
-    { title: "주말 오픈 준비", items: [
-      "주말 추가 인력 출근 확인",
-      "테이크아웃 잔/캐리어 재고 보충",
-      "원두/시럽 주말 소진량 대비 여유분 확인",
-      "포스기 결제 단말기 영수증 용지 점검"
-    ]},
-    { title: "장비/머신", items: [
-      "커피머신 청소 및 전원 OFF",
-      "그라인더 청소 및 원두통 비우기",
-      "블렌더 세척",
-      "제빙기 점검 (주말 사용량 多 - 얼음 여유분 확인)"
-    ]},
-    { title: "매장 정리", items: [
-      "테이블/의자 정리",
-      "바닥 청소",
-      "쓰레기통 비우기 (주말 2회 이상 점검)",
-      "조명 및 에어컨/난방 OFF"
+    { title: "주말 체크리스트", items: [
+      "설거지하기",
+      "커피머신 윗쪽 마른 설거지들 정리하기",
+      "청소기 돌리기",
+      "테이블 행주로 닦기",
+      "청소기 필터 세척하기",
+      "커피머신 청소(약품 돌리기)",
+      "그라인더 청소(옥수수 알약)",
+      "쇼케이스 비우기",
+      "베이스 확인 및 새로 만들기",
+      "휘핑크림 만들기",
+      "파비 뿌리기"
     ]}
   ];
 }
@@ -1030,7 +1025,7 @@ function defaultClosingSections() {
 }
 
 // 평일 마감 섹션을 반환합니다.
-// 오프닝과 동일하게 요일별 특이사항 섹션을 기본 항목 앞에 추가합니다.
+// 오픈과 동일하게 요일별 특이사항 섹션을 기본 항목 앞에 추가합니다.
 // extraTitle: 특이사항 섹션 제목, extraItems: 특이사항 항목 배열
 function weekdayClosingSections(extraTitle, extraItems) {
   return [
@@ -1039,57 +1034,31 @@ function weekdayClosingSections(extraTitle, extraItems) {
   ];
 }
 
-// 주말 마감 섹션을 반환합니다.
-// 주말 전용 정산, 장비/머신, 재고/식자재, 매장 정리 섹션으로 구성됩니다.
-function weekendClosingSections() {
-  return [
-    { title: "주말 마감 특이사항", items: [
-      "POS 마감 정산 (주말 매출 별도 기록)",
-      "주말 소진 재고 리스트 작성",
-      "월요일 발주 필요 품목 체크"
-    ]},
-    { title: "장비/머신", items: [
-      "커피머신 청소 및 전원 OFF",
-      "그라인더 청소 및 원두통 비우기",
-      "블렌더 세척",
-      "제빙기 점검"
-    ]},
-    { title: "재고/식자재", items: [
-      "베이스류 라벨링 및 보관",
-      "다음날 사용할 원두 계량"
-    ]},
-    { title: "매장 정리", items: [
-      "테이블/의자 정리",
-      "바닥 청소",
-      "쓰레기통 비우기 (주말 마지막 수거 확인)",
-      "조명 및 에어컨/난방 OFF",
-      "출입문 잠금 확인"
-    ]}
-  ];
-}
 
-// ─── 오프닝/마감 체크리스트 데이터 ──────────────────────────────
+
+// ─── 오픈/마감 체크리스트 데이터 ──────────────────────────────
 // 요일별(mon~sun) 섹션 목록을 정의합니다.
 // 특정 요일만 다르게 하고 싶으면 해당 day의 함수 호출 부분만 수정하세요.
 // 예) opening.wed = [ { title: "수요일 전용", items: ["재고 실사"] } ];
 const checklistData = {
+  //오픈 체크리스트
   opening: {
     mon: weekdayOpeningSections("오픈 특이사항", [
-      "수요일 우유 발주 마감하기"
+      "수요일 우유 발주 마감하기",
+      "쇼케이스 기간 지난 베이커리들 싹 버리고 새로 채우기"
     ]),
-    tue: weekdayOpeningSections("오픈 특이사항", [
-      "우유 발주 마감하기"
+    tue: defaultOpeningSections(),
+    wed: weekdayOpeningSections("오픈 특이사항", [
+      "금요일 우유 발주 마감하기"
     ]),
-    wed: defaultOpeningSections(),
-    thu: weekdayOpeningSections("오픈 특이사항", [
-      "우유 발주 마감하기"
-    ]),
+    thu: defaultOpeningSections(),
     fri: weekdayOpeningSections("오픈 특이사항", [
       "월요일 우유 발주 마감하기"
     ]),
-    sat: weekendOpeningSections(),
-    sun: weekendOpeningSections()
+    sat: weekendSections(),
+    sun: weekendSections()
   },
+  //마감 체크리스트
   closing: {
     mon: weekdayClosingSections("마감 특이사항", [
       "수요일 발주 마감하기"
@@ -1106,8 +1075,8 @@ const checklistData = {
     fri: weekdayClosingSections("마감 특이사항", [
       "월요일 발주 마감하기"
     ]),
-    sat: weekendClosingSections(),
-    sun: weekendClosingSections()
+    sat: weekendSections(),
+    sun: weekendSections()
   }
 };
 /* ============================================================ */
@@ -1116,17 +1085,17 @@ const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-w
 
 /* ============================================================
    오래된 localStorage 데이터 정리 (2주 = 14일 지난 데이터 삭제)
-   오프닝/마감 체크리스트("opening-월-2026-6-1" 형식)와
+   오픈/마감 체크리스트("opening-월-2026-6-1" 형식)와
    재고표("inventory-2026-6-1" 형식) 저장 키를 검사해서
    14일보다 오래된 항목은 자동으로 지워 브라우저 저장공간을 유지합니다.
 ============================================================ */
-// localStorage에서 14일 이상 지난 오프닝/마감 체크리스트 및 재고표 데이터를 자동 삭제합니다.
+// localStorage에서 14일 이상 지난 오픈/마감 체크리스트 및 재고표 데이터를 자동 삭제합니다.
 function cleanupOldChecklistStorage() {
   const RETENTION_DAYS = 14;
   const now = new Date();
   const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - RETENTION_DAYS);
 
-  const checklistKeyPattern = /^(opening|closing)-(mon|tue|wed|thu|fri|sat|sun)-(\d{4})-(\d{1,2})-(\d{1,2})$/;
+  const checklistKeyPattern = /^(opening|closing|weekend)-(mon|tue|wed|thu|fri|sat|sun)-(\d{4})-(\d{1,2})-(\d{1,2})$/;
   const inventoryKeyPattern = /^inventory-(\d{4})-(\d{1,2})-(\d{1,2})$/;
 
   const keysToRemove = [];
@@ -1165,10 +1134,12 @@ const checklistActiveDay = {
   closing: checklistTodayDayKey()
 };
 
-// 오프닝/마감 체크리스트의 localStorage 저장 키를 생성합니다. (예: "opening-mon-2026-6-28")
+// 오픈/마감 체크리스트의 localStorage 저장 키를 생성합니다. (예: "opening-mon-2026-6-28")
+// 주말(토/일)은 오픈·마감 구분 없이 동일한 키를 사용합니다. (예: "weekend-sat-2026-6-28")
 function checklistStorageKey(type, day) {
   const d = new Date();
-  return `${type}-${day}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  const prefix = (day === 'sat' || day === 'sun') ? 'weekend' : type;
+  return `${prefix}-${day}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
 // localStorage에서 특정 타입(opening/closing)과 요일의 체크 상태를 불러옵니다.
@@ -1184,7 +1155,7 @@ function saveChecklistState(type, day) {
   try { localStorage.setItem(checklistStorageKey(type, day), JSON.stringify(checklistState[type][day] || {})); } catch (e) {}
 }
 
-// 오프닝 또는 마감 탭의 요일 탭 버튼을 렌더링합니다. 오늘 요일에는 점 표시를 추가합니다.
+// 오픈 또는 마감 탭의 요일 탭 버튼을 렌더링합니다. 오늘 요일에는 점 표시를 추가합니다.
 function renderDayTabs(type) {
   const wrap = document.getElementById('dayTabs-' + type);
   const todayKey = checklistTodayDayKey();
@@ -1212,8 +1183,16 @@ function renderChecklist(type) {
   const wrap = document.getElementById('sections-' + type);
   const data = checklistData[type][day] || [];
 
+  // 주말 공유 안내 배너
+  const isWeekend = (day === 'sat' || day === 'sun');
+  const weekendBanner = isWeekend
+    ? `<div style="margin-bottom:1rem;padding:10px 14px;background:#fffbf0;border:1px solid #f0e5c0;border-radius:10px;font-size:13px;color:#7a5c00;">
+        🔒 주말은 운영하지 않아요. 오픈·마감 체크리스트가 동일하게 표시됩니다.
+       </div>`
+    : '';
+
   if (!data.length) {
-    wrap.innerHTML = '<div class="empty">이 요일에는 체크리스트 항목이 없어요</div>';
+    wrap.innerHTML = weekendBanner + '<div class="empty">이 요일에는 체크리스트 항목이 없어요</div>';
     updateChecklistProgress(type, 0, 0);
     renderChecklistDone(type);
     return;
@@ -1246,7 +1225,7 @@ function renderChecklist(type) {
     </div>`;
   }).join('');
 
-  wrap.innerHTML = sectionsHtml || '';
+  wrap.innerHTML = weekendBanner + (sectionsHtml || '');
   updateChecklistProgress(type, checked, total);
   renderChecklistDone(type);
 }
@@ -1323,7 +1302,7 @@ function resetChecklist(type) {
   renderChecklist(type);
 }
 
-// 오프닝/마감 탭 상단에 오늘 날짜와 요일을 표시합니다. (예: 2026.6.28 (일) 오프닝)
+// 오픈/마감 탭 상단에 오늘 날짜와 요일을 표시합니다. (예: 2026.6.28 (일) 오픈)
 function setChecklistDateLabel(type, suffix) {
   const d = new Date();
   const days = ['일','월','화','수','목','금','토'];
@@ -1333,7 +1312,7 @@ function setChecklistDateLabel(type, suffix) {
 
 checklistState.opening[checklistActiveDay.opening] = loadChecklistState('opening', checklistActiveDay.opening);
 checklistState.closing[checklistActiveDay.closing] = loadChecklistState('closing', checklistActiveDay.closing);
-setChecklistDateLabel('opening', '오프닝');
+setChecklistDateLabel('opening', '오픈');
 setChecklistDateLabel('closing', '마감');
 renderDayTabs('opening');
 renderDayTabs('closing');
@@ -1527,7 +1506,7 @@ setInventoryDateLabel();
 renderInventory();
 
 
-// 메인 탭(레시피/오프닝/마감/재고)을 전환하고 해당 뷰만 표시합니다.
+// 메인 탭(레시피/오픈/마감/재고)을 전환하고 해당 뷰만 표시합니다.
 // 레시피 탭에서만 우하단 FAB 버튼 그룹을 표시합니다.
 function switchTab(tab) {
   ['recipe', 'opening', 'closing', 'inventory'].forEach(t => {
