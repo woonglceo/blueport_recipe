@@ -97,6 +97,10 @@
   .tab-bar {
     display: flex; gap: 4px; margin-bottom: 1.75rem;
     border-bottom: 1px solid #e8e5e0;
+    position: sticky; top: 0; z-index: 60;
+    background: #f5f4f0;
+    margin-left: -1.25rem; margin-right: -1.25rem;
+    padding-left: 1.25rem; padding-right: 1.25rem;
   }
   .tab-item {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -139,6 +143,42 @@
     .size-grid { grid-template-columns: 1fr; }
     .temp-row { flex-direction: column; gap: 3px; align-items: flex-start; }
     .recipe-text { display: block; }
+  }
+
+  /* ── 레시피 검색창 상단 고정 ── */
+  .recipe-sticky {
+    position: sticky;
+    top: 48px; /* 탭바 높이 보정 */
+    z-index: 50;
+    background: #f5f4f0;
+    padding-top: 10px;
+    padding-bottom: 0;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  /* ── 체크리스트·재고표 progress-wrap 상단 고정 ── */
+  .progress-sticky {
+    position: sticky;
+    top: 48px; /* 탭바 높이 보정 */
+    z-index: 50;
+    background: #f5f4f0;
+    padding-top: 10px;
+    padding-bottom: 0;
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+  .progress-sticky .progress-wrap {
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  @media (max-width: 500px) {
+    .recipe-sticky { top: 44px; }
+    .progress-sticky { top: 44px; }
   }
   /* 체크리스트 탭 전용 스타일 (네임스페이스로 분리하여 레시피 카드와 충돌 방지) */
   .checklist-page h1 { margin-bottom: 0.4rem; }
@@ -224,7 +264,7 @@
   }
   .inventory-page .grid-item {
     background: #fff; border: 1px solid #e8e5e0; border-radius: 10px;
-    padding: 6px 5px 5px; min-height: 44px;
+    padding: 8px 5px 6px; min-height: 64px;
     display: flex; flex-direction: column; gap: 4px;
     transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.12s;
   }
@@ -258,7 +298,7 @@
   .inventory-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; }
   @media (max-width: 500px) {
     .inventory-page .grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
-    .inventory-page .grid-item { padding: 5px 4px 4px; min-height: 40px; }
+    .inventory-page .grid-item { padding: 7px 4px 5px; min-height: 58px; }
     .inventory-page .grid-item-label { font-size: 10.5px; }
     .inventory-page .grid-input { font-size: 10px; padding: 3px 2px; }
   }
@@ -276,17 +316,19 @@
 
   <div id="view-recipe">
   <h1>레시피 검색</h1>
-  <div class="search-row">
-    <input type="text" id="q" placeholder="메뉴명 또는 초성 검색 (예: ㄱㄱㅁㄹㄸ)" oninput="render()" onkeydown="handleEnter(event)" />
-    <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
-  </div>
-  <div class="chips">
-    <button class="chip active" onclick="setFilter('전체')">전체</button>
-    <button class="chip" onclick="setFilter('커피')">커피</button>
-    <button class="chip" onclick="setFilter('논커피')">논커피</button>
-    <button class="chip" onclick="setFilter('에이드/주스')">에이드/주스</button>
-    <button class="chip" onclick="setFilter('스무디/프라페')">스무디/프라페</button>
-    <button class="chip" onclick="setFilter('베이스')">베이스</button>
+  <div class="recipe-sticky">
+    <div class="search-row">
+      <input type="text" id="q" placeholder="메뉴명 또는 초성 검색 (예: ㄱㄱㅁㄹㄸ)" oninput="render()" onkeydown="handleEnter(event)" />
+      <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
+    </div>
+    <div class="chips">
+      <button class="chip active" onclick="setFilter('전체')">전체</button>
+      <button class="chip" onclick="setFilter('커피')">커피</button>
+      <button class="chip" onclick="setFilter('논커피')">논커피</button>
+      <button class="chip" onclick="setFilter('에이드/주스')">에이드/주스</button>
+      <button class="chip" onclick="setFilter('스무디/프라페')">스무디/프라페</button>
+      <button class="chip" onclick="setFilter('베이스')">베이스</button>
+    </div>
   </div>
   <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
   <div class="results" id="results"></div>
@@ -296,9 +338,11 @@
     <h1>오픈 체크리스트</h1>
     <div class="subtitle" id="dateLabel-opening"></div>
     <div class="day-tab-bar" id="dayTabs-opening"></div>
-    <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progressFill-opening"></div></div>
-      <div class="progress-text" id="progressText-opening">0 / 0</div>
+    <div class="progress-sticky">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill-opening"></div></div>
+        <div class="progress-text" id="progressText-opening">0 / 0</div>
+      </div>
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('opening')">↺ 전체 초기화</button>
@@ -314,9 +358,11 @@
     <h1>마감 체크리스트</h1>
     <div class="subtitle" id="dateLabel-closing"></div>
     <div class="day-tab-bar" id="dayTabs-closing"></div>
-    <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progressFill-closing"></div></div>
-      <div class="progress-text" id="progressText-closing">0 / 0</div>
+    <div class="progress-sticky">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill-closing"></div></div>
+        <div class="progress-text" id="progressText-closing">0 / 0</div>
+      </div>
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('closing')">↺ 전체 초기화</button>
@@ -331,9 +377,11 @@
   <div id="view-inventory" class="checklist-page inventory-page" style="display:none;">
     <h1>재고표</h1>
     <div class="subtitle" id="dateLabel-inventory"></div>
-    <div class="progress-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progressFill-inventory"></div></div>
-      <div class="progress-text" id="progressText-inventory">0 / 0</div>
+    <div class="progress-sticky">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill-inventory"></div></div>
+        <div class="progress-text" id="progressText-inventory">0 / 0</div>
+      </div>
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetInventory()">↺ 전체 초기화</button>
