@@ -103,12 +103,19 @@
     background: #f5f4f0;
     margin-left: -1.25rem; margin-right: -1.25rem;
     padding-left: 1.25rem; padding-right: 1.25rem;
+    /* 모바일에서 가로 스크롤 허용 */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
   }
+  .tab-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
   .tab-item {
-    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 11px 8px 13px; font-size: 13.5px; font-weight: 600;
+    flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 11px 12px 13px; font-size: 13.5px; font-weight: 600;
     color: #999; text-decoration: none; background: none; border: none;
     position: relative; cursor: pointer; transition: color 0.15s;
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
   }
   .tab-item .tab-icon { font-size: 15px; opacity: 0.8; }
   .tab-item:hover { color: #444; }
@@ -120,7 +127,7 @@
     height: 2px; background: #1a1a1a; border-radius: 2px 2px 0 0;
   }
   @media (max-width: 500px) {
-    .tab-item { font-size: 12px; padding: 10px 4px 12px; }
+    .tab-item { font-size: 12.5px; padding: 10px 10px 12px; }
     .tab-item .tab-icon { font-size: 14px; }
   }
   /* 우하단 고정 버튼 그룹 */
@@ -150,7 +157,7 @@
   /* ── 레시피 검색창 상단 고정 ── */
   .recipe-sticky {
     position: sticky;
-    top: 48px; /* 탭바 높이 보정 */
+    top: var(--tabbar-h, 48px); /* JS로 실제 탭바 높이 주입 */
     z-index: 50;
     background: #f5f4f0;
     padding-top: 10px;
@@ -164,7 +171,7 @@
   /* ── 체크리스트·재고표 progress-wrap 상단 고정 ── */
   .progress-sticky {
     position: sticky;
-    top: 48px; /* 탭바 높이 보정 */
+    top: var(--tabbar-h, 48px); /* JS로 실제 탭바 높이 주입 */
     z-index: 50;
     background: #f5f4f0;
     padding-top: 10px;
@@ -177,10 +184,6 @@
   .progress-sticky .progress-wrap {
     margin-bottom: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
-  @media (max-width: 500px) {
-    .recipe-sticky { top: 44px; }
-    .progress-sticky { top: 44px; }
   }
   /* 체크리스트 탭 전용 스타일 (네임스페이스로 분리하여 레시피 카드와 충돌 방지) */
   .checklist-page h1 { margin-bottom: 0.4rem; }
@@ -3126,5 +3129,35 @@ window.moveSelectedDown = moveSelectedDown;
 })();
 </script>
 
+<script>
+// 탭바 실제 높이를 CSS 변수에 반영 → sticky 요소들이 탭바 바로 아래에 위치하도록 보정
+(function () {
+  function updateTabbarHeight() {
+    const tabBar = document.querySelector('.tab-bar');
+    if (!tabBar) return;
+    const h = tabBar.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--tabbar-h', h + 'px');
+  }
+
+  // 최초 실행
+  updateTabbarHeight();
+
+  // 폰트 로딩 후 다시 측정 (폰트 로드 전후로 높이가 달라질 수 있음)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(updateTabbarHeight);
+  }
+
+  // 창 크기 변경 시 재측정
+  window.addEventListener('resize', updateTabbarHeight);
+
+  // ResizeObserver로 탭바 자체 크기 변화 감지
+  if (window.ResizeObserver) {
+    const tabBar = document.querySelector('.tab-bar');
+    if (tabBar) {
+      new ResizeObserver(updateTabbarHeight).observe(tabBar);
+    }
+  }
+})();
+</script>
 </body>
 </html>
