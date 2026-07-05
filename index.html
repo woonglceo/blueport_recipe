@@ -19,7 +19,13 @@
     background: #fff; outline: none; transition: border 0.15s;
   }
   .search-row input:focus { border-color: #aaa; }
-  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .chips {
+    display: flex; gap: 6px; flex-wrap: nowrap;
+    margin-bottom: 1.5rem;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding-bottom: 4px;
+  }
+  .chips::-webkit-scrollbar { display: none; }
   .chip {
     font-size: 13px; padding: 5px 12px; border-radius: 99px;
     border: 1px solid #ddd; color: #666; background: #fff;
@@ -97,18 +103,48 @@
   .note-label { font-weight: 700; margin-right: 4px; }
   .empty { text-align: center; padding: 4rem 0; color: #aaa; font-size: 15px; }
   .tab-bar {
-    display: flex; gap: 4px; margin-bottom: 1.75rem;
+    display: flex; gap: 4px; margin-bottom: 0;
     border-bottom: 1px solid #e8e5e0;
-    position: sticky; top: 0; z-index: 60;
     background: #f5f4f0;
-    margin-left: -1.25rem; margin-right: -1.25rem;
     padding-left: 1.25rem; padding-right: 1.25rem;
     /* 모바일에서 가로 스크롤 허용 */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
   }
+  /* tab-bar-wrap이 sticky 컨테이너 역할 */
+  .tab-bar-wrap {
+    position: sticky !important; top: 0 !important; z-index: 60 !important;
+    background: #f5f4f0 !important;
+    margin-left: -1.25rem; margin-right: -1.25rem;
+    margin-bottom: 1.75rem;
+  }
   .tab-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+  /* 탭바 스크롤 표시: 오른쪽에 페이드 그라데이션 */
+  .tab-bar-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, #f5f4f0);
+    pointer-events: none;
+    z-index: 61;
+    opacity: 1;
+    transition: opacity 0.2s;
+  }
+  .tab-bar-wrap.scrolled-end::after { opacity: 0; }
+  .tab-bar-wrap::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 40px;
+    background: linear-gradient(to left, transparent, #f5f4f0);
+    pointer-events: none;
+    z-index: 61;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .tab-bar-wrap.scrolled-start::before { opacity: 1; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -263,6 +299,15 @@
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
   }
+  /* 커스텀 체크리스트 항목 삭제 버튼 */
+  .checklist-page .item-delete {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: none; background: transparent;
+    color: #ccc; font-size: 16px; cursor: pointer; transition: all 0.15s;
+    margin-left: auto; padding: 0; line-height: 1;
+  }
+  .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   /* 재고표 전용 - 바둑판(그리드) 체크리스트 */
   .inventory-page .grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
@@ -922,12 +967,15 @@
 <body>
 <div class="container">
   <div class="brand">Blueport Cafe</div>
-  <div class="tab-bar">
+  <div class="tab-bar-wrap" id="tabBarWrap">
+  <div class="tab-bar" id="mainTabBar">
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
+    <button class="tab-item" id="tab-custom" onclick="switchTab('custom')"><span class="tab-icon">✏️</span>커스텀 체크리스트</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
+  </div>
   </div>
 
   
@@ -1143,6 +1191,32 @@
     <div class="done-section" id="done-section-closing" style="display:none;">
       <div class="section-title">✅ 완료</div>
       <div class="card" id="done-list-closing"><div class="done-chips"></div></div>
+    </div>
+  </div>
+
+  <!-- 커스텀 체크리스트 -->
+  <div id="view-custom" class="checklist-page" style="display:none;">
+    <h1>커스텀 체크리스트</h1>
+    <div class="subtitle">직접 항목을 추가해서 나만의 체크리스트를 만들어요</div>
+    <div class="progress-sticky">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill-custom"></div></div>
+        <div class="progress-text" id="progressText-custom">0 / 0</div>
+      </div>
+    </div>
+    <div class="top-actions" style="flex-direction:column;gap:8px;align-items:stretch;">
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="customItemInput" placeholder="항목을 입력하세요"
+          style="flex:1;padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:10px;background:#fff;outline:none;font-family:inherit;"
+          onkeydown="if(event.key==='Enter')addCustomItem()" />
+        <button class="reset-btn" onclick="addCustomItem()" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
+      </div>
+      <button class="reset-btn" onclick="resetCustomChecklist()" style="align-self:flex-start;">↺ 전체 초기화</button>
+    </div>
+    <div id="sections-custom"></div>
+    <div class="done-section" id="done-section-custom" style="display:none;">
+      <div class="section-title">✅ 완료</div>
+      <div class="card" id="done-list-custom"><div class="done-chips"></div></div>
     </div>
   </div>
 
@@ -1805,6 +1879,7 @@ function weekendSections() {
       "청소기 돌리기",
       "청소기 필터 세척하기",
       "커피머신 청소하기(약품 돌리기)",
+      "포터필터, 커피머신 필터 분해해서 약품 담그기",
       "호퍼 설거지하기",
       "그라인더 청소하기(옥수수 알약)",
       "쇼케이스 비우기",
@@ -2319,15 +2394,152 @@ setInventoryDateLabel();
 renderInventory();
 
 
-// 메인 탭(레시피/오픈/마감/재고)을 전환하고 해당 뷰만 표시합니다.
+// 메인 탭(레시피/오픈/마감/커스텀/재고/트레이닝)을 전환하고 해당 뷰만 표시합니다.
 // 레시피 탭에서만 우하단 FAB 버튼 그룹을 표시합니다.
 function switchTab(tab) {
-  ['recipe', 'opening', 'closing', 'inventory', 'training'].forEach(t => {
+  ['recipe', 'opening', 'closing', 'custom', 'inventory', 'training'].forEach(t => {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   document.getElementById('fabGroup').style.display = (tab === 'recipe') ? '' : 'none';
 }
+
+/* ============================================================
+   커스텀 체크리스트 - localStorage 저장, 2주 후 자동 삭제
+============================================================ */
+const CUSTOM_STORAGE_KEY = 'custom-checklist-v1';
+
+// 커스텀 체크리스트 데이터 로드 (2주 지난 데이터는 자동 삭제)
+function loadCustomChecklist() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
+    if (!raw) return { items: [] };
+    const data = JSON.parse(raw);
+    // 2주(14일) 경과 시 초기화
+    const TWO_WEEKS = 14 * 24 * 60 * 60 * 1000;
+    if (data.savedAt && (Date.now() - data.savedAt) > TWO_WEEKS) {
+      localStorage.removeItem(CUSTOM_STORAGE_KEY);
+      return { items: [] };
+    }
+    return { items: data.items || [] };
+  } catch (e) { return { items: [] }; }
+}
+
+function saveCustomChecklist() {
+  try {
+    localStorage.setItem(CUSTOM_STORAGE_KEY, JSON.stringify({
+      items: customItems,
+      savedAt: Date.now()
+    }));
+  } catch (e) {}
+}
+
+let customItems = loadCustomChecklist().items;
+// items: [{ id, text, checked }]
+
+function renderCustomChecklist() {
+  const wrap = document.getElementById('sections-custom');
+  const unchecked = customItems.filter(it => !it.checked);
+  const checked = customItems.filter(it => it.checked);
+
+  if (customItems.length === 0) {
+    wrap.innerHTML = '<div class="empty">항목을 추가해서 체크리스트를 만들어요 ✏️</div>';
+  } else if (unchecked.length === 0) {
+    wrap.innerHTML = '<div class="empty">모든 항목을 완료했어요 🎉</div>';
+  } else {
+    wrap.innerHTML = `<div class="section"><div class="card">
+      ${unchecked.map(it => `
+        <div class="item" id="cust-item-${it.id}" onclick="toggleCustomItem('${it.id}')">
+          <div class="checkbox">${CHECK_ICON}</div>
+          <div class="item-label">${escapeHtml(it.text)}</div>
+          <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
+        </div>`).join('')}
+    </div></div>`;
+  }
+
+  // 완료 영역
+  const doneSection = document.getElementById('done-section-custom');
+  const doneList = document.getElementById('done-list-custom');
+  if (checked.length === 0) {
+    doneSection.style.display = 'none';
+  } else {
+    doneSection.style.display = '';
+    doneList.innerHTML = `<div class="done-chips">
+      ${checked.map(it =>
+        `<span class="done-chip" onclick="toggleCustomItem('${it.id}')">${escapeHtml(it.text)} <span class="undo-icon">↺</span></span>`
+      ).join('')}
+    </div>`;
+  }
+
+  // 진행률 업데이트
+  const total = customItems.length;
+  const checkedCount = checked.length;
+  const pct = total ? Math.round((checkedCount / total) * 100) : 0;
+  document.getElementById('progressFill-custom').style.width = pct + '%';
+  document.getElementById('progressText-custom').textContent = `${checkedCount} / ${total}`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addCustomItem() {
+  const input = document.getElementById('customItemInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const id = 'c' + Date.now() + Math.random().toString(36).slice(2,6);
+  customItems.push({ id, text, checked: false });
+  saveCustomChecklist();
+  renderCustomChecklist();
+  input.value = '';
+  input.focus();
+}
+
+function toggleCustomItem(id) {
+  const it = customItems.find(i => i.id === id);
+  if (!it) return;
+  if (!it.checked) {
+    // 미완료 → 완료: 애니메이션
+    const el = document.getElementById('cust-item-' + id);
+    if (el) {
+      el.classList.add('removing');
+      setTimeout(() => {
+        it.checked = true;
+        saveCustomChecklist();
+        renderCustomChecklist();
+      }, 180);
+      return;
+    }
+  }
+  it.checked = !it.checked;
+  saveCustomChecklist();
+  renderCustomChecklist();
+}
+
+function deleteCustomItem(id) {
+  const el = document.getElementById('cust-item-' + id);
+  if (el) {
+    el.classList.add('removing');
+    setTimeout(() => {
+      customItems = customItems.filter(i => i.id !== id);
+      saveCustomChecklist();
+      renderCustomChecklist();
+    }, 180);
+    return;
+  }
+  customItems = customItems.filter(i => i.id !== id);
+  saveCustomChecklist();
+  renderCustomChecklist();
+}
+
+function resetCustomChecklist() {
+  if (!confirm('커스텀 체크리스트를 모두 초기화할까요?')) return;
+  customItems = [];
+  saveCustomChecklist();
+  renderCustomChecklist();
+}
+
+renderCustomChecklist();
 
 </script>
 
@@ -3132,10 +3344,24 @@ window.moveSelectedDown = moveSelectedDown;
 <script>
 // 탭바 실제 높이를 CSS 변수에 반영 → sticky 요소들이 탭바 바로 아래에 위치하도록 보정
 (function () {
+  // 탭바 스크롤 페이드 표시기
+  const tabBar = document.getElementById('mainTabBar');
+  const wrap = document.getElementById('tabBarWrap');
+  function updateTabScrollFade() {
+    if (!tabBar || !wrap) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tabBar;
+    wrap.classList.toggle('scrolled-start', scrollLeft > 4);
+    wrap.classList.toggle('scrolled-end', scrollLeft + clientWidth >= scrollWidth - 4);
+  }
+  if (tabBar) {
+    tabBar.addEventListener('scroll', updateTabScrollFade, { passive: true });
+    setTimeout(updateTabScrollFade, 100);
+  }
+
   function updateTabbarHeight() {
-    const tabBar = document.querySelector('.tab-bar');
-    if (!tabBar) return;
-    const h = tabBar.getBoundingClientRect().height;
+    const el = document.getElementById('tabBarWrap') || document.querySelector('.tab-bar');
+    if (!el) return;
+    const h = el.getBoundingClientRect().height;
     document.documentElement.style.setProperty('--tabbar-h', h + 'px');
   }
 
@@ -3152,10 +3378,8 @@ window.moveSelectedDown = moveSelectedDown;
 
   // ResizeObserver로 탭바 자체 크기 변화 감지
   if (window.ResizeObserver) {
-    const tabBar = document.querySelector('.tab-bar');
-    if (tabBar) {
-      new ResizeObserver(updateTabbarHeight).observe(tabBar);
-    }
+    const el2 = document.getElementById('tabBarWrap');
+    if (el2) new ResizeObserver(updateTabbarHeight).observe(el2);
   }
 })();
 </script>
