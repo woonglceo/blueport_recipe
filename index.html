@@ -1205,11 +1205,11 @@
       </div>
     </div>
     <div class="top-actions" style="flex-direction:column;gap:8px;align-items:stretch;">
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;min-width:0;">
         <input type="text" id="customItemInput" placeholder="항목을 입력하세요"
-          style="flex:1;padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:10px;background:#fff;outline:none;font-family:inherit;"
+          style="flex:1;min-width:0;padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:10px;background:#fff;outline:none;font-family:inherit;"
           onkeydown="if(event.key==='Enter')addCustomItem()" />
-        <button class="reset-btn" onclick="addCustomItem()" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
+        <button class="reset-btn" onclick="addCustomItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
       </div>
       <button class="reset-btn" onclick="resetCustomChecklist()" style="align-self:flex-start;">↺ 전체 초기화</button>
     </div>
