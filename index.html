@@ -134,6 +134,18 @@
     transition: opacity 0.2s;
   }
   .tab-bar-wrap.scrolled-end::after { opacity: 0; }
+  /* 탭바 우측 다운로드 버튼 */
+  .tab-download-btn {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    z-index: 62;
+    padding: 0 12px;
+    border: none; border-left: 1px solid #e8e5e0;
+    background: #f5f4f0; color: #999;
+    font-size: 14px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex; align-items: center;
+  }
+  .tab-download-btn:hover { background: #eae8e3; color: #333; }
   .tab-bar-wrap::before {
     content: '';
     position: absolute;
@@ -977,6 +989,7 @@
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
+  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드">⬇</button>
   </div>
 
   
@@ -1241,12 +1254,7 @@
   </div>
 </div>
 
-<!-- 우하단 고정 버튼 그룹 (레시피 검색 탭에서만 표시) -->
-<div class="fab-group" id="fabGroup">
-  <button class="fab" id="fabUndo" onclick="undoReset()" title="되돌리기">↩</button>
-  <button class="fab" id="fabReset" onclick="fabResetAll()" title="초기화 후 검색">↺</button>
-  <button class="fab" onclick="fabSearch()" title="검색">🔍</button>
-</div>
+<!-- 우하단 FAB 버튼 그룹 제거됨 -->
 
 <script>
 const menus = [
@@ -1759,6 +1767,7 @@ function undoReset() {
 // 저장된 이전 검색어 유무에 따라 되돌리기 버튼의 활성/비활성 상태를 업데이트합니다.
 function updateUndoBtn() {
   const btn = document.getElementById('fabUndo');
+  if (!btn) return;
   if (lastQuery) btn.classList.remove('disabled');
   else btn.classList.add('disabled');
 }
@@ -1812,6 +1821,18 @@ function clearFocus() {
 
 render();
 updateUndoBtn();
+
+// 카테고리 칩 영역: 마우스 휠 위아래 → 좌우 스크롤
+(function() {
+  const chipsEl = document.querySelector('#view-recipe .chips');
+  if (!chipsEl) return;
+  chipsEl.addEventListener('wheel', function(e) {
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      chipsEl.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+})();
 
 /* ============================================================
    체크리스트 (오픈/마감) - 아래 항목만 직접 수정하면 됩니다.
@@ -2132,9 +2153,12 @@ function renderChecklistDone(type) {
   data.forEach((section, sIdx) => {
     section.items.forEach((label, iIdx) => {
       const id = `${sIdx}-${iIdx}`;
-      if (state[id]) doneItems.push({ label, id });
+      if (state[id]) doneItems.push({ label, id, ts: state[id] });
     });
   });
+
+  // 최근 완료 순 정렬 (타임스탬프 내림차순; 구버전 true 값은 0으로 처리)
+  doneItems.sort((a, b) => (b.ts === true ? 0 : b.ts) - (a.ts === true ? 0 : a.ts));
 
   if (!doneItems.length) {
     doneSection.style.display = 'none';
@@ -2161,7 +2185,7 @@ function toggleChecklistItem(type, id) {
     if (el) {
       el.classList.add('removing');
       setTimeout(() => {
-        checklistState[type][day][id] = true;
+        checklistState[type][day][id] = Date.now();
         saveChecklistState(type, day);
         renderChecklist(type);
       }, 180);
@@ -2402,7 +2426,7 @@ function switchTab(tab) {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  document.getElementById('fabGroup').style.display = (tab === 'recipe') ? '' : 'none';
+
 }
 
 /* ============================================================
@@ -2458,15 +2482,18 @@ function renderCustomChecklist() {
     </div></div>`;
   }
 
-  // 완료 영역
+  // 완료 영역 (최근 완료 순 정렬)
+  const sortedChecked = [...checked].sort((a, b) =>
+    (b.checked === true ? 0 : b.checked) - (a.checked === true ? 0 : a.checked)
+  );
   const doneSection = document.getElementById('done-section-custom');
   const doneList = document.getElementById('done-list-custom');
-  if (checked.length === 0) {
+  if (sortedChecked.length === 0) {
     doneSection.style.display = 'none';
   } else {
     doneSection.style.display = '';
     doneList.innerHTML = `<div class="done-chips">
-      ${checked.map(it =>
+      ${sortedChecked.map(it =>
         `<span class="done-chip" onclick="toggleCustomItem('${it.id}')">${escapeHtml(it.text)} <span class="undo-icon">↺</span></span>`
       ).join('')}
     </div>`;
@@ -2505,7 +2532,7 @@ function toggleCustomItem(id) {
     if (el) {
       el.classList.add('removing');
       setTimeout(() => {
-        it.checked = true;
+        it.checked = Date.now();
         saveCustomChecklist();
         renderCustomChecklist();
       }, 180);
@@ -3343,6 +3370,19 @@ window.moveSelectedDown = moveSelectedDown;
 </script>
 
 <script>
+// 소스코드 다운로드
+function downloadSource() {
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'blueport_recipe.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 // 탭바 실제 높이를 CSS 변수에 반영 → sticky 요소들이 탭바 바로 아래에 위치하도록 보정
 (function () {
   // 탭바 스크롤 페이드 표시기
