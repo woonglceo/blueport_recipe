@@ -108,44 +108,24 @@
     border-bottom: 1px solid #e8e5e0;
     background: #f5f4f0;
     padding-left: 1.25rem; padding-right: 1.25rem;
-    /* 모바일에서 가로 스크롤 허용 */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
+    flex: 1; min-width: 0;
+    cursor: grab;
+    user-select: none;
   }
-  /* tab-bar-wrap이 sticky 컨테이너 역할 */
+  .tab-bar.dragging { cursor: grabbing; }
+  /* tab-bar-wrap이 sticky 컨테이너 역할 — flex로 다운로드 버튼과 나란히 */
   .tab-bar-wrap {
     position: sticky !important; top: 0 !important; z-index: 60 !important;
     background: #f5f4f0 !important;
     margin-left: -1.25rem; margin-right: -1.25rem;
     margin-bottom: 1.75rem;
+    display: flex; align-items: stretch;
   }
-  .tab-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-  /* 탭바 스크롤 표시: 오른쪽에 페이드 그라데이션 */
-  .tab-bar-wrap::after {
-    content: '';
-    position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 40px;
-    background: linear-gradient(to right, transparent, #f5f4f0);
-    pointer-events: none;
-    z-index: 61;
-    opacity: 1;
-    transition: opacity 0.2s;
-  }
-  .tab-bar-wrap.scrolled-end::after { opacity: 0; }
-  /* 탭바 우측 다운로드 버튼 */
-  .tab-download-btn {
-    position: absolute; right: 0; top: 0; bottom: 0;
-    z-index: 62;
-    padding: 0 12px;
-    border: none; border-left: 1px solid #e8e5e0;
-    background: #f5f4f0; color: #999;
-    font-size: 14px; cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    display: flex; align-items: center;
-  }
-  .tab-download-btn:hover { background: #eae8e3; color: #333; }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  /* 탭바 좌측 페이드 그라데이션 (스크롤 시작됐을 때만 표시) */
   .tab-bar-wrap::before {
     content: '';
     position: absolute;
@@ -158,6 +138,31 @@
     transition: opacity 0.2s;
   }
   .tab-bar-wrap.scrolled-start::before { opacity: 1; }
+  /* 우측 페이드 — 다운로드 버튼 왼쪽 끝까지만 */
+  .tab-bar-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 42px; bottom: 0; /* 버튼 너비만큼 오프셋 */
+    width: 36px;
+    background: linear-gradient(to right, transparent, #f5f4f0);
+    pointer-events: none;
+    z-index: 61;
+    opacity: 1;
+    transition: opacity 0.2s;
+  }
+  .tab-bar-wrap.scrolled-end::after { opacity: 0; }
+  /* 다운로드 버튼 — flex 아이템으로 항상 우측에 고정 */
+  .tab-download-btn {
+    flex-shrink: 0;
+    padding: 0 13px;
+    border: none; border-left: 1px solid #e8e5e0; border-bottom: 1px solid #e8e5e0;
+    background: #f5f4f0; color: #999;
+    font-size: 14px; cursor: pointer;
+    display: flex; align-items: center;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .tab-download-btn:hover { background: #eae8e3; color: #333; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -3398,6 +3403,59 @@ function downloadSource() {
     tabBar.addEventListener('scroll', updateTabScrollFade, { passive: true });
     setTimeout(updateTabScrollFade, 100);
   }
+
+  // ── 탭바 마우스 드래그 스크롤 ──
+  (function() {
+    let isDragging = false, startX = 0, scrollStart = 0, dragMoved = false;
+    tabBar.addEventListener('mousedown', (e) => {
+      isDragging = true; dragMoved = false;
+      startX = e.pageX;
+      scrollStart = tabBar.scrollLeft;
+      tabBar.classList.add('dragging');
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 3) dragMoved = true;
+      tabBar.scrollLeft = scrollStart - dx;
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      tabBar.classList.remove('dragging');
+    });
+    // 드래그 중 클릭 이벤트 차단
+    tabBar.addEventListener('click', (e) => {
+      if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
+    }, true);
+  })();
+
+  // ── 레시피 칩 마우스 드래그 스크롤 ──
+  (function() {
+    const chipsEl = document.querySelector('#view-recipe .chips');
+    if (!chipsEl) return;
+    let isDragging = false, startX = 0, scrollStart = 0, dragMoved = false;
+    chipsEl.addEventListener('mousedown', (e) => {
+      isDragging = true; dragMoved = false;
+      startX = e.pageX;
+      scrollStart = chipsEl.scrollLeft;
+      chipsEl.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 3) dragMoved = true;
+      chipsEl.scrollLeft = scrollStart - dx;
+    });
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      chipsEl.style.cursor = '';
+    });
+    chipsEl.addEventListener('click', (e) => {
+      if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
+    }, true);
+  })();
 
   function updateTabbarHeight() {
     const el = document.getElementById('tabBarWrap') || document.querySelector('.tab-bar');
