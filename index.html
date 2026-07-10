@@ -138,31 +138,21 @@
     transition: opacity 0.2s;
   }
   .tab-bar-wrap.scrolled-start::before { opacity: 1; }
-  /* 우측 페이드 — 다운로드 버튼 왼쪽 끝까지만 */
-  .tab-bar-wrap::after {
-    content: '';
-    position: absolute;
-    top: 0; right: 42px; bottom: 0; /* 버튼 너비만큼 오프셋 */
-    width: 36px;
-    background: linear-gradient(to right, transparent, #f5f4f0);
-    pointer-events: none;
-    z-index: 61;
-    opacity: 1;
-    transition: opacity 0.2s;
-  }
   .tab-bar-wrap.scrolled-end::after { opacity: 0; }
   /* 다운로드 버튼 — flex 아이템으로 항상 우측에 고정 */
   .tab-download-btn {
     flex-shrink: 0;
-    padding: 0 13px;
+    padding: 0 14px;
     border: none; border-left: 1px solid #e8e5e0; border-bottom: 1px solid #e8e5e0;
-    background: #f5f4f0; color: #999;
-    font-size: 14px; cursor: pointer;
-    display: flex; align-items: center;
+    background: #f5f4f0; color: #777;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
     transition: background 0.15s, color 0.15s;
     white-space: nowrap;
+    min-width: 64px;
   }
-  .tab-download-btn:hover { background: #eae8e3; color: #333; }
+  .tab-download-btn .dl-icon { font-size: 15px; line-height: 1; }
+  .tab-download-btn:hover { background: #eae8e3; color: #222; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -994,7 +984,7 @@
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
-  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드">⬇</button>
+  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장</button>
   </div>
 
   
