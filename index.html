@@ -306,15 +306,32 @@
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
   }
-  /* 커스텀 체크리스트 항목 삭제 버튼 */
+  /* 커스텀 체크리스트 항목 수정/삭제 버튼 */
+  .checklist-page .item-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
+  .checklist-page .item-edit,
   .checklist-page .item-delete {
     width: 26px; height: 26px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%; border: none; background: transparent;
     color: #ccc; font-size: 16px; cursor: pointer; transition: all 0.15s;
-    margin-left: auto; padding: 0; line-height: 1;
+    padding: 0; line-height: 1;
   }
+  .checklist-page .item-edit { font-size: 13px; }
+  .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
+  .checklist-page .item-edit-input {
+    width: 100%; font: inherit; font-size: 15px; color: #1a1a1a;
+    background: transparent; border: none; border-bottom: 1.5px solid #1a1a1a;
+    outline: none; padding: 0 0 1px; line-height: 1.4; font-family: inherit;
+  }
+  .checklist-page .item-confirm {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: none; background: #1a1a1a;
+    color: #fff; font-size: 13px; cursor: pointer; transition: all 0.15s;
+    padding: 0; line-height: 1;
+  }
+  .checklist-page .item-confirm:hover { background: #333; }
   /* 재고표 전용 - 바둑판(그리드) 체크리스트 */
   .inventory-page .grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
@@ -3960,11 +3977,12 @@ function renderChecklistDone(type) {
     return;
   }
   doneSection.style.display = '';
-  doneList.innerHTML = `<div class="done-chips">
-    ${doneItems.map(it =>
-      `<span class="done-chip" onclick="toggleChecklistItem('${type}','${it.id}')">${it.label} <span class="undo-icon">↺</span></span>`
-    ).join('')}
-  </div>`;
+  doneList.innerHTML = doneItems.map(it =>
+    `<div class="item checked" onclick="toggleChecklistItem('${type}','${it.id}')">
+      <div class="checkbox">${CHECK_ICON}</div>
+      <div class="item-label">${it.label}</div>
+    </div>`
+  ).join('');
 }
 
 // 체크리스트 항목을 체크(완료)하면 애니메이션 후 사라지고 완료 칩으로 이동합니다.
@@ -4271,8 +4289,11 @@ function renderCustomChecklist() {
       ${unchecked.map(it => `
         <div class="item" id="cust-item-${it.id}" onclick="toggleCustomItem('${it.id}')">
           <div class="checkbox">${CHECK_ICON}</div>
-          <div class="item-label">${escapeHtml(it.text)}</div>
-          <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
+          <div class="item-label" id="cust-label-${it.id}">${escapeHtml(it.text)}</div>
+          <div class="item-actions" id="cust-actions-${it.id}">
+            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('${it.id}')" title="수정">✎</button>
+            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
+          </div>
         </div>`).join('')}
     </div></div>`;
   }
@@ -4287,11 +4308,12 @@ function renderCustomChecklist() {
     doneSection.style.display = 'none';
   } else {
     doneSection.style.display = '';
-    doneList.innerHTML = `<div class="done-chips">
-      ${sortedChecked.map(it =>
-        `<span class="done-chip" onclick="toggleCustomItem('${it.id}')">${escapeHtml(it.text)} <span class="undo-icon">↺</span></span>`
-      ).join('')}
-    </div>`;
+    doneList.innerHTML = sortedChecked.map(it =>
+      `<div class="item checked" onclick="toggleCustomItem('${it.id}')">
+        <div class="checkbox">${CHECK_ICON}</div>
+        <div class="item-label">${escapeHtml(it.text)}</div>
+      </div>`
+    ).join('');
   }
 
   // 진행률 업데이트
@@ -4337,6 +4359,66 @@ function toggleCustomItem(id) {
   it.checked = !it.checked;
   saveCustomChecklist();
   renderCustomChecklist();
+}
+
+function editCustomItem(id) {
+  const it = customItems.find(i => i.id === id);
+  if (!it) return;
+  const labelEl = document.getElementById('cust-label-' + id);
+  const actionsEl = document.getElementById('cust-actions-' + id);
+  if (!labelEl || !actionsEl || labelEl.querySelector('input')) return;
+  const original = it.text;
+
+  // 텍스트를 입력창으로 교체 (기존 내용 유지, 커서는 끝으로)
+  labelEl.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'item-edit-input';
+  input.value = original;
+  labelEl.appendChild(input);
+
+  // 수정/삭제 버튼을 숨기고 완료 버튼만 표시
+  actionsEl.innerHTML = '';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'item-confirm';
+  confirmBtn.title = '완료';
+  confirmBtn.textContent = '✓';
+  actionsEl.appendChild(confirmBtn);
+
+  const stop = e => e.stopPropagation();
+  input.addEventListener('click', stop);
+  input.addEventListener('mousedown', stop);
+  confirmBtn.addEventListener('click', stop);
+  // 버튼 클릭 시 input이 먼저 blur되지 않도록 방지 (commit 중복 실행 방지)
+  confirmBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    const val = input.value.trim();
+    it.text = val || original;
+    saveCustomChecklist();
+    renderCustomChecklist();
+  };
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    renderCustomChecklist();
+  };
+
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+  confirmBtn.addEventListener('click', commit);
+
+  input.focus();
+  const end = input.value.length;
+  input.setSelectionRange(end, end);
 }
 
 function deleteCustomItem(id) {
