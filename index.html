@@ -332,6 +332,35 @@
     padding: 0; line-height: 1;
   }
   .checklist-page .item-confirm:hover { background: #333; }
+  /* 항목 순서 변경(드래그) 핸들 */
+  .checklist-page .drag-handle {
+    flex-shrink: 0; width: 26px; height: 26px; margin-left: 2px;
+    display: flex; align-items: center; justify-content: center;
+    color: #ccc; font-size: 17px; cursor: grab; touch-action: none;
+    border-radius: 6px; user-select: none; transition: all 0.15s;
+  }
+  .checklist-page .drag-handle:hover { color: #999; background: #f0ede8; }
+  .checklist-page .item.dragging-item {
+    background: #fff; border-radius: 10px; position: relative; z-index: 20;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.16);
+  }
+  /* 오픈/마감 탭에 내장된 커스텀 체크리스트 */
+  .checklist-page .custom-section-header {
+    display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; padding-left: 2px;
+  }
+  .checklist-page .custom-shared-note { font-size: 11px; font-weight: 400; color: #bbb; }
+  .checklist-page .custom-reset-link {
+    margin-left: auto; font-size: 12px; font-weight: 600; color: #bbb;
+    background: none; border: none; cursor: pointer; padding: 2px 4px;
+  }
+  .checklist-page .custom-reset-link:hover { color: #777; }
+  .checklist-page .custom-add-row { display: flex; gap: 8px; margin-top: 10px; }
+  .checklist-page .custom-add-row input {
+    flex: 1; min-width: 0; padding: 10px 14px; font-size: 15px;
+    border: 1px solid #ddd; border-radius: 10px; background: #fff;
+    outline: none; font-family: inherit;
+  }
+  .checklist-page .custom-add-row input:focus { border-color: #aaa; }
   /* 재고표 전용 - 바둑판(그리드) 체크리스트 */
   .inventory-page .grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
@@ -996,7 +1025,6 @@
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
-    <button class="tab-item" id="tab-custom" onclick="switchTab('custom')"><span class="tab-icon">✏️</span>커스텀 체크리스트</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
@@ -1244,6 +1272,358 @@
   <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
   <div class="results" id="results"><div class="card">
       <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">아메리카노</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">온수 1번 + 샷 2</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 1번 + 얼음 + 샷 2</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">온수 2번 + 샷 3</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 2번 + 얼음 + 샷 3</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">온수 2번 + 샷 4</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 2번 + 얼음 + 샷 4</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카페라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">샷 2 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우유(주전자 절반) + 얼음 + 샷 2</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">샷 3 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우유(주전자 절반) + 얼음 + 샷 3</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">샷 4 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">얼음가득 + 우유 + 샷 4</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카페라떼 (바닐라/카라멜/헤이즐넛)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">해당시럽 2p + 카페라떼 R</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당시럽 2p + 아이스라떼 R</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">해당시럽 3p + 카페라떼 L</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당시럽 3p + 아이스라떼 L</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">해당시럽 3p + 설탕시럽 1p + 카페라떼 D</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당시럽 3p + 설탕시럽 1p + 아이스라떼 D</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카푸치노</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카페라떼 R(우유적게) + 우유거품 가득</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스라떼 R(우유적게) + 우유거품 가득 + 시나몬파우더(선택)</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카페라떼 L(우유적게) + 우유거품 가득</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스라떼 L(우유적게) + 우유거품 가득</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카페라떼 D(우유적게) + 우유거품 가득</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스라떼 D(우유적게) + 우유거품 가득</span></div>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 시나몬파우더(선택)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카라멜 마끼아또</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 1p + 카라멜시럽 1p + 샷 2 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 1p + 카라멜시럽 1p + 샷 2<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 1p + 카라멜시럽 2p + 샷 3 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 1p + 카라멜시럽 2p + 샷 3<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 1p + 카라멜시럽 3p + 샷 4 + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 1p + 카라멜시럽 3p + 샷 4<b>]</b><br>+ 얼음가득 + 우유</span></div>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 우유거품 + 카라멜드리즐</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카페모카 (다크)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코소스 1p + 카페라떼 R</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>초코소스 1p + 샷2<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코소스 1p + 초코파우더 1s + 카페라떼 L</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>초코소스 1p + 초코파우더 1s + 샷3<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코소스 1p + 초코파우더 2s + 카페라떼 D</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>초코소스 1p + 초코파우더 2s + 샷4<b>]</b><br>+ 얼음가득 + 우유</span></div>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 휘핑(선택) + 초코드리즐</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">카페모카 (카라멜)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 0.5p + 초코파우더 1s + 카페라떼 R</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 0.5p + 초코파우더 1s<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 1p + 초코파우더 1s + 카페라떼 L</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 1p + 초코파우더 1s<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카라멜소스 1p + 카라멜시럽 1p + 초코파우더 1s + 카페라떼 D</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>카라멜소스 1p + 카라멜시럽 1p + 초코파우더 1s<b>]</b><br>+ 얼음가득 + 우유</span></div>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 휘핑(선택) + 카라멜드리즐</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">아인슈페너</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">뜨아 R + 크림베이스 2스푼</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아아 R + 크림베이스 2스푼</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">뜨아 L + 크림베이스 2스푼</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아아 L + 크림베이스 2스푼</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 초코파우더(토핑)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">아인슈페너 라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카페라떼 R + 크림베이스 2스푼</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스라떼 R + 크림베이스 2스푼</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">카페라떼 L + 크림베이스 2스푼</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스라떼 L + 크림베이스 2스푼</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 초코파우더(토핑)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">아인슈페너 초코</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코파우더 2s + 스팀밀크 + 크림베이스 2s</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">초코베이스(주전자 절반) + 얼음 + 크림베이스 2s</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코파우더 3s + 스팀밀크 + 크림베이스 2s</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">초코베이스(주전자 절반) + 얼음 + 크림베이스 2s</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 초코파우더(토핑)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">더블크림라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">설탕시럽 1p + 더블베이스(주전자 반) + 얼음 + 샷 2</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">설탕시럽 2p + 더블베이스(주전자 반) + 얼음 + 샷 3</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>R: 우유 60g + 달럽 40g + 설탕시럽 1p, L: 우유 90g + 달럽 50g + 설탕시럽 2p</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">더블크림 바닐라라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">바닐라시럽 1p + 더블베이스 + 얼음 + 샷 2</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">바닐라시럽 2p + 더블베이스 + 얼음 + 샷 3</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>R: 우유 60g + 달럽 40g + 바닐라시럽 1p , L: 우유 90g + 달럽 50g + 바닐라시럽 2p</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">콜드브루</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 1번 + 얼음 + 콜드브루 70ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 2번 + 얼음 + 콜드브루 100ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">정수 2번 + 얼음 + 콜드브루 100ml</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">콜드브루 라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우유(주전자 반) + 얼음 + 콜드브루 70ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우유(주전자 반) + 얼음 + 콜드브루 100ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우유(주전자 반) + 얼음 + 콜드브루 100ml</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-커피">커피</span>
+        <span class="menu-name">콜드브루 바닐라라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">바닐라시럽 2p + 우유(주전자 절반) + 얼음 + 콜드브루 70ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">바닐라시럽 3p + 우유(주전자 절반) + 얼음 + 콜드브루 100ml</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">바닐라시럽 3p + 설탕시럽 1p + 얼음가득 + 우유 + 콜드브루 100ml</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">아이스티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스티 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스티 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">얼음가득 + 아이스티 베이스</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">아샷추</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스티 베이스(주전자 끝) + 얼음 + 샷 1</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">아이스티 베이스(주전자 끝) + 얼음 + 샷 1</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>기본 샷은 사이즈 상관없이 1개만!</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">초콜릿(다크)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코파우더 2s + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">초코 베이스(주전자 절반) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코파우더 3s + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">초코 베이스(주전자 절반) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">초코파우더 4s + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">얼음가득 + 초코 베이스</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">제주말차라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">말차파우더 1s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>말차파우더 1s + 설탕시럽 1p + 온수조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">말차파우더 1.5s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>말차파우더 1.5s + 설탕시럽 1p + 온수조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">말차파우더 2s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>말차파우더 2s + 설탕시럽 1p + 온수조금<b>]</b><br>+ 얼음 + 우유</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">곡물라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">곡물파우더 2s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>곡물파우더 2s + 설탕시럽 1p + 온수조금<b>]</b><br>+ 우유 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">곡물파우더 3s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>곡물파우더 3s + 설탕시럽 1p + 온수조금<b>]</b><br>+ 우유 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">민트초코라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">민트초코파우더 2s + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>민트초코파우더 2s + 온수 조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">민트초코파우더 3s + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>민트초코파우더 3s + 온수 조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">고구마라떼</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">고구마페이스트 1.5s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>고구마페이스트 1.5s + 설탕시럽 1p + 온수 조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">고구마페이스트 2s + 설탕시럽 1p + 스팀밀크</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>섞기[</b>고구마페이스트 2s + 설탕시럽 1p + 온수 조금<b>]</b><br>+ 우유(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
         <span class="cat-badge cat-논커피">논커피</span>
         <span class="menu-name">뉴딸기라떼</span>
       </div>
@@ -1258,17 +1638,575 @@
         <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">딸기 리플잼 3s + 우유(컵 절반) + 얼음</span></div>
       </div></div>
       
-    </div></div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">히비스커스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">히비스커스 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">히비스커스 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">히비스커스 티백 2 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">얼음가득 + 히비스커스 베이스</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">히비스커스 유자/레몬</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 해당 청 2s + 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 2s + 설탕시럽 2p + 히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 해당 청 3s + 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 3s + 설탕시럽 2p + 히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">히비스커스 패션프룻</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">패션프룻 2s + 설탕시럽 2p + 히비스커스 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">패션프룻 2s + 설탕시럽 2p + 히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">패션프룻 3s + 설탕시럽 2p + 히비스커스 티백 1 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">패션프룻 3s + 설탕시럽 2p + 히비스커스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">수제차 (유자/레몬/자몽/대추/진저)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 해당 청 2s + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 2s + 설탕시럽 2p + 정수 1번 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 해당 청 3s + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 3s + 설탕시럽 2p + 정수 2번 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">엘리자베스 스페셜 티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">엘리자베스 베이스 250ml 스팀</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">엘리자베스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">엘리자베스 베이스 330ml 스팀</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">엘리자베스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">엘리자베스 베이스 400ml 스팀</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">얼음가득 + 엘리자베스 베이스</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">엘리자베스 레몬/딸기 티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 0.5s + 엘리자베스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 청 1s + 엘리자베스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">타이거슈가 밀크티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">흑당시럽 30g(컵 벽) + 엘리자베스 베이스(주전자 끝) + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">달고나 밀크티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">엘리자베스 베이스(주전자 끝) + 얼음 + 달고나 30g(토핑)</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">꿀자몽블랙티</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[온수 + 일글리쉬 티백]<br>+ 자몽청 2s + 설탕시럽 2p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[온수 + 일글리쉬 티백]<br>+ 자몽청 3s + 설탕시럽 2p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">페퍼민트 라임</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">라임 3p + 페퍼민트 티 R</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[온수 + 페퍼민트 티백]<br>+라임시럽 3p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">라임 4.5p + 페퍼민트 티 L</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[온수 + 페퍼민트 티백]<br>+라임시럽 4.5p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">캐모마일 핑크리치</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">리치파우더 1.5s + 설탕시럽 1p + 온수 + 캐모마일 티백</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[리치파우더 1.5s + 설탕시럽 1p + 온수 + 캐모마일 티백]<br>+ 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">리치파우더 2s + 설탕시럽 1p + 온수 + 캐모마일 티백</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[리치파우더 2s + 설탕시럽 1p + 온수 + 캐모마일 티백]<br>+ 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-논커피">논커피</span>
+        <span class="menu-name">그린 청귤 깔라만시</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">청귤파우더 1s + 설탕시럽 1p + 깔라만시 1s + 녹차 R</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[청귤파우더 1s + 설탕시럽 1p + 온수 + 녹차 티백]<br>+ 깔라만시 1s + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)" "=""><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">청귤파우더 1.5s + 설탕시럽 1p + 깔라만시 1.5s + 녹차 L</span></div><div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">우리기[청귤파우더 1.5s + 설탕시럽 1p + 온수 + 녹차 티백]<br>+ 깔라만시 1.5s + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">에이드 (레몬/자몽/청포도/한라봉)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 퓨레 1p + 사이다 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 퓨레 1.5p + 사이다 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">해당 퓨레 1.5p + 나타드코코 1s + 사이다 + 얼음</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">블루 레몬에이드</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">레몬 퓨레 1p + 사이다 + 블루레몬시럽 2p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">레몬 퓨레 1.5p + 사이다 + 블루레몬시럽 2p + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">레몬 퓨레 1.5p + 나타드코코 1s + 사이다 + 블루레몬시럽 2p + 얼음</span></div>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">딸기 에이드</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">딸기 스무디 1p + 딸기 리플잼 1s + 사이다 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">딸기 스무디 1p + 딸기 리플잼 2s + 사이다 + 얼음</span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">딸기/망고 주스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>정수 2번 + 해당과일 100g + 설탕시럽 5p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>정수 2번 + 해당과일 130g + 설탕시럽 6p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 얼음조금</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">바나나 주스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 150ml + 바나나 80g + 설탕시럽 5p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 200ml + 바나나 110g + 설탕시럽 6p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 얼음조금</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">초코바나나 주스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 150ml + 초코소스 1p + 바나나 60g + 설탕시럽 3p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 200ml + 초코소스 1p + 바나나 80g + 설탕시럽 3p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 얼음조금</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">딸기바나나 주스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 150ml + 딸기 40g + 바나나 40g + 설탕시럽 5p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 200ml + 딸기 60g + 바나나 60g + 설탕시럽 6p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 얼음조금</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-에이드주스">에이드/주스</span>
+        <span class="menu-name">아보카도바나나 주스</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 180ml + 아보카도 50g + 바나나 50g + 설탕시럽 5p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 2번[</b>우유 230ml + 아보카도 65g + 바나나 65g + 설탕시럽 6p<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 얼음조금</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">플레인 요거트</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 150ml + 요거트파우더 3s + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 180ml + 요거트파우더 4s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">과일 요거트 (키위/블루베리/딸기)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 150ml + 요거트파우더 2s + 해당소스 2p + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 180ml + 요거트파우더 3s + 해당소스 3p + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">파인애플 요거트</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 100ml + 설탕시럽 5p + 요거트파우더 1s + 파인애플청 3s + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 120ml + 설탕시럽 5p + 요거트파우더 1.5s + 파인애플청 4s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 파인애플청 1s(토핑)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">살구크러쉬</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>정수 1번 + 설탕시럽 5p + 살구청 3s + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>정수 2번 + 설탕시럽 5p + 살구청 4s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 살구청 1s(토핑)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">프라페 (모카/카라멜)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 100ml + 샷 1 + 설탕시럽 5p + 해당소스 1p + 바닐라파우더 2s + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 120ml + 샷 2 + 설탕시럽 5p + 해당소스 2p + 바닐라파우더 3s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 휘핑(선택) + 해당드리즐</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">프라페 (바닐라/자바칩/민트초코/쿠앤크/제주말차)</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 150ml + 설탕시럽 5p + 해당파우더 3s + 얼음R 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 180ml + 설탕시럽 5p + 해당파우더 4s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 휘핑(선택)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">미드나잇초코 프라페</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 150ml + 설탕시럽 5p + 미드나잇 파우더 3s + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 휘핑(선택)</div>
+    </div><div class="card">
+      <div class="card-header">
+        <span class="cat-badge cat-스무디프라페">스무디/프라페</span>
+        <span class="menu-name">죠리퐁 프라페</span>
+      </div>
+      <div class="size-grid"><div class="size-block">
+        <div class="size-label">R 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div><div class="size-block">
+        <div class="size-label">L 사이즈</div>
+        <div class="temp-row" onclick="focusRecipe(this)"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text"><b>블렌더 4번[</b>우유 180ml + 바닐라 파우더 2s + 죠리퐁 3스푼 + 얼음L 1컵<b>]</b></span></div>
+      </div><div class="size-block">
+        <div class="size-label">D 사이즈</div>
+        <span class="none-text">해당 없음</span>
+      </div></div>
+      <div class="note-bar"><span class="note-label">📌 비고</span>+ 죠리퐁 뚜껑가득</div>
+    </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">설탕시럽 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">설탕 400g + 온수 400g</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">엘리자베스 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">5분 우려내기[얼그레이 잎 30g + 온수 240g + 연유 60g + 설탕시럽 10번] + 우유 1200g</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">아인슈페너 크림 베이스(소량)</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 BMP(스텐통) 랩 밀봉 후 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">달럽 100g + 우유 70g + 설탕 5g + 바닐라시럽 1번 + 5번 버튼 1회 + 1번 버튼 2회</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">아인슈페너 크림 베이스(매장 통)</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 BMP(스텐통) 랩 밀봉 후 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">달럽 300g + 우유 210g + 설탕 15g + 바닐라시럽 2번 + 5번 버튼 1회 + 1번 버튼 2회</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">더블크림 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">우유 600g + 달럽 400g + 1번 버튼으로 블랜딩 후 보관통에 옮기기</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">콜드브루 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 12시간 이상 추출 후 냉장보관 30일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">간 원두 400g + 물 2L (그라인더 굵기 : 3.5)</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">아이스티 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">아이스티 원액 460g + 정수 1.5L (정수 3번 버튼 3번)</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">말차 베이스(소량)</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">섞기[말차 파우더 60g + 설탕시럽 6번 + 온수 80ml]<br>+ 우유 650ml</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">말차 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">섞기[말차 파우더 120g + 설탕시럽 12번 + 온수 160ml]<br>+ 우유 1250ml</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">초코 베이스(소량)</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">섞기[초코 파우더 105g + 온수 70ml]<br>+ 우유 650ml</div>
+        </div>
+        
+      </div><div class="card">
+        <div class="card-header">
+          <span class="cat-badge cat-베이스">베이스</span>
+          <span class="menu-name">초코 베이스</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 냉장보관 7일</div>
+          <div style="font-size:13px;color:#333;line-height:1.7;">섞기[초코 파우더 210g + 온수 140ml]<br>+ 우유 1250ml</div>
+        </div>
+        
+      </div></div>
   </div>
 
   <div id="view-opening" class="checklist-page" style="display:none;">
     <h1>오픈 체크리스트</h1>
-    <div class="subtitle" id="dateLabel-opening">2026.7.14 (화) 오픈</div>
-    <div class="day-tab-bar" id="dayTabs-opening"><button class="day-tab " onclick="switchChecklistDay('opening','mon')">월</button><button class="day-tab active" onclick="switchChecklistDay('opening','tue')">화<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('opening','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('opening','thu')">목</button><button class="day-tab " onclick="switchChecklistDay('opening','fri')">금</button><button class="day-tab " onclick="switchChecklistDay('opening','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('opening','sun')">일</button></div>
+    <div class="subtitle" id="dateLabel-opening">2026.7.10 (금) 오픈</div>
+    <div class="day-tab-bar" id="dayTabs-opening"><button class="day-tab " onclick="switchChecklistDay('opening','mon')">월</button><button class="day-tab " onclick="switchChecklistDay('opening','tue')">화</button><button class="day-tab " onclick="switchChecklistDay('opening','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('opening','thu')">목</button><button class="day-tab active" onclick="switchChecklistDay('opening','fri')">금<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('opening','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('opening','sun')">일</button></div>
     <div class="progress-sticky">
       <div class="progress-wrap">
-        <div class="progress-track"><div class="progress-fill" id="progressFill-opening" style="width: 27%;"></div></div>
-        <div class="progress-text" id="progressText-opening">6 / 22</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill-opening" style="width: 87%;"></div></div>
+        <div class="progress-text" id="progressText-opening">20 / 23</div>
       </div>
     </div>
     <div class="top-actions">
@@ -1276,138 +2214,107 @@
     </div>
     <div id="sections-opening"><div class="section">
       <div class="section-title">오픈 기본사항</div>
-      <div class="card"><div class="item" id="cl-item-opening-0-6" onclick="toggleChecklistItem('opening','0-6')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">커피머신 윗쪽 마른 설거지들 정리하기</div>
-      </div><div class="item" id="cl-item-opening-0-7" onclick="toggleChecklistItem('opening','0-7')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">토스트 세팅하기(가루받이, 도마)</div>
-      </div><div class="item" id="cl-item-opening-0-8" onclick="toggleChecklistItem('opening','0-8')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">행주 소독하기</div>
-      </div><div class="item" id="cl-item-opening-0-9" onclick="toggleChecklistItem('opening','0-9')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">베이커리 해동하기</div>
-      </div><div class="item" id="cl-item-opening-0-10" onclick="toggleChecklistItem('opening','0-10')">
+      <div class="card"><div class="item" id="cl-item-opening-1-10" onclick="toggleChecklistItem('opening','1-10')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">리플잼 세팅하기</div>
-      </div><div class="item" id="cl-item-opening-0-11" onclick="toggleChecklistItem('opening','0-11')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">아이스티 세팅하기(물빠지는 철판, 컵)</div>
-      </div><div class="item" id="cl-item-opening-0-12" onclick="toggleChecklistItem('opening','0-12')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">아이스티 꺼내기</div>
-      </div><div class="item" id="cl-item-opening-0-13" onclick="toggleChecklistItem('opening','0-13')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">에이드 펌프 꺼내기</div>
-      </div><div class="item" id="cl-item-opening-0-14" onclick="toggleChecklistItem('opening','0-14')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">컵 채우기</div>
-      </div><div class="item" id="cl-item-opening-0-15" onclick="toggleChecklistItem('opening','0-15')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">뚜껑 채우기</div>
-      </div><div class="item" id="cl-item-opening-0-16" onclick="toggleChecklistItem('opening','0-16')">
+      </div><div class="item" id="cl-item-opening-1-16" onclick="toggleChecklistItem('opening','1-16')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">빨대 채우기</div>
-      </div><div class="item" id="cl-item-opening-0-17" onclick="toggleChecklistItem('opening','0-17')">
+      </div><div class="item" id="cl-item-opening-1-17" onclick="toggleChecklistItem('opening','1-17')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">베이스 빠진거 있는지 체크하기</div>
-      </div><div class="item" id="cl-item-opening-0-18" onclick="toggleChecklistItem('opening','0-18')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">쇼케이스 물기닦기</div>
-      </div><div class="item" id="cl-item-opening-0-19" onclick="toggleChecklistItem('opening','0-19')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">정수기 물받이 세팅하기</div>
-      </div><div class="item" id="cl-item-opening-0-20" onclick="toggleChecklistItem('opening','0-20')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">메뉴판 모니터 켜기</div>
-      </div><div class="item" id="cl-item-opening-0-21" onclick="toggleChecklistItem('opening','0-21')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">음악 켜기</div>
       </div></div>
     </div></div>
     <div class="done-section" id="done-section-opening" style="">
       <div class="section-title">✅ 완료</div>
-      <div class="card" id="done-list-opening"><div class="item checked" onclick="toggleChecklistItem('opening','0-5')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">신발 갈아신기</div>
-    </div><div class="item checked" onclick="toggleChecklistItem('opening','0-4')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">블렌더 켜기</div>
-    </div><div class="item checked" onclick="toggleChecklistItem('opening','0-3')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">캠플기기 켜기</div>
-    </div><div class="item checked" onclick="toggleChecklistItem('opening','0-2')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">포스 켜기</div>
-    </div><div class="item checked" onclick="toggleChecklistItem('opening','0-1')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">쪽문 열기</div>
-    </div><div class="item checked" onclick="toggleChecklistItem('opening','0-0')">
-      <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-      <div class="item-label">키오스크 켜기</div>
-    </div></div>
+      <div class="card" id="done-list-opening"><div class="done-chips">
+    <span class="done-chip" onclick="toggleChecklistItem('opening','0-0')">월요일 우유 발주 마감하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-0')">키오스크 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-1')">쪽문 열기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-2')">포스 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-3')">캠플기기 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-4')">블렌더 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-5')">신발 갈아신기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-6')">커피머신 윗쪽 마른 설거지들 정리하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-7')">토스트 세팅하기(가루받이, 도마) <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-8')">행주 소독하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-9')">베이커리 해동하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-11')">아이스티 세팅하기(물빠지는 철판, 컵) <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-12')">아이스티 꺼내기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-13')">에이드 펌프 꺼내기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-14')">컵 채우기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-15')">뚜껑 채우기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-18')">쇼케이스 물기닦기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-19')">정수기 물받이 세팅하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-20')">메뉴판 모니터 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-21')">음악 켜기 <span class="undo-icon">↺</span></span>
+  </div></div>
+    </div>
+
+    <!-- 커스텀 체크리스트 (오픈·마감 공유) -->
+    <div class="section">
+      <div class="custom-section-header">
+        <div class="section-title" style="margin-bottom:0;">📝 커스텀 체크리스트</div>
+        <span class="custom-shared-note">(오픈·마감 공유)</span>
+        <button class="custom-reset-link" onclick="resetCustomChecklist()">초기화</button>
+      </div>
+      <div class="card" id="sections-custom-opening"></div>
+      <div class="custom-add-row">
+        <input type="text" id="customItemInput-opening" placeholder="항목을 입력하세요" onkeydown="if(event.key==='Enter')addCustomItem('opening')">
+        <button class="reset-btn" onclick="addCustomItem('opening')" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
+      </div>
+    </div>
+    <div class="done-section" id="done-section-custom-opening" style="display:none;">
+      <div class="section-title">✅ 완료 (커스텀)</div>
+      <div class="card" id="done-list-custom-opening"></div>
     </div>
   </div>
 
   <div id="view-closing" class="checklist-page" style="display:none;">
     <h1>마감 체크리스트</h1>
-    <div class="subtitle" id="dateLabel-closing">2026.7.14 (화) 마감</div>
-    <div class="day-tab-bar" id="dayTabs-closing"><button class="day-tab " onclick="switchChecklistDay('closing','mon')">월</button><button class="day-tab active" onclick="switchChecklistDay('closing','tue')">화<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('closing','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('closing','thu')">목</button><button class="day-tab " onclick="switchChecklistDay('closing','fri')">금</button><button class="day-tab " onclick="switchChecklistDay('closing','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('closing','sun')">일</button></div>
+    <div class="subtitle" id="dateLabel-closing">2026.7.10 (금) 마감</div>
+    <div class="day-tab-bar" id="dayTabs-closing"><button class="day-tab " onclick="switchChecklistDay('closing','mon')">월</button><button class="day-tab " onclick="switchChecklistDay('closing','tue')">화</button><button class="day-tab " onclick="switchChecklistDay('closing','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('closing','thu')">목</button><button class="day-tab active" onclick="switchChecklistDay('closing','fri')">금<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('closing','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('closing','sun')">일</button></div>
     <div class="progress-sticky">
       <div class="progress-wrap">
         <div class="progress-track"><div class="progress-fill" id="progressFill-closing" style="width: 0%;"></div></div>
-        <div class="progress-text" id="progressText-closing">0 / 15</div>
+        <div class="progress-text" id="progressText-closing">0 / 16</div>
       </div>
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('closing')">↺ 전체 초기화</button>
     </div>
     <div id="sections-closing"><div class="section">
-      <div class="section-title">마감 기본사항</div>
+      <div class="section-title">마감 특이사항</div>
       <div class="card"><div class="item" id="cl-item-closing-0-0" onclick="toggleChecklistItem('closing','0-0')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        <div class="item-label">월요일 발주 마감하기</div>
+      </div></div>
+    </div><div class="section">
+      <div class="section-title">마감 기본사항</div>
+      <div class="card"><div class="item" id="cl-item-closing-1-0" onclick="toggleChecklistItem('closing','1-0')">
+        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">테이블 행주로 닦기</div>
-      </div><div class="item" id="cl-item-closing-0-1" onclick="toggleChecklistItem('closing','0-1')">
+      </div><div class="item" id="cl-item-closing-1-1" onclick="toggleChecklistItem('closing','1-1')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">모자른 베이스 만들기</div>
-      </div><div class="item" id="cl-item-closing-0-2" onclick="toggleChecklistItem('closing','0-2')">
+      </div><div class="item" id="cl-item-closing-1-2" onclick="toggleChecklistItem('closing','1-2')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">설거지 모으기(토스트 가루받침, 토스트 도마 등)</div>
-      </div><div class="item" id="cl-item-closing-0-3" onclick="toggleChecklistItem('closing','0-3')">
+      </div><div class="item" id="cl-item-closing-1-3" onclick="toggleChecklistItem('closing','1-3')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">설거지 하기</div>
-      </div><div class="item" id="cl-item-closing-0-4" onclick="toggleChecklistItem('closing','0-4')">
+      </div><div class="item" id="cl-item-closing-1-4" onclick="toggleChecklistItem('closing','1-4')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">커피머신 청소하기(약품 돌리기)</div>
-      </div><div class="item" id="cl-item-closing-0-5" onclick="toggleChecklistItem('closing','0-5')">
+      </div><div class="item" id="cl-item-closing-1-5" onclick="toggleChecklistItem('closing','1-5')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">포터필터 분해해서 세척하기</div>
-      </div><div class="item" id="cl-item-closing-0-6" onclick="toggleChecklistItem('closing','0-6')">
+      </div><div class="item" id="cl-item-closing-1-6" onclick="toggleChecklistItem('closing','1-6')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">아이스티 냉장고에 넣기</div>
-      </div><div class="item" id="cl-item-closing-0-7" onclick="toggleChecklistItem('closing','0-7')">
+      </div><div class="item" id="cl-item-closing-1-7" onclick="toggleChecklistItem('closing','1-7')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">물빠지는 철판(?) 말리기</div>
-      </div><div class="item" id="cl-item-closing-0-8" onclick="toggleChecklistItem('closing','0-8')">
+      </div><div class="item" id="cl-item-closing-1-8" onclick="toggleChecklistItem('closing','1-8')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">에이드 펌프 냉장고에 넣기</div>
-      </div><div class="item" id="cl-item-closing-0-9" onclick="toggleChecklistItem('closing','0-9')">
+      </div><div class="item" id="cl-item-closing-1-9" onclick="toggleChecklistItem('closing','1-9')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">리플잼 냉장고에 넣기</div>
-      </div><div class="item" id="cl-item-closing-0-10" onclick="toggleChecklistItem('closing','0-10')">
+      </div><div class="item" id="cl-item-closing-1-10" onclick="toggleChecklistItem('closing','1-10')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">쓰레기 버리기</div>
-      </div><div class="item" id="cl-item-closing-0-11" onclick="toggleChecklistItem('closing','0-11')">
+      </div><div class="item" id="cl-item-closing-1-11" onclick="toggleChecklistItem('closing','1-11')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">신발 갈아신기</div>
-      </div><div class="item" id="cl-item-closing-0-12" onclick="toggleChecklistItem('closing','0-12')">
+      </div><div class="item" id="cl-item-closing-1-12" onclick="toggleChecklistItem('closing','1-12')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">POS, 키오스크 마감 정산</div>
-      </div><div class="item" id="cl-item-closing-0-13" onclick="toggleChecklistItem('closing','0-13')">
+      </div><div class="item" id="cl-item-closing-1-13" onclick="toggleChecklistItem('closing','1-13')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">현금 시재 확인</div>
-      </div><div class="item" id="cl-item-closing-0-14" onclick="toggleChecklistItem('closing','0-14')">
+      </div><div class="item" id="cl-item-closing-1-14" onclick="toggleChecklistItem('closing','1-14')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">출입문 잠금 확인</div>
       </div></div>
@@ -1416,64 +2323,29 @@
       <div class="section-title">✅ 완료</div>
       <div class="card" id="done-list-closing"><div class="done-chips"></div></div>
     </div>
-  </div>
 
-  <!-- 커스텀 체크리스트 -->
-  <div id="view-custom" class="checklist-page" style="display:none;">
-    <h1>커스텀 체크리스트</h1>
-    <div class="subtitle">직접 항목을 추가해서 나만의 체크리스트를 만들어요</div>
-    <div class="progress-sticky">
-      <div class="progress-wrap">
-        <div class="progress-track"><div class="progress-fill" id="progressFill-custom" style="width: 25%;"></div></div>
-        <div class="progress-text" id="progressText-custom">1 / 4</div>
+    <!-- 커스텀 체크리스트 (오픈·마감 공유) -->
+    <div class="section">
+      <div class="custom-section-header">
+        <div class="section-title" style="margin-bottom:0;">📝 커스텀 체크리스트</div>
+        <span class="custom-shared-note">(오픈·마감 공유)</span>
+        <button class="custom-reset-link" onclick="resetCustomChecklist()">초기화</button>
+      </div>
+      <div class="card" id="sections-custom-closing"></div>
+      <div class="custom-add-row">
+        <input type="text" id="customItemInput-closing" placeholder="항목을 입력하세요" onkeydown="if(event.key==='Enter')addCustomItem('closing')">
+        <button class="reset-btn" onclick="addCustomItem('closing')" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
       </div>
     </div>
-    <div class="top-actions" style="flex-direction:column;gap:8px;align-items:stretch;">
-      <div style="display:flex;gap:8px;min-width:0;">
-        <input type="text" id="customItemInput" placeholder="항목을 입력하세요" style="flex:1;min-width:0;padding:10px 14px;font-size:15px;border:1px solid #ddd;border-radius:10px;background:#fff;outline:none;font-family:inherit;" onkeydown="if(event.key==='Enter')addCustomItem()">
-        <button class="reset-btn" onclick="addCustomItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
-      </div>
-      <button class="reset-btn" onclick="resetCustomChecklist()" style="align-self:flex-start;">↺ 전체 초기화</button>
-    </div>
-    <div id="sections-custom"><div class="section"><div class="card">
-      
-        <div class="item" id="cust-item-c1783669047062t2jg" onclick="toggleCustomItem('c1783669047062t2jg')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-c1783669047062t2jg">크림치즈 만들기</div>
-          <div class="item-actions" id="cust-actions-c1783669047062t2jg">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669047062t2jg')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669047062t2jg')" title="삭제">×</button>
-          </div>
-        </div>
-        <div class="item" id="cust-item-c1783669087645zxyt" onclick="toggleCustomItem('c1783669087645zxyt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-c1783669087645zxyt">티라미수, 말차크림 쿠키 만들기</div>
-          <div class="item-actions" id="cust-actions-c1783669087645zxyt">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669087645zxyt')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669087645zxyt')" title="삭제">×</button>
-          </div>
-        </div>
-        <div class="item" id="cust-item-c1783671185630krkt" onclick="toggleCustomItem('c1783671185630krkt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-c1783671185630krkt">6개월짜리 정수기 필터 교체하기</div>
-          <div class="item-actions" id="cust-actions-c1783671185630krkt">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783671185630krkt')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783671185630krkt')" title="삭제">×</button>
-          </div>
-        </div>
-    </div></div></div>
-    <div class="done-section" id="done-section-custom" style="">
-      <div class="section-title">✅ 완료</div>
-      <div class="card" id="done-list-custom"><div class="item checked" onclick="toggleCustomItem('c17836690169105zx6')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">설탕시럽 만들기</div>
-      </div></div>
+    <div class="done-section" id="done-section-custom-closing" style="display:none;">
+      <div class="section-title">✅ 완료 (커스텀)</div>
+      <div class="card" id="done-list-custom-closing"></div>
     </div>
   </div>
 
   <div id="view-inventory" class="checklist-page inventory-page" style="display:none;">
     <h1>재고표</h1>
-    <div class="subtitle" id="dateLabel-inventory">2026.7.14 (화) 재고 점검</div>
+    <div class="subtitle" id="dateLabel-inventory">2026.7.10 (금) 재고 점검</div>
     <div class="progress-sticky">
       <div class="progress-wrap">
         <div class="progress-track"><div class="progress-fill" id="progressFill-inventory" style="width: 0%;"></div></div>
@@ -2327,9 +3199,9 @@ const menus = [
     L: { hot: "고구마페이스트 2s + 설탕시럽 1p + 스팀밀크", ice: "섞기[고구마페이스트 2s + 설탕시럽 1p + 온수 조금]<br/>+ 우유(주전자 끝) + 얼음" },
     D: { hot: "-", ice: "-" } },
   { name: "뉴딸기라떼", cat: "논커피",
-    R: { hot: "-", ice: "딸기스무디 0.5p + 딸기 리플잼 1.5s + 우유(주전자 끝) + 얼음" },
-    L: { hot: "-", ice: "딸기스무디 0.5p + 딸기 리플잼 2s + 우유(주전자 끝) + 얼음" },
-    D: { hot: "-", ice: "딸기스무디 1p + 딸기 리플잼 3s + 우유(컵 절반) + 얼음" } },
+    R: { hot: "-", ice: "딸기 리플잼 1.5s + 우유(주전자 끝) + 얼음" },
+    L: { hot: "-", ice: "딸기 리플잼 2s + 우유(주전자 끝) + 얼음" },
+    D: { hot: "-", ice: "딸기 리플잼 3s + 우유(컵 절반) + 얼음" } },
   { name: "히비스커스", cat: "논커피",
     R: { hot: "히비스커스 티백 1 + 온수", ice: "히비스커스 베이스(주전자 끝) + 얼음" },
     L: { hot: "히비스커스 티백 1 + 온수", ice: "히비스커스 베이스(주전자 끝) + 얼음" },
@@ -2974,6 +3846,107 @@ const checklistData = {
 const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
 /* ============================================================
+   체크리스트 항목 순서 변경(드래그) 공용 유틸
+   - enableDragReorder: .drag-handle을 눌러서 위/아래로 드래그하면
+     같은 컨테이너 안의 .item들의 순서를 실시간으로 바꿔줍니다.
+     마우스와 터치(모바일) 모두 지원합니다(Pointer Events).
+   - reorderPreservingHidden: 화면에 보이는(미완료) 항목들만 새 순서로
+     바꾸고, 화면에 없는(완료된) 항목들은 원래 상대 위치를 유지한 채
+     전체 순서 배열을 다시 만들어줍니다.
+============================================================ */
+function reorderPreservingHidden(fullIds, newVisibleOrder) {
+  const visibleSet = new Set(newVisibleOrder);
+  let vi = 0;
+  return fullIds.map(id => visibleSet.has(id) ? newVisibleOrder[vi++] : id);
+}
+
+function enableDragReorder(container, onReorder) {
+  if (!container || container._dragReorderBound) return;
+  container._dragReorderBound = true;
+
+  let dragEl = null, startY = 0, items = [];
+  const AUTO_SCROLL_EDGE = 60, AUTO_SCROLL_SPEED = 12;
+  let autoScrollRAF = null;
+  let lastClientY = 0;
+
+  function getItems() {
+    return Array.from(container.querySelectorAll(':scope > .item'));
+  }
+
+  function autoScrollStep() {
+    if (!dragEl) { autoScrollRAF = null; return; }
+    if (lastClientY < AUTO_SCROLL_EDGE) {
+      window.scrollBy(0, -AUTO_SCROLL_SPEED);
+    } else if (lastClientY > window.innerHeight - AUTO_SCROLL_EDGE) {
+      window.scrollBy(0, AUTO_SCROLL_SPEED);
+    }
+    autoScrollRAF = requestAnimationFrame(autoScrollStep);
+  }
+
+  function onPointerDown(e) {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle || !container.contains(handle)) return;
+    const item = handle.closest('.item');
+    if (!item) return;
+    e.preventDefault();
+    dragEl = item;
+    items = getItems();
+    startY = e.clientY;
+    lastClientY = e.clientY;
+    dragEl.classList.add('dragging-item');
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
+    if (!autoScrollRAF) autoScrollRAF = requestAnimationFrame(autoScrollStep);
+  }
+
+  function onPointerMove(e) {
+    if (!dragEl) return;
+    lastClientY = e.clientY;
+    const dy = e.clientY - startY;
+    dragEl.style.transform = `translateY(${dy}px)`;
+
+    const dragRect = dragEl.getBoundingClientRect();
+    const dragCenter = dragRect.top + dragRect.height / 2;
+
+    for (const other of items) {
+      if (other === dragEl) continue;
+      const r = other.getBoundingClientRect();
+      const center = r.top + r.height / 2;
+      const otherIsAfter = !!(dragEl.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING);
+      if (otherIsAfter && dragCenter > center) {
+        container.insertBefore(dragEl, other.nextSibling);
+        items = getItems();
+        dragEl.style.transform = '';
+        startY = e.clientY;
+        break;
+      } else if (!otherIsAfter && dragCenter < center) {
+        container.insertBefore(dragEl, other);
+        items = getItems();
+        dragEl.style.transform = '';
+        startY = e.clientY;
+        break;
+      }
+    }
+  }
+
+  function onPointerUp() {
+    if (!dragEl) return;
+    dragEl.style.transform = '';
+    dragEl.classList.remove('dragging-item');
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
+    if (autoScrollRAF) { cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
+    const newIds = getItems().map(it => it.dataset.id);
+    dragEl = null;
+    onReorder(newIds);
+  }
+
+  container.addEventListener('pointerdown', onPointerDown);
+}
+
+/* ============================================================
    오래된 localStorage 데이터 정리 (2주 = 14일 지난 데이터 삭제)
    오픈/마감 체크리스트("opening-월-2026-6-1" 형식)와
    재고표("inventory-2026-6-1" 형식) 저장 키를 검사해서
@@ -3007,6 +3980,14 @@ function cleanupOldChecklistStorage() {
   keysToRemove.forEach(k => {
     try { localStorage.removeItem(k); } catch (e) {}
   });
+
+  // 이전 버전에서 사용했던 오픈/마감 항목 순서 저장 키(clOrder-*)는 더 이상 쓰지 않으므로 정리합니다.
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.indexOf('clOrder-') === 0) {
+      try { localStorage.removeItem(key); } catch (e) {}
+    }
+  }
 }
 
 cleanupOldChecklistStorage();
@@ -3403,7 +4384,7 @@ renderInventory();
 // 메인 탭(레시피/오픈/마감/커스텀/재고/트레이닝)을 전환하고 해당 뷰만 표시합니다.
 // 레시피 탭에서만 우하단 FAB 버튼 그룹을 표시합니다.
 function switchTab(tab) {
-  ['recipe', 'opening', 'closing', 'custom', 'inventory', 'training'].forEach(t => {
+  ['recipe', 'opening', 'closing', 'inventory', 'training'].forEach(t => {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -3442,62 +4423,75 @@ function saveCustomChecklist() {
 
 let customItems = loadCustomChecklist().items;
 // items: [{ id, text, checked }]
+// 오픈/마감 탭에 동일하게 표시되는 공유 목록입니다 (탭은 따로 없음).
+const CUSTOM_VIEWS = ['opening', 'closing'];
+
+// 두 탭(오픈/마감) 중 존재하는 요소에 removing 애니메이션을 건 뒤 콜백을 실행합니다.
+function animateCustomRemoveThen(id, callback) {
+  let found = false;
+  CUSTOM_VIEWS.forEach(suffix => {
+    const el = document.getElementById('cust-item-' + suffix + '-' + id);
+    if (el) { el.classList.add('removing'); found = true; }
+  });
+  if (found) setTimeout(callback, 180);
+  else callback();
+}
 
 function renderCustomChecklist() {
-  const wrap = document.getElementById('sections-custom');
   const unchecked = customItems.filter(it => !it.checked);
   const checked = customItems.filter(it => it.checked);
-
-  if (customItems.length === 0) {
-    wrap.innerHTML = '<div class="empty">항목을 추가해서 체크리스트를 만들어요 ✏️</div>';
-  } else if (unchecked.length === 0) {
-    wrap.innerHTML = '<div class="empty">모든 항목을 완료했어요 🎉</div>';
-  } else {
-    wrap.innerHTML = `<div class="section"><div class="card">
-      ${unchecked.map(it => `
-        <div class="item" id="cust-item-${it.id}" onclick="toggleCustomItem('${it.id}')">
-          <div class="checkbox">${CHECK_ICON}</div>
-          <div class="item-label" id="cust-label-${it.id}">${escapeHtml(it.text)}</div>
-          <div class="item-actions" id="cust-actions-${it.id}">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('${it.id}')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
-          </div>
-        </div>`).join('')}
-    </div></div>`;
-  }
-
-  // 완료 영역 (최근 완료 순 정렬)
   const sortedChecked = [...checked].sort((a, b) =>
     (b.checked === true ? 0 : b.checked) - (a.checked === true ? 0 : a.checked)
   );
-  const doneSection = document.getElementById('done-section-custom');
-  const doneList = document.getElementById('done-list-custom');
-  if (sortedChecked.length === 0) {
-    doneSection.style.display = 'none';
-  } else {
-    doneSection.style.display = '';
-    doneList.innerHTML = sortedChecked.map(it =>
-      `<div class="item checked" onclick="toggleCustomItem('${it.id}')">
-        <div class="checkbox">${CHECK_ICON}</div>
-        <div class="item-label">${escapeHtml(it.text)}</div>
-      </div>`
-    ).join('');
-  }
 
-  // 진행률 업데이트
-  const total = customItems.length;
-  const checkedCount = checked.length;
-  const pct = total ? Math.round((checkedCount / total) * 100) : 0;
-  document.getElementById('progressFill-custom').style.width = pct + '%';
-  document.getElementById('progressText-custom').textContent = `${checkedCount} / ${total}`;
+  CUSTOM_VIEWS.forEach(suffix => {
+    const wrap = document.getElementById('sections-custom-' + suffix);
+    if (!wrap) return;
+
+    if (customItems.length === 0) {
+      wrap.innerHTML = '<div class="empty" style="padding:1.75rem 0;">항목을 추가해서 나만의 체크리스트를 만들어요 ✏️</div>';
+    } else if (unchecked.length === 0) {
+      wrap.innerHTML = '<div class="empty" style="padding:1.75rem 0;">모든 커스텀 항목을 완료했어요 🎉</div>';
+    } else {
+      wrap.innerHTML = unchecked.map(it => `
+        <div class="item" id="cust-item-${suffix}-${it.id}" data-id="${it.id}" onclick="toggleCustomItem('${it.id}')">
+          <div class="checkbox">${CHECK_ICON}</div>
+          <div class="item-label" id="cust-label-${suffix}-${it.id}">${escapeHtml(it.text)}</div>
+          <div class="item-actions" id="cust-actions-${suffix}-${it.id}">
+            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('${it.id}','${suffix}')" title="수정">✎</button>
+            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
+            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
+          </div>
+        </div>`).join('');
+      enableDragReorder(wrap, reorderCustomItems);
+    }
+
+    // 완료 영역 (최근 완료 순 정렬, 오픈/마감 동일하게 공유)
+    const doneSection = document.getElementById('done-section-custom-' + suffix);
+    const doneList = document.getElementById('done-list-custom-' + suffix);
+    if (!doneSection || !doneList) return;
+    if (sortedChecked.length === 0) {
+      doneSection.style.display = 'none';
+    } else {
+      doneSection.style.display = '';
+      doneList.innerHTML = sortedChecked.map(it =>
+        `<div class="item checked" onclick="toggleCustomItem('${it.id}')">
+          <div class="checkbox">${CHECK_ICON}</div>
+          <div class="item-label">${escapeHtml(it.text)}</div>
+        </div>`
+      ).join('');
+    }
+  });
 }
 
 function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function addCustomItem() {
-  const input = document.getElementById('customItemInput');
+// suffix: 'opening' 또는 'closing' (어느 탭에서 추가했는지). 항목 자체는 오픈·마감에 동일하게 공유됩니다.
+function addCustomItem(suffix) {
+  const input = document.getElementById('customItemInput-' + suffix);
+  if (!input) return;
   const text = input.value.trim();
   if (!text) return;
   const id = 'c' + Date.now() + Math.random().toString(36).slice(2,6);
@@ -3508,32 +4502,28 @@ function addCustomItem() {
   input.focus();
 }
 
+// 커스텀 항목을 체크하면 오픈/마감 두 탭 모두에서 동일하게 완료 처리됩니다.
 function toggleCustomItem(id) {
   const it = customItems.find(i => i.id === id);
   if (!it) return;
   if (!it.checked) {
-    // 미완료 → 완료: 애니메이션
-    const el = document.getElementById('cust-item-' + id);
-    if (el) {
-      el.classList.add('removing');
-      setTimeout(() => {
-        it.checked = Date.now();
-        saveCustomChecklist();
-        renderCustomChecklist();
-      }, 180);
-      return;
-    }
+    animateCustomRemoveThen(id, () => {
+      it.checked = Date.now();
+      saveCustomChecklist();
+      renderCustomChecklist();
+    });
+    return;
   }
   it.checked = !it.checked;
   saveCustomChecklist();
   renderCustomChecklist();
 }
 
-function editCustomItem(id) {
+function editCustomItem(id, suffix) {
   const it = customItems.find(i => i.id === id);
   if (!it) return;
-  const labelEl = document.getElementById('cust-label-' + id);
-  const actionsEl = document.getElementById('cust-actions-' + id);
+  const labelEl = document.getElementById('cust-label-' + suffix + '-' + id);
+  const actionsEl = document.getElementById('cust-actions-' + suffix + '-' + id);
   if (!labelEl || !actionsEl || labelEl.querySelector('input')) return;
   const original = it.text;
 
@@ -3545,7 +4535,7 @@ function editCustomItem(id) {
   input.value = original;
   labelEl.appendChild(input);
 
-  // 수정/삭제 버튼을 숨기고 완료 버튼만 표시
+  // 수정/삭제/드래그 버튼을 숨기고 완료 버튼만 표시
   actionsEl.innerHTML = '';
   const confirmBtn = document.createElement('button');
   confirmBtn.type = 'button';
@@ -3589,24 +4579,27 @@ function editCustomItem(id) {
   input.setSelectionRange(end, end);
 }
 
+// 삭제 역시 오픈/마감 두 탭 모두에서 함께 사라집니다.
 function deleteCustomItem(id) {
-  const el = document.getElementById('cust-item-' + id);
-  if (el) {
-    el.classList.add('removing');
-    setTimeout(() => {
-      customItems = customItems.filter(i => i.id !== id);
-      saveCustomChecklist();
-      renderCustomChecklist();
-    }, 180);
-    return;
-  }
-  customItems = customItems.filter(i => i.id !== id);
+  animateCustomRemoveThen(id, () => {
+    customItems = customItems.filter(i => i.id !== id);
+    saveCustomChecklist();
+    renderCustomChecklist();
+  });
+}
+
+// 드래그로 커스텀 항목 순서를 바꾸면 오픈/마감 모두에 동일한 순서로 반영됩니다.
+function reorderCustomItems(newVisibleIds) {
+  const fullIds = customItems.map(it => it.id);
+  const mergedIds = reorderPreservingHidden(fullIds, newVisibleIds);
+  const byId = Object.fromEntries(customItems.map(it => [it.id, it]));
+  customItems = mergedIds.map(id => byId[id]);
   saveCustomChecklist();
   renderCustomChecklist();
 }
 
 function resetCustomChecklist() {
-  if (!confirm('커스텀 체크리스트를 모두 초기화할까요?')) return;
+  if (!confirm('커스텀 체크리스트를 모두 초기화할까요? (오픈·마감 공통 항목입니다)')) return;
   customItems = [];
   saveCustomChecklist();
   renderCustomChecklist();
