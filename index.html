@@ -149,6 +149,19 @@
     transition: background 0.15s, color 0.15s;
     white-space: nowrap;
     min-width: 64px;
+    position: relative;
+  }
+  .tab-download-btn .dl-badge {
+    position: absolute; top: 3px; right: 2px;
+    min-width: 15px; height: 15px; padding: 0 4px;
+    border-radius: 99px; background: #DC2626; color: #fff;
+    font-size: 10px; font-weight: 700; line-height: 15px; text-align: center;
+    display: none; box-shadow: 0 0 0 2px #f5f4f0;
+  }
+  .tab-download-btn .dl-badge.visible { display: inline-block; animation: dlBadgePulse 1.8s ease-in-out infinite; }
+  @keyframes dlBadgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
   }
   .tab-download-btn .dl-icon { font-size: 15px; line-height: 1; }
   .tab-download-btn:hover { background: #eae8e3; color: #222; }
@@ -349,6 +362,14 @@
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
   }
   /* 커스텀 체크리스트 항목 수정/삭제 버튼 */
+  /* 커스텀 체크리스트: 소스코드 저장 여부 배지 */
+  .checklist-page .custom-status-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 99px; flex-shrink: 0; white-space: nowrap;
+    margin-left: 2px;
+  }
+  .checklist-page .custom-status-badge.status-saved { background: #E0F2FE; color: #075985; }
+  .checklist-page .custom-status-badge.status-temp { background: #FEF3C7; color: #92400E; }
   .checklist-page .item-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
   .checklist-page .item-edit,
   .checklist-page .item-delete {
@@ -1071,7 +1092,7 @@
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
-  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장</button>
+  <button class="tab-download-btn" id="tabDownloadBtn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장<span class="dl-badge" id="dlBadge"></span></button>
   </div>
 
   
@@ -4440,20 +4461,31 @@ function switchTab(tab) {
 ============================================================ */
 const CUSTOM_STORAGE_KEY = 'custom-checklist-v1';
 
+// ★ 소스코드(index.html)에 실제로 baked-in 된 커스텀 체크리스트 기본 항목입니다.
+//   "소스코드 저장" 버튼을 누르는 순간, 이 배열이 그 시점의 전체 항목으로 교체된 채
+//   새 index.html 파일로 다운로드됩니다. 즉 이 배열에 들어있는 항목 = 파일을 처음 열어도
+//   항상 보이는 "저장된" 항목이고, 아직 여기 없이 localStorage에만 있는 항목은 "임시" 항목입니다.
+const CUSTOM_ITEMS_SEED = [];
+
+function seedCustomItems() {
+  return CUSTOM_ITEMS_SEED.map(it => ({ id: it.id, text: it.text, checked: false, saved: true }));
+}
+
 // 커스텀 체크리스트 데이터 로드 (2주 지난 데이터는 자동 삭제)
 function loadCustomChecklist() {
   try {
     const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
-    if (!raw) return { items: [] };
+    if (!raw) return { items: seedCustomItems() };
     const data = JSON.parse(raw);
     // 2주(14일) 경과 시 초기화
     const TWO_WEEKS = 14 * 24 * 60 * 60 * 1000;
     if (data.savedAt && (Date.now() - data.savedAt) > TWO_WEEKS) {
       localStorage.removeItem(CUSTOM_STORAGE_KEY);
-      return { items: [] };
+      return { items: seedCustomItems() };
     }
-    return { items: data.items || [] };
-  } catch (e) { return { items: [] }; }
+    // localStorage에 이미 기록이 있으면(저장/임시 항목이 섞여 저장되어 있음) 그걸 그대로 사용
+    return { items: (data.items && data.items.length) ? data.items : seedCustomItems() };
+  } catch (e) { return { items: seedCustomItems() }; }
 }
 
 function saveCustomChecklist() {
@@ -4466,7 +4498,9 @@ function saveCustomChecklist() {
 }
 
 let customItems = loadCustomChecklist().items;
-// items: [{ id, text, checked }]
+// items: [{ id, text, checked, saved }]
+// saved: true  → 소스코드(CUSTOM_ITEMS_SEED)에 실제로 저장되어 있는 항목
+// saved: false → 아직 이 브라우저의 localStorage에만 있는 "임시" 항목
 // 오픈/마감 탭에 동일하게 표시되는 공유 목록입니다 (탭은 따로 없음).
 const CUSTOM_VIEWS = ['opening', 'closing'];
 
@@ -4482,6 +4516,7 @@ function animateCustomRemoveThen(id, callback) {
 }
 
 function renderCustomChecklist() {
+  updateDownloadBadge();
   const unchecked = customItems.filter(it => !it.checked);
   const checked = customItems.filter(it => it.checked);
   const sortedChecked = [...checked].sort((a, b) =>
@@ -4501,6 +4536,7 @@ function renderCustomChecklist() {
         <div class="item" id="cust-item-${suffix}-${it.id}" data-id="${it.id}" onclick="toggleCustomItem('${it.id}')">
           <div class="checkbox">${CHECK_ICON}</div>
           <div class="item-label" id="cust-label-${suffix}-${it.id}">${escapeHtml(it.text)}</div>
+          <span class="custom-status-badge ${it.saved ? 'status-saved' : 'status-temp'}">${it.saved ? '저장됨' : '임시'}</span>
           <div class="item-actions" id="cust-actions-${suffix}-${it.id}">
             <button class="item-edit" onclick="event.stopPropagation();editCustomItem('${it.id}','${suffix}')" title="수정">✎</button>
             <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
@@ -4522,10 +4558,28 @@ function renderCustomChecklist() {
         `<div class="item checked" onclick="toggleCustomItem('${it.id}')">
           <div class="checkbox">${CHECK_ICON}</div>
           <div class="item-label">${escapeHtml(it.text)}</div>
+          <span class="custom-status-badge ${it.saved ? 'status-saved' : 'status-temp'}">${it.saved ? '저장됨' : '임시'}</span>
         </div>`
       ).join('');
     }
   });
+}
+
+// 임시(아직 소스코드에 저장 안 된) 커스텀 항목 개수를 다운로드 버튼에 표시합니다.
+function updateDownloadBadge() {
+  const btn = document.getElementById('tabDownloadBtn');
+  const badge = document.getElementById('dlBadge');
+  if (!btn || !badge) return;
+  const tempCount = customItems.filter(it => !it.saved).length;
+  if (tempCount > 0) {
+    badge.textContent = tempCount > 9 ? '9+' : String(tempCount);
+    badge.classList.add('visible');
+    btn.title = `임시 항목 ${tempCount}개 있음 — 눌러서 소스코드에 저장(다운로드)`;
+  } else {
+    badge.textContent = '';
+    badge.classList.remove('visible');
+    btn.title = '소스코드 다운로드';
+  }
 }
 
 function escapeHtml(str) {
@@ -4539,7 +4593,7 @@ function addCustomItem(suffix) {
   const text = input.value.trim();
   if (!text) return;
   const id = 'c' + Date.now() + Math.random().toString(36).slice(2,6);
-  customItems.push({ id, text, checked: false });
+  customItems.push({ id, text, checked: false, saved: false });
   saveCustomChecklist();
   renderCustomChecklist();
   input.value = '';
@@ -5557,7 +5611,28 @@ window.moveSelectedDown = moveSelectedDown;
 <script>
 // 소스코드 다운로드
 function downloadSource() {
-  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  // 커스텀 체크리스트: 지금까지 이 브라우저(localStorage)에만 "임시"로 있던 항목들을
+  // 전부 "저장됨" 상태로 전환하고, 화면에도 즉시 반영합니다.
+  if (typeof customItems !== 'undefined') {
+    customItems.forEach(it => { it.saved = true; });
+    if (typeof saveCustomChecklist === 'function') saveCustomChecklist();
+    if (typeof renderCustomChecklist === 'function') renderCustomChecklist();
+  }
+
+  let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+  // 소스코드 안의 CUSTOM_ITEMS_SEED 선언을 현재 항목들로 실제 교체합니다.
+  // → 이렇게 만들어진 index.html은 브라우저 localStorage가 비어있어도
+  //   이 항목들이 처음부터 "저장됨" 상태로 표시됩니다.
+  if (typeof customItems !== 'undefined') {
+    const seedForSource = customItems.map(it => ({ id: it.id, text: it.text }));
+    const seedLiteral = JSON.stringify(seedForSource);
+    html = html.replace(
+      /const CUSTOM_ITEMS_SEED = \[[\s\S]*?\];/,
+      'const CUSTOM_ITEMS_SEED = ' + seedLiteral + ';'
+    );
+  }
+
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
