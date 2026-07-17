@@ -254,6 +254,8 @@
   }
   .section-nav-toggle:active { background: rgba(26,26,26,0.9); }
   .section-nav-toggle.hidden { display: none !important; }
+  /* 목차가 펼쳐진 동안엔 토글 버튼을 살짝 비켜서 목차를 가리지 않게 함 */
+  .section-nav-toggle.nav-open { opacity: 0; pointer-events: none; }
 
   /* 목차 뒤 반투명 배경 (모바일에서 펼쳤을 때만) */
   .section-nav-backdrop {
@@ -5248,16 +5250,21 @@ function updateSectionNav() {
 function toggleSectionNav() {
   const nav = document.getElementById('sectionNav');
   const backdrop = document.getElementById('sectionNavBackdrop');
+  const toggle = document.getElementById('sectionNavToggle');
   if (!nav) return;
   const expand = !nav.classList.contains('expanded');
   nav.classList.toggle('expanded', expand);
   if (backdrop) backdrop.classList.toggle('show', expand);
+  // 펼쳐진 목차를 회색 토글 버튼이 가리지 않도록, 펼친 동안에는 토글 버튼을 숨깁니다.
+  if (toggle) toggle.classList.toggle('nav-open', expand);
 }
 function closeSectionNav() {
   const nav = document.getElementById('sectionNav');
   const backdrop = document.getElementById('sectionNavBackdrop');
+  const toggle = document.getElementById('sectionNavToggle');
   if (nav) nav.classList.remove('expanded');
   if (backdrop) backdrop.classList.remove('show');
+  if (toggle) toggle.classList.remove('nav-open');
 }
 
 // 탭바·상단 고정 진행률 바 높이만큼 보정하여 목표 섹션이 가려지지 않게 스크롤합니다.
