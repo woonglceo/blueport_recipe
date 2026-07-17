@@ -462,14 +462,21 @@
   .dm-dday.ok { background: #E0F2FE; color: #075985; }
   .dm-dday.soon { background: #FEF3C7; color: #92400E; }
   .dm-dday.over { background: #FFE4E6; color: #9F1239; }
+  .dm-dday-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+  .dm-dday-label {
+    font-size: 9px; font-weight: 700; color: #6D28D9; background: #F3F0FF;
+    border: 1px solid #E3DBFF; border-radius: 99px; padding: 1px 6px; white-space: nowrap;
+  }
   .dm-card-edit,
-  .dm-card-delete {
+  .dm-card-delete,
+  .dm-card-refresh {
     flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; border: 1px solid #eee;
     background: #fff; color: #bbb; cursor: pointer; font-size: 13px;
     display: flex; align-items: center; justify-content: center; transition: all 0.15s;
   }
   .dm-card-edit:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
   .dm-card-delete:hover { background: #fee2e2; border-color: #fecaca; color: #ef4444; }
+  .dm-card-refresh:hover { background: #ecfdf5; border-color: #a7f3d0; color: #059669; }
   @media (max-width: 480px) {
     .dm-card { flex-wrap: wrap; }
   }
@@ -6162,12 +6169,16 @@ window.moveSelectedDown = moveSelectedDown;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 만료일이 가까운 순으로 정렬
+    // 만료일이 가까운 순으로 정렬 (단, 교체일이 아직 오지 않은 미래 예정 항목은 교체일 기준으로 정렬)
     const sorted = dateItems.map((item, idx) => {
       const due = calcDueDate(item.startDate, item.period, item.unit);
       due.setHours(0, 0, 0, 0);
-      const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
-      return { ...item, idx, due, diffDays };
+      const startD = new Date(item.startDate + 'T00:00:00');
+      startD.setHours(0, 0, 0, 0);
+      const isFutureStart = startD > today; // 교체(작업)일이 아직 안 지난 예정 항목
+      const refDate = isFutureStart ? startD : due;
+      const diffDays = Math.round((refDate - today) / (1000 * 60 * 60 * 24));
+      return { ...item, idx, due, startD, isFutureStart, diffDays };
     }).sort((a, b) => a.diffDays - b.diffDays);
 
     listEl.innerHTML = sorted.map(item => {
@@ -6181,7 +6192,7 @@ window.moveSelectedDown = moveSelectedDown;
       } else {
         ddClass = 'ok'; ddText = `D-${item.diffDays}`;
       }
-      const startD = new Date(item.startDate + 'T00:00:00');
+      const startD = item.startD;
       const activeCls = item.id === editingId ? ' dm-card-editing' : '';
       const deletedCls = item.deleted ? ' dm-card-deleted' : '';
       let typeBadge;
@@ -6195,16 +6206,18 @@ window.moveSelectedDown = moveSelectedDown;
         typeBadge = '<span class="dm-new-badge">신규데이터</span>';
       }
       const deletedBadge = item.deleted ? '<span class="dm-deleted-badge">삭제됨</span>' : '';
+      const ddLabel = (!item.deleted && item.isFutureStart) ? '<div class="dm-dday-label">교체예정</div>' : '';
       const actionBtns = item.deleted
         ? `<button class="dm-card-restore" onclick="restoreDateItem('${item.id}')" title="복구">↺ 복구</button>`
-        : `<button class="dm-card-edit" onclick="editDateItem('${item.id}')" title="수정">✎</button>
+        : `<button class="dm-card-refresh" onclick="refreshDateItem('${item.id}')" title="오늘 날짜로 최신화">🔄</button>
+        <button class="dm-card-edit" onclick="editDateItem('${item.id}')" title="수정">✎</button>
         <button class="dm-card-delete" onclick="deleteDateItem('${item.id}')" title="삭제">✕</button>`;
       return `<div class="dm-card${activeCls}${deletedCls}">
         <div class="dm-card-main">
           <div class="dm-card-name">${escapeHtml(item.name)}${typeBadge}${deletedBadge}</div>
           <div class="dm-card-dates">${fmtDate(startD)} 시작 · 주기 <b>${item.period}${unitLabel(item.unit)}</b> · 만료 <b>${fmtDate(item.due)}</b></div>
         </div>
-        <div class="dm-dday ${ddClass}">${ddText}</div>
+        <div class="dm-dday-wrap">${ddLabel}<div class="dm-dday ${ddClass}">${ddText}</div></div>
         ${actionBtns}
       </div>`;
     }).join('');
@@ -6315,6 +6328,21 @@ window.moveSelectedDown = moveSelectedDown;
     renderDateItems();
   }
 
+  // 기준일(startDate)만 오늘 날짜로 최신화. 주기(period/unit)는 그대로 유지되므로
+  // 만료일은 renderDateItems()에서 calcDueDate()로 자동 재계산됨.
+  function refreshDateItem(id) {
+    const target = dateItems.find(i => i.id === id);
+    if (!target) return;
+    target.startDate = new Date().toISOString().slice(0, 10);
+    saveDateItems();
+    renderDateItems();
+    if (editingId === id) {
+      // 수정 폼이 이 항목을 열어둔 상태라면 폼의 날짜값도 같이 갱신
+      const dateEl = document.getElementById('dm-input-date');
+      if (dateEl) dateEl.value = target.startDate;
+    }
+  }
+
   function resetDateItems() {
     if (!confirm('날짜관리 항목을 모두 초기화할까요? 직접 추가/수정한 항목은 사라지고 소스코드 기본 데이터만 남아요.')) return;
     if (editingId) cancelEditDateItem();
@@ -6338,6 +6366,7 @@ window.moveSelectedDown = moveSelectedDown;
   window.cancelEditDateItem = cancelEditDateItem;
   window.deleteDateItem = deleteDateItem;
   window.restoreDateItem = restoreDateItem;
+  window.refreshDateItem = refreshDateItem;
   window.resetDateItems = resetDateItems;
   window.applySampleUpdate = applySampleUpdate;
   window.dismissSampleUpdate = dismissSampleUpdate;
