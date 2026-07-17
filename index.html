@@ -413,6 +413,11 @@
     background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0;
     white-space: nowrap;
   }
+  .dm-modified-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
+    background: #FFF7ED; color: #C2410C; border: 1px solid #FED7AA;
+    white-space: nowrap;
+  }
   .dm-deleted-badge {
     font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
     background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA;
@@ -5885,7 +5890,16 @@ window.moveSelectedDown = moveSelectedDown;
       const startD = new Date(item.startDate + 'T00:00:00');
       const activeCls = item.id === editingId ? ' dm-card-editing' : '';
       const deletedCls = item.deleted ? ' dm-card-deleted' : '';
-      const typeBadge = isUnmodifiedSample(item) ? '<span class="dm-sample-badge">소스코드 데이터</span>' : '<span class="dm-new-badge">신규데이터</span>';
+      let typeBadge;
+      if (isUnmodifiedSample(item)) {
+        typeBadge = '<span class="dm-sample-badge">소스코드 데이터</span>';
+      } else if (DM_SAMPLE_DATA.some(s => s.id === item.id)) {
+        // 소스코드 샘플과 id는 같지만 값이 바뀐 경우
+        typeBadge = '<span class="dm-modified-badge">수정데이터</span>';
+      } else {
+        // 소스코드에 애초에 없던 완전히 새로운 항목
+        typeBadge = '<span class="dm-new-badge">신규데이터</span>';
+      }
       const deletedBadge = item.deleted ? '<span class="dm-deleted-badge">삭제됨</span>' : '';
       const actionBtns = item.deleted
         ? `<button class="dm-card-restore" onclick="restoreDateItem('${item.id}')" title="복구">↺ 복구</button>`
