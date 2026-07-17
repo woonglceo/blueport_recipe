@@ -361,6 +361,73 @@
   .checklist-page .item-edit { font-size: 13px; }
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
+
+  /* ── 날짜관리 탭 ── */
+  .dm-form {
+    background: #fff; border: 1px solid #e8e5e0; border-radius: 14px;
+    padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .dm-form-row { display: flex; }
+  .dm-form-row-inline { gap: 10px; flex-wrap: wrap; }
+  .dm-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+  .dm-field-period { flex: 1; min-width: 160px; }
+  .dm-field-label { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0.04em; }
+  .dm-period-inline { display: flex; gap: 6px; }
+  .dm-input {
+    padding: 10px 12px; font-size: 14px; border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; outline: none; transition: border 0.15s; width: 100%;
+    font-family: inherit; color: #1a1a1a;
+  }
+  .dm-input:focus { border-color: #aaa; }
+  .dm-input-period { width: 80px; flex: 0 0 80px; }
+  .dm-select { flex: 1; min-width: 70px; }
+  .dm-form-actions { display: flex; gap: 8px; align-items: center; }
+  .dm-add-btn {
+    align-self: flex-start; padding: 9px 16px; font-size: 13px; font-weight: 700;
+    border: none; border-radius: 10px; background: #1a1a1a; color: #fff;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .dm-add-btn:hover { background: #333; }
+  .dm-cancel-btn {
+    padding: 9px 14px; font-size: 13px; font-weight: 600;
+    border: 1px solid #ddd; border-radius: 10px; background: #fff; color: #666;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .dm-cancel-btn:hover { background: #f0ede8; border-color: #bbb; color: #333; }
+  .dm-list { display: flex; flex-direction: column; gap: 10px; }
+  .dm-card {
+    background: #fff; border: 1px solid #e8e5e0; border-radius: 14px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .dm-card.dm-card-editing { border-color: #1a1a1a; box-shadow: 0 0 0 1px #1a1a1a inset; }
+  .dm-card-main { flex: 1; min-width: 0; }
+  .dm-card-name { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .dm-sample-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
+    background: #F3F0FF; color: #6D28D9; border: 1px solid #E3DBFF;
+    white-space: nowrap;
+  }
+  .dm-card-dates { font-size: 12px; color: #888; }
+  .dm-card-dates b { color: #555; font-weight: 600; }
+  .dm-dday {
+    font-size: 13px; font-weight: 700; padding: 5px 11px; border-radius: 99px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .dm-dday.ok { background: #E0F2FE; color: #075985; }
+  .dm-dday.soon { background: #FEF3C7; color: #92400E; }
+  .dm-dday.over { background: #FFE4E6; color: #9F1239; }
+  .dm-card-edit,
+  .dm-card-delete {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; border: 1px solid #eee;
+    background: #fff; color: #bbb; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .dm-card-edit:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+  .dm-card-delete:hover { background: #fee2e2; border-color: #fecaca; color: #ef4444; }
+  @media (max-width: 480px) {
+    .dm-card { flex-wrap: wrap; }
+  }
   .checklist-page .item-edit-input {
     width: 100%; font: inherit; font-size: 15px; color: #1a1a1a;
     background: transparent; border: none; border-bottom: 1.5px solid #1a1a1a;
@@ -1068,6 +1135,7 @@
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
+    <button class="tab-item" id="tab-datemanage" onclick="switchTab('datemanage')"><span class="tab-icon">📅</span>날짜관리</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
@@ -3149,6 +3217,41 @@
   </div>
 </div>
 
+<div id="view-datemanage" class="checklist-page datemanage-page" style="display:none;">
+  <h1>날짜관리</h1>
+  <div class="subtitle">교체/점검일을 등록하면 만료일과 남은 일수를 자동으로 계산해요</div>
+
+  <div class="dm-form">
+    <div class="dm-form-row">
+      <input type="text" id="dm-input-name" class="dm-input" placeholder="예: 정수기 필터">
+    </div>
+    <div class="dm-form-row dm-form-row-inline">
+      <div class="dm-field">
+        <label class="dm-field-label">교체(작업)일</label>
+        <input type="date" id="dm-input-date" class="dm-input">
+      </div>
+      <div class="dm-field dm-field-period">
+        <label class="dm-field-label">교체 주기</label>
+        <div class="dm-period-inline">
+          <input type="number" id="dm-input-period" class="dm-input dm-input-period" placeholder="6" min="0" step="0.5">
+          <select id="dm-input-unit" class="dm-input dm-select">
+            <option value="day">일</option>
+            <option value="month" selected>개월</option>
+            <option value="year">년</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="dm-form-actions">
+      <button class="dm-add-btn" id="dm-submit-btn" onclick="addDateItem()">+ 항목 추가</button>
+      <button class="dm-cancel-btn" id="dm-cancel-btn" onclick="cancelEditDateItem()" style="display:none;">취소</button>
+    </div>
+  </div>
+
+  <div id="dm-list" class="dm-list"></div>
+  <div id="dm-empty" class="empty" style="display:none;">등록된 항목이 없어요. 위에서 새 항목을 추가해보세요.</div>
+</div>
+
 <!-- 우하단 FAB 버튼 그룹 제거됨 -->
 
 <script>
@@ -4428,7 +4531,7 @@ renderInventory();
 // 메인 탭(레시피/오픈/마감/커스텀/재고/트레이닝)을 전환하고 해당 뷰만 표시합니다.
 // 레시피 탭에서만 우하단 FAB 버튼 그룹을 표시합니다.
 function switchTab(tab) {
-  ['recipe', 'opening', 'closing', 'inventory', 'training'].forEach(t => {
+  ['recipe', 'opening', 'closing', 'inventory', 'training', 'datemanage'].forEach(t => {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -5551,6 +5654,223 @@ window.toggleQuiz = toggleQuiz;
 window.resetQuiz = resetQuiz;
 window.moveSelectedUp = moveSelectedUp;
 window.moveSelectedDown = moveSelectedDown;
+})();
+</script>
+
+<script>
+/* ============================================================
+   날짜관리 탭 - 교체/점검일 등록 후 만료일·잔여일수 자동 계산
+   localStorage 저장 (영구 저장, 새로고침해도 유지)
+============================================================ */
+(function () {
+  const DM_STORAGE_KEY = 'date-manage-items-v1';
+
+  // 아래 2개는 예시로 넣어둔 실제 데이터예요. 앱 안에서 그대로 수정하거나 삭제할 수 있고,
+  // 한 번 수정/추가/삭제하면 그 상태가 계속 저장됩니다 (새로고침해도 유지).
+  const DM_SAMPLE_DATA = [
+    { id: 'dm-sample-1', name: '정수기 필터', startDate: '2026-04-20', period: 6, unit: 'month', isSample: true },
+    { id: 'dm-sample-2', name: '에어컨 필터 청소', startDate: '2026-06-01', period: 3, unit: 'month', isSample: true }
+  ];
+
+  function loadDateItems() {
+    const sampleIds = new Set(DM_SAMPLE_DATA.map(s => s.id));
+    try {
+      const raw = localStorage.getItem(DM_STORAGE_KEY);
+      if (!raw) return DM_SAMPLE_DATA.slice();
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return DM_SAMPLE_DATA.slice();
+      // 소스코드에 하드코딩된 id는 (예전에 저장된 값이든 뭐든 상관없이) 항상 isSample=true로 취급
+      return data.map(item => sampleIds.has(item.id) ? { ...item, isSample: true } : item);
+    } catch (e) { return DM_SAMPLE_DATA.slice(); }
+  }
+
+  function saveDateItems() {
+    try { localStorage.setItem(DM_STORAGE_KEY, JSON.stringify(dateItems)); } catch (e) {}
+  }
+
+  let dateItems = loadDateItems();
+  let editingId = null; // 수정 중인 항목 id (null이면 신규 추가 모드)
+  saveDateItems(); // 샘플 데이터를 즉시 저장해서 첫 화면부터 '진짜 데이터'로 취급
+
+  // startDate('YYYY-MM-DD') + period(unit) => 만료일 Date 객체
+  function calcDueDate(startDate, period, unit) {
+    const d = new Date(startDate + 'T00:00:00');
+    const p = Number(period) || 0;
+    if (unit === 'day') {
+      d.setDate(d.getDate() + Math.round(p));
+    } else if (unit === 'year') {
+      d.setMonth(d.getMonth() + Math.round(p * 12));
+    } else {
+      // 개월 단위: 0.5개월처럼 소수도 대략 지원 (일 단위로 환산)
+      const wholeMonths = Math.trunc(p);
+      const fracMonths = p - wholeMonths;
+      d.setMonth(d.getMonth() + wholeMonths);
+      if (fracMonths) d.setDate(d.getDate() + Math.round(fracMonths * 30));
+    }
+    return d;
+  }
+
+  function fmtDate(d) {
+    const w = ['일','월','화','수','목','금','토'][d.getDay()];
+    return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} (${w})`;
+  }
+
+  function unitLabel(unit) {
+    return unit === 'day' ? '일' : unit === 'year' ? '년' : '개월';
+  }
+
+  function renderDateItems() {
+    const listEl = document.getElementById('dm-list');
+    const emptyEl = document.getElementById('dm-empty');
+    if (!listEl) return;
+
+    if (dateItems.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl.style.display = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 만료일이 가까운 순으로 정렬
+    const sorted = dateItems.map((item, idx) => {
+      const due = calcDueDate(item.startDate, item.period, item.unit);
+      due.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+      return { ...item, idx, due, diffDays };
+    }).sort((a, b) => a.diffDays - b.diffDays);
+
+    listEl.innerHTML = sorted.map(item => {
+      let ddClass = 'ok', ddText;
+      if (item.diffDays < 0) {
+        ddClass = 'over'; ddText = `${Math.abs(item.diffDays)}일 지남`;
+      } else if (item.diffDays === 0) {
+        ddClass = 'over'; ddText = 'D-Day';
+      } else if (item.diffDays <= 7) {
+        ddClass = 'soon'; ddText = `D-${item.diffDays}`;
+      } else {
+        ddClass = 'ok'; ddText = `D-${item.diffDays}`;
+      }
+      const startD = new Date(item.startDate + 'T00:00:00');
+      const activeCls = item.id === editingId ? ' dm-card-editing' : '';
+      return `<div class="dm-card${activeCls}">
+        <div class="dm-card-main">
+          <div class="dm-card-name">${escapeHtml(item.name)}${item.isSample ? '<span class="dm-sample-badge">소스코드 데이터</span>' : ''}</div>
+          <div class="dm-card-dates">${fmtDate(startD)} 시작 · 주기 <b>${item.period}${unitLabel(item.unit)}</b> · 만료 <b>${fmtDate(item.due)}</b></div>
+        </div>
+        <div class="dm-dday ${ddClass}">${ddText}</div>
+        <button class="dm-card-edit" onclick="editDateItem('${item.id}')" title="수정">✎</button>
+        <button class="dm-card-delete" onclick="deleteDateItem('${item.id}')" title="삭제">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function getFormEls() {
+    return {
+      nameEl: document.getElementById('dm-input-name'),
+      dateEl: document.getElementById('dm-input-date'),
+      periodEl: document.getElementById('dm-input-period'),
+      unitEl: document.getElementById('dm-input-unit'),
+      btnEl: document.getElementById('dm-submit-btn'),
+      cancelEl: document.getElementById('dm-cancel-btn')
+    };
+  }
+
+  function addDateItem() {
+    const { nameEl, dateEl, periodEl, unitEl, btnEl } = getFormEls();
+
+    const name = nameEl.value.trim();
+    const startDate = dateEl.value || new Date().toISOString().slice(0, 10);
+    const period = periodEl.value;
+    const unit = unitEl.value;
+
+    if (!name) { nameEl.focus(); return; }
+    if (!period || Number(period) <= 0) { periodEl.focus(); return; }
+
+    if (editingId) {
+      // 수정 모드: 기존 항목 업데이트
+      const target = dateItems.find(i => i.id === editingId);
+      if (target) {
+        target.name = name;
+        target.startDate = startDate;
+        target.period = Number(period);
+        target.unit = unit;
+      }
+      editingId = null;
+      btnEl.textContent = '+ 항목 추가';
+      document.getElementById('dm-cancel-btn').style.display = 'none';
+    } else {
+      // 신규 추가
+      dateItems.push({
+        id: 'dm-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        name, startDate, period: Number(period), unit
+      });
+    }
+
+    saveDateItems();
+    renderDateItems();
+
+    nameEl.value = '';
+    periodEl.value = '';
+    dateEl.value = new Date().toISOString().slice(0, 10);
+    nameEl.focus();
+  }
+
+  function editDateItem(id) {
+    const item = dateItems.find(i => i.id === id);
+    if (!item) return;
+    const { nameEl, dateEl, periodEl, unitEl, btnEl, cancelEl } = getFormEls();
+
+    editingId = id;
+    nameEl.value = item.name;
+    dateEl.value = item.startDate;
+    periodEl.value = item.period;
+    unitEl.value = item.unit;
+    btnEl.textContent = '수정 완료';
+    cancelEl.style.display = '';
+
+    renderDateItems();
+    nameEl.focus();
+    document.getElementById('view-datemanage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEditDateItem() {
+    editingId = null;
+    const { nameEl, dateEl, periodEl, unitEl, btnEl, cancelEl } = getFormEls();
+    nameEl.value = '';
+    periodEl.value = '';
+    dateEl.value = new Date().toISOString().slice(0, 10);
+    btnEl.textContent = '+ 항목 추가';
+    cancelEl.style.display = 'none';
+    renderDateItems();
+  }
+
+  function deleteDateItem(id) {
+    if (editingId === id) cancelEditDateItem();
+    dateItems = dateItems.filter(i => i.id !== id);
+    saveDateItems();
+    renderDateItems();
+  }
+
+  // 날짜 입력의 기본값을 오늘로 세팅
+  function initDateInput() {
+    const dateEl = document.getElementById('dm-input-date');
+    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+  }
+
+  initDateInput();
+  renderDateItems();
+
+  window.addDateItem = addDateItem;
+  window.editDateItem = editDateItem;
+  window.cancelEditDateItem = cancelEditDateItem;
+  window.deleteDateItem = deleteDateItem;
 })();
 </script>
 
