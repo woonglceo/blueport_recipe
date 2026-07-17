@@ -3215,41 +3215,41 @@
       <div class="card" id="inventory-done-list"></div>
     </div>
   </div>
-</div>
 
-<div id="view-datemanage" class="checklist-page datemanage-page" style="display:none;">
-  <h1>날짜관리</h1>
-  <div class="subtitle">교체/점검일을 등록하면 만료일과 남은 일수를 자동으로 계산해요</div>
+  <div id="view-datemanage" class="checklist-page datemanage-page" style="display:none;">
+    <h1>날짜관리</h1>
+    <div class="subtitle">교체/점검일을 등록하면 만료일과 남은 일수를 자동으로 계산해요</div>
 
-  <div class="dm-form">
-    <div class="dm-form-row">
-      <input type="text" id="dm-input-name" class="dm-input" placeholder="예: 정수기 필터">
-    </div>
-    <div class="dm-form-row dm-form-row-inline">
-      <div class="dm-field">
-        <label class="dm-field-label">교체(작업)일</label>
-        <input type="date" id="dm-input-date" class="dm-input">
+    <div class="dm-form">
+      <div class="dm-form-row">
+        <input type="text" id="dm-input-name" class="dm-input" placeholder="예: 정수기 필터">
       </div>
-      <div class="dm-field dm-field-period">
-        <label class="dm-field-label">교체 주기</label>
-        <div class="dm-period-inline">
-          <input type="number" id="dm-input-period" class="dm-input dm-input-period" placeholder="6" min="0" step="0.5">
-          <select id="dm-input-unit" class="dm-input dm-select">
-            <option value="day">일</option>
-            <option value="month" selected>개월</option>
-            <option value="year">년</option>
-          </select>
+      <div class="dm-form-row dm-form-row-inline">
+        <div class="dm-field">
+          <label class="dm-field-label">교체(작업)일</label>
+          <input type="date" id="dm-input-date" class="dm-input">
+        </div>
+        <div class="dm-field dm-field-period">
+          <label class="dm-field-label">교체 주기</label>
+          <div class="dm-period-inline">
+            <input type="number" id="dm-input-period" class="dm-input dm-input-period" placeholder="6" min="0" step="0.5">
+            <select id="dm-input-unit" class="dm-input dm-select">
+              <option value="day">일</option>
+              <option value="month" selected>개월</option>
+              <option value="year">년</option>
+            </select>
+          </div>
         </div>
       </div>
+      <div class="dm-form-actions">
+        <button class="dm-add-btn" id="dm-submit-btn" onclick="addDateItem()">+ 항목 추가</button>
+        <button class="dm-cancel-btn" id="dm-cancel-btn" onclick="cancelEditDateItem()" style="display:none;">취소</button>
+      </div>
     </div>
-    <div class="dm-form-actions">
-      <button class="dm-add-btn" id="dm-submit-btn" onclick="addDateItem()">+ 항목 추가</button>
-      <button class="dm-cancel-btn" id="dm-cancel-btn" onclick="cancelEditDateItem()" style="display:none;">취소</button>
-    </div>
-  </div>
 
-  <div id="dm-list" class="dm-list"></div>
-  <div id="dm-empty" class="empty" style="display:none;">등록된 항목이 없어요. 위에서 새 항목을 추가해보세요.</div>
+    <div id="dm-list" class="dm-list"></div>
+    <div id="dm-empty" class="empty" style="display:none;">등록된 항목이 없어요. 위에서 새 항목을 추가해보세요.</div>
+  </div>
 </div>
 
 <!-- 우하단 FAB 버튼 그룹 제거됨 -->
