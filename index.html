@@ -9,7 +9,10 @@
   html { overflow-x: clip; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; overflow-x: clip; }
   .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
-  .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
+  .last-updated { font-size: 10.5px; color: #b3b0aa; letter-spacing: 0; text-transform: none; white-space: nowrap; flex-shrink: 0; }
+  .last-updated.is-cached { color: #c9a34a; }
   h1 { font-size: 26px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; }
   .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
   .search-row input {
@@ -229,9 +232,60 @@
   .section-nav-item.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
   .section-nav-item.done-type { color: #b7935f; }
   .section-nav-item.done-type.active { background: #92400E; border-color: #92400E; color: #fff; }
+
+  /* 목차 펼침 토글 버튼 (모바일 전용) */
+  .section-nav-toggle {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 56;
+    width: 22px; height: 52px;
+    background: rgba(26,26,26,0.72);
+    color: #fff;
+    border-radius: 0 12px 12px 0;
+    align-items: center; justify-content: center;
+    font-size: 13px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .section-nav-toggle:active { background: rgba(26,26,26,0.9); }
+  .section-nav-toggle.hidden { display: none !important; }
+
+  /* 목차 뒤 반투명 배경 (모바일에서 펼쳤을 때만) */
+  .section-nav-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.15);
+    z-index: 54;
+  }
+
   @media (max-width: 900px) {
-    .section-nav { left: 4px; gap: 5px; }
-    .section-nav-item { min-width: 24px; height: 24px; font-size: 9.5px; padding: 0 4px; }
+    .section-nav-toggle { display: flex; }
+    .section-nav {
+      left: 6px;
+      gap: 5px;
+      background: rgba(255,255,255,0.98);
+      border-radius: 14px;
+      padding: 8px 5px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+      border: 1px solid #e5e2dc;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-14px, -50%);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .section-nav.expanded {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(0, -50%);
+    }
+    .section-nav.expanded ~ .section-nav-backdrop,
+    .section-nav-backdrop.show { display: block; }
+    .section-nav-item { min-width: 26px; height: 26px; font-size: 10px; padding: 0 5px; }
   }
   @media (max-width: 500px) {
     .size-grid { grid-template-columns: 1fr; }
@@ -1191,9 +1245,14 @@
 
 </head>
 <body>
+<div class="section-nav-toggle hidden" id="sectionNavToggle" onclick="toggleSectionNav()">≡</div>
+<div class="section-nav-backdrop" id="sectionNavBackdrop" onclick="closeSectionNav()"></div>
 <div class="section-nav hidden" id="sectionNav"></div>
 <div class="container">
-  <div class="brand">Blueport Cafe</div>
+  <div class="brand-row">
+    <div class="brand">Blueport Cafe</div>
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
   <div class="tab-bar-wrap" id="tabBarWrap">
   <div class="tab-bar" id="mainTabBar">
     <button class="tab-item" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
@@ -5132,11 +5191,14 @@ function sectionNavLabel(rawText) {
 
 function updateSectionNav() {
   const nav = document.getElementById('sectionNav');
+  const toggle = document.getElementById('sectionNavToggle');
   if (!nav) return;
 
   if (!CHECKLIST_NAV_TYPES.includes(currentNavType)) {
     nav.classList.add('hidden');
     nav.innerHTML = '';
+    if (toggle) toggle.classList.add('hidden');
+    closeSectionNav();
     return;
   }
 
@@ -5144,6 +5206,8 @@ function updateSectionNav() {
   if (!viewEl || viewEl.style.display === 'none') {
     nav.classList.add('hidden');
     nav.innerHTML = '';
+    if (toggle) toggle.classList.add('hidden');
+    closeSectionNav();
     return;
   }
 
@@ -5160,6 +5224,8 @@ function updateSectionNav() {
   if (!visibleEls.length) {
     nav.classList.add('hidden');
     nav.innerHTML = '';
+    if (toggle) toggle.classList.add('hidden');
+    closeSectionNav();
     return;
   }
 
@@ -5175,6 +5241,23 @@ function updateSectionNav() {
     nav.appendChild(btn);
   });
   nav.classList.remove('hidden');
+  if (toggle) toggle.classList.remove('hidden');
+}
+
+// 모바일에서 좌측 목차를 펼치고/접습니다. 데스크톱(900px 초과)에서는 항상 펼쳐진 채로 보입니다.
+function toggleSectionNav() {
+  const nav = document.getElementById('sectionNav');
+  const backdrop = document.getElementById('sectionNavBackdrop');
+  if (!nav) return;
+  const expand = !nav.classList.contains('expanded');
+  nav.classList.toggle('expanded', expand);
+  if (backdrop) backdrop.classList.toggle('show', expand);
+}
+function closeSectionNav() {
+  const nav = document.getElementById('sectionNav');
+  const backdrop = document.getElementById('sectionNavBackdrop');
+  if (nav) nav.classList.remove('expanded');
+  if (backdrop) backdrop.classList.remove('show');
 }
 
 // 탭바·상단 고정 진행률 바 높이만큼 보정하여 목표 섹션이 가려지지 않게 스크롤합니다.
@@ -5189,6 +5272,7 @@ function scrollToChecklistSection(el) {
   const rect = el.getBoundingClientRect();
   const targetY = window.scrollY + rect.top - offset;
   window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+  closeSectionNav();
 }
 
 // 기존 렌더/전환 함수들을 감싸서, 다시 그려질 때마다 목차도 함께 갱신합니다.
@@ -6494,7 +6578,93 @@ function downloadSource() {
     if (el2) new ResizeObserver(updateTabbarHeight).observe(el2);
   }
 })();
-</script>
 
+// ── 마지막 업데이트 표시 ──────────────────────────────────
+// GitHub API로 이 파일(index.html)의 가장 최근 커밋 시각을 가져와 표시합니다.
+// 즉, "커밋해서 GitHub에 올린 시각" = "업데이트 시각" 기준입니다.
+(function () {
+  const el = document.getElementById('lastUpdated');
+  if (!el) return;
+  const GH_OWNER = 'woonglceo';
+  const GH_REPO = 'blueport_recipe';
+  const GH_BRANCH = 'main';
+  const GH_FILE = 'index.html';
+
+  // 캐싱 설정: 같은 브라우저에서는 CACHE_TTL_MS 동안 GitHub API를 다시 호출하지 않고
+  // localStorage에 저장된 값을 재사용합니다. (비인증 API는 시간당 60회 제한)
+  const CACHE_KEY = 'lastUpdatedCache_' + GH_OWNER + '_' + GH_REPO;
+  const CACHE_TTL_MS = 10 * 60 * 1000; // 10분
+
+  const pad = n => String(n).padStart(2, '0');
+  const formatDate = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+  function readCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeCache(dateStr) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ dateStr, fetchedAt: Date.now() }));
+    } catch (e) {
+      // localStorage 접근 불가(프라이빗 모드 등) 시에는 캐싱을 건너뜁니다.
+    }
+  }
+
+  // isFallback=true면 "API 호출은 실패했지만 캐시값을 대신 보여주는 중"이라는 뜻 →
+  // 색을 다르게 하고 안내 문구를 덧붙여 최신 값이 아닐 수 있음을 표시합니다.
+  function applyDate(dateStr, isFallback) {
+    const d = new Date(dateStr);
+    el.textContent = '업데이트 ' + formatDate(d) + (isFallback ? ' (오프라인, 이전 확인값)' : '');
+    el.classList.toggle('is-cached', !!isFallback);
+    el.title = isFallback
+      ? 'GitHub API 호출 실패로 마지막으로 확인된 값을 표시 중입니다.'
+      : 'GitHub 커밋 기준 (' + GH_BRANCH + ' 브랜치)';
+  }
+
+  const cached = readCache();
+
+  // 캐시가 있고 아직 유효(TTL 이내)하면 API 호출 없이 바로 표시하고 종료합니다.
+  if (cached && cached.dateStr && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS) {
+    applyDate(cached.dateStr, false);
+    return;
+  }
+
+  // 캐시가 없거나 만료됐으면, 우선 있는 캐시라도 화면에 먼저 보여준 뒤 백그라운드에서 갱신합니다.
+  // (아직 API 호출 결과를 모르므로 실패 표시는 하지 않습니다.)
+  if (cached && cached.dateStr) {
+    applyDate(cached.dateStr, false);
+  } else {
+    el.textContent = '업데이트 확인 중...';
+    el.classList.remove('is-cached');
+  }
+
+  fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/commits?path=${GH_FILE}&sha=${GH_BRANCH}&per_page=1`)
+    .then(res => {
+      if (!res.ok) throw new Error('github api error: ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      const dateStr = data && data[0] && data[0].commit && data[0].commit.committer && data[0].commit.committer.date;
+      if (!dateStr) throw new Error('no commit date');
+      writeCache(dateStr);
+      applyDate(dateStr, false);
+    })
+    .catch(() => {
+      // API 실패(오프라인, 레이트리밋 등) 시: 캐시가 있으면 "캐시값 + 실패 표시"로 보여주고,
+      // 캐시조차 없을 때만 표시를 비웁니다.
+      if (cached && cached.dateStr) {
+        applyDate(cached.dateStr, true);
+      } else {
+        el.textContent = '';
+      }
+    });
+})();
+</script>
 
 </body></html>
