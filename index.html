@@ -477,8 +477,20 @@
   .dm-card-edit:hover { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
   .dm-card-delete:hover { background: #fee2e2; border-color: #fecaca; color: #ef4444; }
   .dm-card-refresh:hover { background: #ecfdf5; border-color: #a7f3d0; color: #059669; }
-  @media (max-width: 480px) {
-    .dm-card { flex-wrap: wrap; }
+  /* 데스크톱: footer(dday+버튼)를 카드 안에서 일반 flex 아이템처럼 한 줄로 배치 */
+  .dm-card-footer { display: contents; }
+  .dm-card-actions { display: contents; }
+  @media (max-width: 560px) {
+    /* 모바일: 이름/날짜 텍스트가 한 줄 전체를 쓰도록 위로, dday+버튼은 아래 별도 줄로 분리 */
+    .dm-card { flex-wrap: wrap; align-items: flex-start; row-gap: 8px; padding: 12px 14px; }
+    .dm-card-main { width: 100%; flex-basis: 100%; }
+    .dm-card-dates { font-size: 12.5px; }
+    .dm-card-footer {
+      display: flex; width: 100%; flex-basis: 100%;
+      align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .dm-dday-wrap { align-items: flex-start; }
+    .dm-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
   }
   .checklist-page .item-edit-input {
     width: 100%; font: inherit; font-size: 15px; color: #1a1a1a;
@@ -6217,8 +6229,10 @@ window.moveSelectedDown = moveSelectedDown;
           <div class="dm-card-name">${escapeHtml(item.name)}${typeBadge}${deletedBadge}</div>
           <div class="dm-card-dates">${fmtDate(startD)} 시작 · 주기 <b>${item.period}${unitLabel(item.unit)}</b> · 만료 <b>${fmtDate(item.due)}</b></div>
         </div>
-        <div class="dm-dday-wrap">${ddLabel}<div class="dm-dday ${ddClass}">${ddText}</div></div>
-        ${actionBtns}
+        <div class="dm-card-footer">
+          <div class="dm-dday-wrap">${ddLabel}<div class="dm-dday ${ddClass}">${ddText}</div></div>
+          <div class="dm-card-actions">${actionBtns}</div>
+        </div>
       </div>`;
     }).join('');
   }
