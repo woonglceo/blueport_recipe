@@ -149,19 +149,6 @@
     transition: background 0.15s, color 0.15s;
     white-space: nowrap;
     min-width: 64px;
-    position: relative;
-  }
-  .tab-download-btn .dl-badge {
-    position: absolute; top: 3px; right: 2px;
-    min-width: 15px; height: 15px; padding: 0 4px;
-    border-radius: 99px; background: #DC2626; color: #fff;
-    font-size: 10px; font-weight: 700; line-height: 15px; text-align: center;
-    display: none; box-shadow: 0 0 0 2px #f5f4f0;
-  }
-  .tab-download-btn .dl-badge.visible { display: inline-block; animation: dlBadgePulse 1.8s ease-in-out infinite; }
-  @keyframes dlBadgePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
   }
   .tab-download-btn .dl-icon { font-size: 15px; line-height: 1; }
   .tab-download-btn:hover { background: #eae8e3; color: #222; }
@@ -362,14 +349,6 @@
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
   }
   /* 커스텀 체크리스트 항목 수정/삭제 버튼 */
-  /* 커스텀 체크리스트: 소스코드 저장 여부 배지 */
-  .checklist-page .custom-status-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px;
-    border-radius: 99px; flex-shrink: 0; white-space: nowrap;
-    margin-left: 2px;
-  }
-  .checklist-page .custom-status-badge.status-saved { background: #E0F2FE; color: #075985; }
-  .checklist-page .custom-status-badge.status-temp { background: #FEF3C7; color: #92400E; }
   .checklist-page .item-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
   .checklist-page .item-edit,
   .checklist-page .item-delete {
@@ -1081,18 +1060,18 @@
 
 </head>
 <body>
-<div class="section-nav" id="sectionNav"><div class="section-nav-item" title="마감 특이사항">마감 특이사항</div><div class="section-nav-item" title="마감 기본사항">마감 기본사항</div><div class="section-nav-item" title="📝 커스텀 체크리스트">커스텀 체크리스트</div><div class="section-nav-item done-type" title="✅ 완료 (커스텀)">완료 (커스텀)</div></div>
+<div class="section-nav hidden" id="sectionNav"></div>
 <div class="container">
   <div class="brand">Blueport Cafe</div>
   <div class="tab-bar-wrap" id="tabBarWrap">
   <div class="tab-bar" id="mainTabBar">
-    <button class="tab-item" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
+    <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
-    <button class="tab-item active" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
+    <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
-  <button class="tab-download-btn" id="tabDownloadBtn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장<span class="dl-badge" id="dlBadge"></span></button>
+  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장</button>
   </div>
 
   
@@ -1317,7 +1296,7 @@
   </div>
 
 
-  <div id="view-recipe" style="display: none;">
+  <div id="view-recipe">
   <h1>레시피 검색</h1>
   <div class="recipe-sticky">
     <div class="search-row">
@@ -2265,94 +2244,28 @@
 
   <div id="view-opening" class="checklist-page" style="display:none;">
     <h1>오픈 체크리스트</h1>
-    <div class="subtitle" id="dateLabel-opening">2026.7.17 (금) 오픈</div>
+    <div class="subtitle" id="dateLabel-opening">2026.7.10 (금) 오픈</div>
     <div class="day-tab-bar" id="dayTabs-opening"><button class="day-tab " onclick="switchChecklistDay('opening','mon')">월</button><button class="day-tab " onclick="switchChecklistDay('opening','tue')">화</button><button class="day-tab " onclick="switchChecklistDay('opening','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('opening','thu')">목</button><button class="day-tab active" onclick="switchChecklistDay('opening','fri')">금<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('opening','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('opening','sun')">일</button></div>
     <div class="progress-sticky">
       <div class="progress-wrap">
-        <div class="progress-track"><div class="progress-fill" id="progressFill-opening" style="width: 0%;"></div></div>
-        <div class="progress-text" id="progressText-opening">0 / 24</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill-opening" style="width: 87%;"></div></div>
+        <div class="progress-text" id="progressText-opening">20 / 23</div>
       </div>
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('opening')">↺ 전체 초기화</button>
     </div>
     <div id="sections-opening"><div class="section">
-      <div class="section-title">오픈 특이사항</div>
-      <div class="card"><div class="item" id="cl-item-opening-0-0" onclick="toggleChecklistItem('opening','0-0')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">월요일 우유 발주 마감하기</div>
-      </div></div>
-    </div><div class="section">
       <div class="section-title">오픈 기본사항</div>
-      <div class="card"><div class="item" id="cl-item-opening-1-0" onclick="toggleChecklistItem('opening','1-0')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">포스 켜기</div>
-      </div><div class="item" id="cl-item-opening-1-1" onclick="toggleChecklistItem('opening','1-1')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">캠플기기 켜기</div>
-      </div><div class="item" id="cl-item-opening-1-2" onclick="toggleChecklistItem('opening','1-2')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">블렌더 켜기</div>
-      </div><div class="item" id="cl-item-opening-1-3" onclick="toggleChecklistItem('opening','1-3')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">신발 갈아신기</div>
-      </div><div class="item" id="cl-item-opening-1-4" onclick="toggleChecklistItem('opening','1-4')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">키오스크 켜기</div>
-      </div><div class="item" id="cl-item-opening-1-5" onclick="toggleChecklistItem('opening','1-5')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">쪽문 열기</div>
-      </div><div class="item" id="cl-item-opening-1-6" onclick="toggleChecklistItem('opening','1-6')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">쪽문 입구쪽 물기, 먼지 쓸기</div>
-      </div><div class="item" id="cl-item-opening-1-7" onclick="toggleChecklistItem('opening','1-7')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">정수기 물받이 세팅하기</div>
-      </div><div class="item" id="cl-item-opening-1-8" onclick="toggleChecklistItem('opening','1-8')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">커피머신 윗쪽 마른 설거지들 정리하기</div>
-      </div><div class="item" id="cl-item-opening-1-9" onclick="toggleChecklistItem('opening','1-9')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">토스트 세팅하기(가루받이, 도마)</div>
-      </div><div class="item" id="cl-item-opening-1-10" onclick="toggleChecklistItem('opening','1-10')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">행주 소독하기</div>
-      </div><div class="item" id="cl-item-opening-1-11" onclick="toggleChecklistItem('opening','1-11')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">베이커리 해동하기</div>
-      </div><div class="item" id="cl-item-opening-1-12" onclick="toggleChecklistItem('opening','1-12')">
+      <div class="card"><div class="item" id="cl-item-opening-1-10" onclick="toggleChecklistItem('opening','1-10')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">리플잼 세팅하기</div>
-      </div><div class="item" id="cl-item-opening-1-13" onclick="toggleChecklistItem('opening','1-13')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">아이스티 세팅하기(물빠지는 철판, 컵)</div>
-      </div><div class="item" id="cl-item-opening-1-14" onclick="toggleChecklistItem('opening','1-14')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">아이스티 꺼내기</div>
-      </div><div class="item" id="cl-item-opening-1-15" onclick="toggleChecklistItem('opening','1-15')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">에이드 펌프 꺼내기</div>
       </div><div class="item" id="cl-item-opening-1-16" onclick="toggleChecklistItem('opening','1-16')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">컵 채우기</div>
+        <div class="item-label">빨대 채우기</div>
       </div><div class="item" id="cl-item-opening-1-17" onclick="toggleChecklistItem('opening','1-17')">
         <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">뚜껑 채우기</div>
-      </div><div class="item" id="cl-item-opening-1-18" onclick="toggleChecklistItem('opening','1-18')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">빨대 채우기</div>
-      </div><div class="item" id="cl-item-opening-1-19" onclick="toggleChecklistItem('opening','1-19')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
         <div class="item-label">베이스 빠진거 있는지 체크하기</div>
-      </div><div class="item" id="cl-item-opening-1-20" onclick="toggleChecklistItem('opening','1-20')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">쇼케이스 물기닦기</div>
-      </div><div class="item" id="cl-item-opening-1-21" onclick="toggleChecklistItem('opening','1-21')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">메뉴판 모니터 켜기</div>
-      </div><div class="item" id="cl-item-opening-1-22" onclick="toggleChecklistItem('opening','1-22')">
-        <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-        <div class="item-label">음악 켜기</div>
       </div></div>
     </div></div>
     <!-- 커스텀 체크리스트 (오픈·마감 공유) -->
@@ -2362,142 +2275,28 @@
         <span class="custom-shared-note">(오픈·마감 공유)</span>
         <button class="custom-reset-link" onclick="resetCustomChecklist()">초기화</button>
       </div>
-      <div class="card" id="sections-custom-opening">
-        <div class="item" id="cust-item-opening-c1784079879570hizp" data-id="c1784079879570hizp" onclick="toggleCustomItem('c1784079879570hizp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1784079879570hizp">휘낭시에 포장하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1784079879570hizp">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784079879570hizp','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784079879570hizp')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c1784071770281d3ey" data-id="c1784071770281d3ey" onclick="toggleCustomItem('c1784071770281d3ey')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1784071770281d3ey">물건들 언박싱하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1784071770281d3ey">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784071770281d3ey','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784071770281d3ey')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c1784071597322xu2a" data-id="c1784071597322xu2a" onclick="toggleCustomItem('c1784071597322xu2a')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1784071597322xu2a">쓰레기 모으기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1784071597322xu2a">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784071597322xu2a','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784071597322xu2a')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c17840760814723axp" data-id="c17840760814723axp" onclick="toggleCustomItem('c17840760814723axp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c17840760814723axp">맨 끝 냉장고 소스들 싹 다 버리기(원물)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c17840760814723axp">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c17840760814723axp','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c17840760814723axp')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c1783669047062t2jg" data-id="c1783669047062t2jg" onclick="toggleCustomItem('c1783669047062t2jg')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1783669047062t2jg">크림치즈 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1783669047062t2jg">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669047062t2jg','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669047062t2jg')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c1783669087645zxyt" data-id="c1783669087645zxyt" onclick="toggleCustomItem('c1783669087645zxyt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1783669087645zxyt">티라미수, 말차크림 쿠키 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1783669087645zxyt">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669087645zxyt','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669087645zxyt')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-opening-c1784156791192t1bm" data-id="c1784156791192t1bm" onclick="toggleCustomItem('c1784156791192t1bm')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-opening-c1784156791192t1bm">(소스코드 추가)쇼케이스 켜기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-opening-c1784156791192t1bm">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784156791192t1bm','opening')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784156791192t1bm')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div></div>
+      <div class="card" id="sections-custom-opening"></div>
       <div class="custom-add-row">
         <input type="text" id="customItemInput-opening" placeholder="항목을 입력하세요" onkeydown="if(event.key==='Enter')addCustomItem('opening')">
         <button class="reset-btn" onclick="addCustomItem('opening')" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
       </div>
     </div>
-    <div class="done-section" id="done-section-opening" style="display: none;">
+    <div class="done-section" id="done-section-opening" style="">
       <div class="section-title">✅ 완료</div>
       <div class="card" id="done-list-opening"><div class="done-chips">
     <span class="done-chip" onclick="toggleChecklistItem('opening','0-0')">월요일 우유 발주 마감하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-0')">키오스크 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-1')">쪽문 열기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-2')">포스 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-3')">캠플기기 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-4')">블렌더 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-5')">신발 갈아신기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-6')">커피머신 윗쪽 마른 설거지들 정리하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-7')">토스트 세팅하기(가루받이, 도마) <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-8')">행주 소독하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-9')">베이커리 해동하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-11')">아이스티 세팅하기(물빠지는 철판, 컵) <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-12')">아이스티 꺼내기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-13')">에이드 펌프 꺼내기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-14')">컵 채우기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-15')">뚜껑 채우기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-18')">쇼케이스 물기닦기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-19')">정수기 물받이 세팅하기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-20')">메뉴판 모니터 켜기 <span class="undo-icon">↺</span></span><span class="done-chip" onclick="toggleChecklistItem('opening','1-21')">음악 켜기 <span class="undo-icon">↺</span></span>
   </div></div>
     </div>
-    <div class="done-section" id="done-section-custom-opening" style="">
+    <div class="done-section" id="done-section-custom-opening" style="display:none;">
       <div class="section-title">✅ 완료 (커스텀)</div>
-      <div class="card" id="done-list-custom-opening"><div class="item checked" onclick="toggleCustomItem('c1783671185630krkt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">6개월짜리 정수기 필터 교체하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784078045983elgo')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(쿠팡)턱있는 수세미 받침대 구매하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784077575714iiio')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">소스통 소독하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784073204027m5r7')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">세무사님 6월달부터 쪼개는거 물어보기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784077814928mlet')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(클로드)완료목록 전부 다 밑으로 빼기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840763123307mfp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(클로드)체크리스트 탭에서 목차(?)별로 건너뛸수있게 왼쪽에 shortcut 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840725319503stt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(오픈)쪽문 스위퍼로 물기, 벌레, 먼지 쓸기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17836690169105zx6')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">설탕시럽 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784072872805x200')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">맨 끝 냉장고 소스들 싹 다 버리기(통)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784071680338gvol')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">항목 순서 바꾸기 버튼 만들기(클로드)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840729424859swj')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">커스텀 체크리스트를 하나로 만들기(오픈, 마감에 공통섹션으로  들어가게)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div></div>
+      <div class="card" id="done-list-custom-opening"></div>
     </div>
 
   </div>
 
-  <div id="view-closing" class="checklist-page" style="">
+  <div id="view-closing" class="checklist-page" style="display:none;">
     <h1>마감 체크리스트</h1>
-    <div class="subtitle" id="dateLabel-closing">2026.7.17 (금) 마감</div>
+    <div class="subtitle" id="dateLabel-closing">2026.7.10 (금) 마감</div>
     <div class="day-tab-bar" id="dayTabs-closing"><button class="day-tab " onclick="switchChecklistDay('closing','mon')">월</button><button class="day-tab " onclick="switchChecklistDay('closing','tue')">화</button><button class="day-tab " onclick="switchChecklistDay('closing','wed')">수</button><button class="day-tab " onclick="switchChecklistDay('closing','thu')">목</button><button class="day-tab active" onclick="switchChecklistDay('closing','fri')">금<span class="today-dot"></span></button><button class="day-tab " onclick="switchChecklistDay('closing','sat')">토</button><button class="day-tab " onclick="switchChecklistDay('closing','sun')">일</button></div>
     <div class="progress-sticky">
       <div class="progress-wrap">
@@ -2570,77 +2369,7 @@
         <span class="custom-shared-note">(오픈·마감 공유)</span>
         <button class="custom-reset-link" onclick="resetCustomChecklist()">초기화</button>
       </div>
-      <div class="card" id="sections-custom-closing">
-        <div class="item" id="cust-item-closing-c1784079879570hizp" data-id="c1784079879570hizp" onclick="toggleCustomItem('c1784079879570hizp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1784079879570hizp">휘낭시에 포장하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1784079879570hizp">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784079879570hizp','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784079879570hizp')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c1784071770281d3ey" data-id="c1784071770281d3ey" onclick="toggleCustomItem('c1784071770281d3ey')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1784071770281d3ey">물건들 언박싱하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1784071770281d3ey">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784071770281d3ey','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784071770281d3ey')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c1784071597322xu2a" data-id="c1784071597322xu2a" onclick="toggleCustomItem('c1784071597322xu2a')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1784071597322xu2a">쓰레기 모으기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1784071597322xu2a">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784071597322xu2a','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784071597322xu2a')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c17840760814723axp" data-id="c17840760814723axp" onclick="toggleCustomItem('c17840760814723axp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c17840760814723axp">맨 끝 냉장고 소스들 싹 다 버리기(원물)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c17840760814723axp">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c17840760814723axp','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c17840760814723axp')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c1783669047062t2jg" data-id="c1783669047062t2jg" onclick="toggleCustomItem('c1783669047062t2jg')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1783669047062t2jg">크림치즈 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1783669047062t2jg">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669047062t2jg','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669047062t2jg')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c1783669087645zxyt" data-id="c1783669087645zxyt" onclick="toggleCustomItem('c1783669087645zxyt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1783669087645zxyt">티라미수, 말차크림 쿠키 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1783669087645zxyt">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1783669087645zxyt','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1783669087645zxyt')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div>
-        <div class="item" id="cust-item-closing-c1784156791192t1bm" data-id="c1784156791192t1bm" onclick="toggleCustomItem('c1784156791192t1bm')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label" id="cust-label-closing-c1784156791192t1bm">(소스코드 추가)쇼케이스 켜기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-          <div class="item-actions" id="cust-actions-closing-c1784156791192t1bm">
-            <button class="item-edit" onclick="event.stopPropagation();editCustomItem('c1784156791192t1bm','closing')" title="수정">✎</button>
-            <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('c1784156791192t1bm')" title="삭제">×</button>
-            <div class="drag-handle" onclick="event.stopPropagation()" title="눌러서 순서 변경">⠿</div>
-          </div>
-        </div></div>
+      <div class="card" id="sections-custom-closing"></div>
       <div class="custom-add-row">
         <input type="text" id="customItemInput-closing" placeholder="항목을 입력하세요" onkeydown="if(event.key==='Enter')addCustomItem('closing')">
         <button class="reset-btn" onclick="addCustomItem('closing')" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
@@ -2650,60 +2379,16 @@
       <div class="section-title">✅ 완료</div>
       <div class="card" id="done-list-closing"><div class="done-chips"></div></div>
     </div>
-    <div class="done-section" id="done-section-custom-closing" style="">
+    <div class="done-section" id="done-section-custom-closing" style="display:none;">
       <div class="section-title">✅ 완료 (커스텀)</div>
-      <div class="card" id="done-list-custom-closing"><div class="item checked" onclick="toggleCustomItem('c1783671185630krkt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">6개월짜리 정수기 필터 교체하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784078045983elgo')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(쿠팡)턱있는 수세미 받침대 구매하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784077575714iiio')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">소스통 소독하기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784073204027m5r7')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">세무사님 6월달부터 쪼개는거 물어보기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784077814928mlet')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(클로드)완료목록 전부 다 밑으로 빼기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840763123307mfp')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(클로드)체크리스트 탭에서 목차(?)별로 건너뛸수있게 왼쪽에 shortcut 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840725319503stt')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">(오픈)쪽문 스위퍼로 물기, 벌레, 먼지 쓸기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17836690169105zx6')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">설탕시럽 만들기</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784072872805x200')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">맨 끝 냉장고 소스들 싹 다 버리기(통)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c1784071680338gvol')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">항목 순서 바꾸기 버튼 만들기(클로드)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div><div class="item checked" onclick="toggleCustomItem('c17840729424859swj')">
-          <div class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-          <div class="item-label">커스텀 체크리스트를 하나로 만들기(오픈, 마감에 공통섹션으로  들어가게)</div>
-          <span class="custom-status-badge status-saved">저장됨</span>
-        </div></div>
+      <div class="card" id="done-list-custom-closing"></div>
     </div>
 
   </div>
 
   <div id="view-inventory" class="checklist-page inventory-page" style="display:none;">
     <h1>재고표</h1>
-    <div class="subtitle" id="dateLabel-inventory">2026.7.17 (금) 재고 점검</div>
+    <div class="subtitle" id="dateLabel-inventory">2026.7.10 (금) 재고 점검</div>
     <div class="progress-sticky">
       <div class="progress-wrap">
         <div class="progress-track"><div class="progress-fill" id="progressFill-inventory" style="width: 0%;"></div></div>
@@ -4755,31 +4440,20 @@ function switchTab(tab) {
 ============================================================ */
 const CUSTOM_STORAGE_KEY = 'custom-checklist-v1';
 
-// ★ 소스코드(index.html)에 실제로 baked-in 된 커스텀 체크리스트 기본 항목입니다.
-//   "소스코드 저장" 버튼을 누르는 순간, 이 배열이 그 시점의 전체 항목으로 교체된 채
-//   새 index.html 파일로 다운로드됩니다. 즉 이 배열에 들어있는 항목 = 파일을 처음 열어도
-//   항상 보이는 "저장된" 항목이고, 아직 여기 없이 localStorage에만 있는 항목은 "임시" 항목입니다.
-const CUSTOM_ITEMS_SEED = [{"id":"c1784077575714iiio","text":"소스통 소독하기"},{"id":"c1784079879570hizp","text":"휘낭시에 포장하기"},{"id":"c1784071770281d3ey","text":"물건들 언박싱하기"},{"id":"c1784071597322xu2a","text":"쓰레기 모으기"},{"id":"c1784073204027m5r7","text":"세무사님 6월달부터 쪼개는거 물어보기"},{"id":"c1784078045983elgo","text":"(쿠팡)턱있는 수세미 받침대 구매하기"},{"id":"c1784072872805x200","text":"맨 끝 냉장고 소스들 싹 다 버리기(통)"},{"id":"c17840725319503stt","text":"(오픈)쪽문 스위퍼로 물기, 벌레, 먼지 쓸기"},{"id":"c1784071680338gvol","text":"항목 순서 바꾸기 버튼 만들기(클로드)"},{"id":"c17840729424859swj","text":"커스텀 체크리스트를 하나로 만들기(오픈, 마감에 공통섹션으로  들어가게)"},{"id":"c17840763123307mfp","text":"(클로드)체크리스트 탭에서 목차(?)별로 건너뛸수있게 왼쪽에 shortcut 만들기"},{"id":"c1784077814928mlet","text":"(클로드)완료목록 전부 다 밑으로 빼기"},{"id":"c17840760814723axp","text":"맨 끝 냉장고 소스들 싹 다 버리기(원물)"},{"id":"c1783671185630krkt","text":"6개월짜리 정수기 필터 교체하기"},{"id":"c17836690169105zx6","text":"설탕시럽 만들기"},{"id":"c1783669047062t2jg","text":"크림치즈 만들기"},{"id":"c1783669087645zxyt","text":"티라미수, 말차크림 쿠키 만들기"},{"id":"c1784156791192t1bm","text":"(소스코드 추가)쇼케이스 켜기"}];
-
-function seedCustomItems() {
-  return CUSTOM_ITEMS_SEED.map(it => ({ id: it.id, text: it.text, checked: false, saved: true }));
-}
-
 // 커스텀 체크리스트 데이터 로드 (2주 지난 데이터는 자동 삭제)
 function loadCustomChecklist() {
   try {
     const raw = localStorage.getItem(CUSTOM_STORAGE_KEY);
-    if (!raw) return { items: seedCustomItems() };
+    if (!raw) return { items: [] };
     const data = JSON.parse(raw);
     // 2주(14일) 경과 시 초기화
     const TWO_WEEKS = 14 * 24 * 60 * 60 * 1000;
     if (data.savedAt && (Date.now() - data.savedAt) > TWO_WEEKS) {
       localStorage.removeItem(CUSTOM_STORAGE_KEY);
-      return { items: seedCustomItems() };
+      return { items: [] };
     }
-    // localStorage에 이미 기록이 있으면(저장/임시 항목이 섞여 저장되어 있음) 그걸 그대로 사용
-    return { items: (data.items && data.items.length) ? data.items : seedCustomItems() };
-  } catch (e) { return { items: seedCustomItems() }; }
+    return { items: data.items || [] };
+  } catch (e) { return { items: [] }; }
 }
 
 function saveCustomChecklist() {
@@ -4792,9 +4466,7 @@ function saveCustomChecklist() {
 }
 
 let customItems = loadCustomChecklist().items;
-// items: [{ id, text, checked, saved }]
-// saved: true  → 소스코드(CUSTOM_ITEMS_SEED)에 실제로 저장되어 있는 항목
-// saved: false → 아직 이 브라우저의 localStorage에만 있는 "임시" 항목
+// items: [{ id, text, checked }]
 // 오픈/마감 탭에 동일하게 표시되는 공유 목록입니다 (탭은 따로 없음).
 const CUSTOM_VIEWS = ['opening', 'closing'];
 
@@ -4810,7 +4482,6 @@ function animateCustomRemoveThen(id, callback) {
 }
 
 function renderCustomChecklist() {
-  updateDownloadBadge();
   const unchecked = customItems.filter(it => !it.checked);
   const checked = customItems.filter(it => it.checked);
   const sortedChecked = [...checked].sort((a, b) =>
@@ -4830,7 +4501,6 @@ function renderCustomChecklist() {
         <div class="item" id="cust-item-${suffix}-${it.id}" data-id="${it.id}" onclick="toggleCustomItem('${it.id}')">
           <div class="checkbox">${CHECK_ICON}</div>
           <div class="item-label" id="cust-label-${suffix}-${it.id}">${escapeHtml(it.text)}</div>
-          <span class="custom-status-badge ${it.saved ? 'status-saved' : 'status-temp'}">${it.saved ? '저장됨' : '임시'}</span>
           <div class="item-actions" id="cust-actions-${suffix}-${it.id}">
             <button class="item-edit" onclick="event.stopPropagation();editCustomItem('${it.id}','${suffix}')" title="수정">✎</button>
             <button class="item-delete" onclick="event.stopPropagation();deleteCustomItem('${it.id}')" title="삭제">×</button>
@@ -4852,28 +4522,10 @@ function renderCustomChecklist() {
         `<div class="item checked" onclick="toggleCustomItem('${it.id}')">
           <div class="checkbox">${CHECK_ICON}</div>
           <div class="item-label">${escapeHtml(it.text)}</div>
-          <span class="custom-status-badge ${it.saved ? 'status-saved' : 'status-temp'}">${it.saved ? '저장됨' : '임시'}</span>
         </div>`
       ).join('');
     }
   });
-}
-
-// 임시(아직 소스코드에 저장 안 된) 커스텀 항목 개수를 다운로드 버튼에 표시합니다.
-function updateDownloadBadge() {
-  const btn = document.getElementById('tabDownloadBtn');
-  const badge = document.getElementById('dlBadge');
-  if (!btn || !badge) return;
-  const tempCount = customItems.filter(it => !it.saved).length;
-  if (tempCount > 0) {
-    badge.textContent = tempCount > 9 ? '9+' : String(tempCount);
-    badge.classList.add('visible');
-    btn.title = `임시 항목 ${tempCount}개 있음 — 눌러서 소스코드에 저장(다운로드)`;
-  } else {
-    badge.textContent = '';
-    badge.classList.remove('visible');
-    btn.title = '소스코드 다운로드';
-  }
 }
 
 function escapeHtml(str) {
@@ -4887,7 +4539,7 @@ function addCustomItem(suffix) {
   const text = input.value.trim();
   if (!text) return;
   const id = 'c' + Date.now() + Math.random().toString(36).slice(2,6);
-  customItems.push({ id, text, checked: false, saved: false });
+  customItems.push({ id, text, checked: false });
   saveCustomChecklist();
   renderCustomChecklist();
   input.value = '';
@@ -5905,28 +5557,7 @@ window.moveSelectedDown = moveSelectedDown;
 <script>
 // 소스코드 다운로드
 function downloadSource() {
-  // 커스텀 체크리스트: 지금까지 이 브라우저(localStorage)에만 "임시"로 있던 항목들을
-  // 전부 "저장됨" 상태로 전환하고, 화면에도 즉시 반영합니다.
-  if (typeof customItems !== 'undefined') {
-    customItems.forEach(it => { it.saved = true; });
-    if (typeof saveCustomChecklist === 'function') saveCustomChecklist();
-    if (typeof renderCustomChecklist === 'function') renderCustomChecklist();
-  }
-
-  let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-
-  // 소스코드 안의 CUSTOM_ITEMS_SEED 선언을 현재 항목들로 실제 교체합니다.
-  // → 이렇게 만들어진 index.html은 브라우저 localStorage가 비어있어도
-  //   이 항목들이 처음부터 "저장됨" 상태로 표시됩니다.
-  if (typeof customItems !== 'undefined') {
-    const seedForSource = customItems.map(it => ({ id: it.id, text: it.text }));
-    const seedLiteral = JSON.stringify(seedForSource);
-    html = html.replace(
-      /const CUSTOM_ITEMS_SEED = \[[\s\S]*?\];/,
-      'const CUSTOM_ITEMS_SEED = ' + seedLiteral + ';'
-    );
-  }
-
+  const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
