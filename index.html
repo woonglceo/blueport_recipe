@@ -185,24 +185,6 @@
     .tab-item { font-size: 12.5px; padding: 10px 10px 12px; }
     .tab-item .tab-icon { font-size: 14px; }
   }
-  /* 우하단 고정 버튼 그룹 */
-  .fab-group {
-    position: fixed; bottom: 24px; right: 20px;
-    display: flex; flex-direction: column; gap: 8px;
-    z-index: 100;
-  }
-  .fab {
-    width: 48px; height: 48px;
-    border-radius: 50%; border: 1px solid #ddd;
-    background: #fff; color: #444;
-    font-size: 18px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    transition: all 0.15s;
-  }
-  .fab:hover { background: #f0ede8; border-color: #bbb; }
-  .fab:active { transform: scale(0.93); }
-  .fab.disabled { opacity: 0.3; pointer-events: none; }
 
   /* ── 체크리스트 탭 좌측 목차(섹션 바로가기) ── */
   .section-nav {
@@ -830,14 +812,6 @@
   .amount-value.red { color: #c02020; }
   .amount-value.blue { color: #1a50a0; }
 
-  /* 하단 액션 버튼 */
-  .order-actions {
-    background: #b8cce0;
-    padding: 5px 6px;
-    display: flex;
-    gap: 4px;
-  }
-
   /* 회원 정보 */
   .member-section {
     background: #c0d8f0;
@@ -1132,7 +1106,6 @@
   .btn:hover { opacity: 0.85; }
   .btn-quiz { background: #4a90e2; color: #fff; }
   .btn-reset { background: #888; color: #fff; }
-  .btn-reveal { background: #e07030; color: #fff; }
 
   .quiz-label {
     color: #ccd;
@@ -3683,8 +3656,6 @@
   </div>
 </div>
 
-<!-- 우하단 FAB 버튼 그룹 제거됨 -->
-
 <script>
 const menus = [
   { name: "아메리카노", cat: "커피",
@@ -4159,48 +4130,6 @@ function resetAll() {
   render();
 }
 
-let lastQuery = ''; // 되돌리기용 저장
-
-// 우하단 FAB 검색 버튼: 페이지 최상단으로 스크롤 후 검색창에 포커스합니다.
-function fabSearch() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  setTimeout(() => document.getElementById('q').focus(), 300);
-}
-
-// 우하단 FAB 초기화 버튼: 현재 검색어를 저장한 뒤 전체 초기화합니다. (되돌리기 가능)
-function fabResetAll() {
-  const q = document.getElementById('q');
-  lastQuery = q.value;
-  updateUndoBtn();
-  q.value = '';
-  activeFilter = '전체';
-  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.textContent === '전체'));
-  clearFocus();
-  render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  setTimeout(() => q.focus(), 300);
-}
-
-// 마지막으로 저장된 검색어를 복원하여 초기화를 되돌립니다.
-function undoReset() {
-  if (!lastQuery) return;
-  const q = document.getElementById('q');
-  q.value = lastQuery;
-  lastQuery = '';
-  updateUndoBtn();
-  render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  setTimeout(() => q.focus(), 300);
-}
-
-// 저장된 이전 검색어 유무에 따라 되돌리기 버튼의 활성/비활성 상태를 업데이트합니다.
-function updateUndoBtn() {
-  const btn = document.getElementById('fabUndo');
-  if (!btn) return;
-  if (lastQuery) btn.classList.remove('disabled');
-  else btn.classList.add('disabled');
-}
-
 // 레시피 행(temp-row)을 클릭하면 해당 항목을 포커스하고 나머지를 흐리게 처리합니다.
 // 이미 포커스된 경우 포커스를 해제합니다.
 function focusRecipe(row) {
@@ -4249,7 +4178,6 @@ function clearFocus() {
 }
 
 render();
-updateUndoBtn();
 
 // 카테고리 칩 영역: 마우스 휠 위아래 → 좌우 스크롤
 (function() {
@@ -5886,55 +5814,6 @@ function changeTab(dir) {
   renderGrid();
 }
 
-/*function renderGrid() {
-  const tab = getCurrentTab();
-  const total = tab.pages.length;
-
-  // 화살표 상태
-  const btnPrev = document.getElementById("btn-prev");
-  const btnNext = document.getElementById("btn-next");
-  btnPrev.disabled = (currentPage === 0 || total === 0);
-  btnNext.disabled = (currentPage === total - 1 || total === 0);
-  btnPrev.style.opacity = total > 1 ? '1' : '1';
-  btnNext.style.opacity = total > 1 ? '1' : '1';
-
-  const el = document.getElementById("grid");
-
-  // 빈 탭이면 그리드 비움
-  if (total === 0) {
-    el.innerHTML = '';
-    return;
-  }
-
-  const dataKey = tab.pages[currentPage];
-  const items = categories[dataKey] || [];
-
-  // 이 탭의 모든 페이지 중 최대 행 수 계산 → 그리드 높이 고정
-  const COLS = 6;
-  let maxRows = 0;
-  tab.pages.forEach(pageKey => {
-    const pageItems = categories[pageKey] || [];
-    const len = pageItems.length % COLS === 0 ? pageItems.length : pageItems.length + (COLS - pageItems.length % COLS);
-    maxRows = Math.max(maxRows, len / COLS);
-  });
-
-  // 현재 페이지 아이템을 maxRows 기준으로 패딩
-  const targetLen = maxRows * COLS;
-  const padded = [...items];
-  while (padded.length < targetLen) padded.push(null);
-  el.innerHTML = padded.map(item => {
-    if (!item) return `<div class="cell empty"></div>`;
-    const typeClass = item.type || "";
-    const priceStr = item.price.toLocaleString();
-    const safeName = item.name.replace(/"/g, '&quot;');
-    const safePrice = item.price;
-    return `<div class="cell ${typeClass}" data-name="${safeName}" data-price="${safePrice}" onclick="addToOrder('${safeName}', ${safePrice})">
-      <div class="cell-name">${item.name}</div>
-      <div class="cell-price">${priceStr}</div>
-    </div>`;
-  }).join("");
-}
-*/
 function renderGrid() {
   const tab = getCurrentTab();
   const total = tab.pages.length;
@@ -6129,9 +6008,9 @@ window.moveSelectedDown = moveSelectedDown;
   // 아래 2개는 예시로 넣어둔 실제 데이터예요. 앱 안에서 그대로 수정하거나 삭제할 수 있고,
   // 한 번 수정/추가/삭제하면 그 상태가 계속 저장됩니다 (새로고침해도 유지).
   const DM_SAMPLE_DATA = [
-      { id: 'dm-1', name: '정수기 10인치 하우징 필터', startDate: '2026-07-11', period: 1, unit: 'month', isSample: true }
+      { id: 'dm-1', name: '정수기 1차 필터(흰색)', startDate: '2026-07-11', period: 1, unit: 'month', isSample: true }
     , { id: 'dm-2', name: '제빙기 분해청소', startDate: '2026-07-14', period: 3, unit: 'month', isSample: true }
-    , { id: 'dm-3', name: '정수기 ACF 필터', startDate: '2026-07-15', period: 6, unit: 'month', isSample: true }
+    , { id: 'dm-3', name: '정수기 2차 필터(ACF)', startDate: '2026-07-15', period: 6, unit: 'month', isSample: true }
     , { id: 'dm-4', name: '제빙기 먼지필터', startDate: '2026-07-17', period: 14, unit: 'day', isSample: true }
   ];
 
