@@ -361,7 +361,7 @@
     border-radius: 14px; overflow: hidden;
   }
   .checklist-page .item {
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: center; gap: 12px; min-width: 0;
     padding: 13px 16px; border-bottom: 1px solid #f0ede8;
     cursor: pointer; user-select: none; transition: background 0.12s;
   }
@@ -377,7 +377,9 @@
   .checklist-page .item.checked .checkbox { background: #1a1a1a; border-color: #1a1a1a; }
   .checklist-page .item.checked .checkbox svg { opacity: 1; }
   .checklist-page .item.checked .item-label { color: #aaa; text-decoration: line-through; }
-  .checklist-page .item-label { font-size: 15px; color: #1a1a1a; flex: 1; line-height: 1.4; }
+  .checklist-page .item-label {
+    font-size: 15px; color: #1a1a1a; flex: 1; line-height: 1.4; min-width: 0;
+  }
   .checklist-page .empty { text-align: center; padding: 4rem 0; color: #aaa; font-size: 15px; }
   .checklist-page .day-tab-bar { display: flex; gap: 5px; margin-bottom: 1.25rem; flex-wrap: wrap; }
   .checklist-page .day-tab {
@@ -411,6 +413,24 @@
   .checklist-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; opacity: 0.6; }
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
+    /* 모바일에서 체크리스트 항목 라벨이 최대한 한 줄로 보이도록 여백/버튼을 축소 */
+    .checklist-page .item { padding: 12px 10px; gap: 8px; }
+    .checklist-page .checkbox { width: 20px; height: 20px; border-radius: 6px; }
+    .checklist-page .item-label { font-size: 14px; }
+    .checklist-page .item-actions { gap: 0; }
+    .checklist-page .item-edit,
+    .checklist-page .item-delete,
+    .checklist-page .item-drag { width: 24px; height: 24px; }
+    .checklist-page .item-edit { font-size: 12px; }
+    .checklist-page .item-delete { font-size: 15px; }
+    .checklist-page .item-drag { font-size: 14px; }
+  }
+  @media (max-width: 360px) {
+    .checklist-page .item { padding: 11px 8px; gap: 6px; }
+    .checklist-page .item-label { font-size: 13.5px; }
+    .checklist-page .item-edit,
+    .checklist-page .item-delete,
+    .checklist-page .item-drag { width: 22px; height: 22px; }
   }
   /* 커스텀 체크리스트 항목 수정/삭제/드래그 버튼 */
   .checklist-page .item-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
@@ -4381,10 +4401,10 @@ function renderChecklist(type) {
       const cap = type === 'opening' ? 'Opening' : 'Closing';
       const editableActions = (type === 'opening' || type === 'closing')
         ? `<div class="item-actions" id="cl-actions-${type}-${it.id}">
-             <span class="item-drag" title="드래그해서 순서 변경"
-               onpointerdown="startItemDrag(event,'${type}',${sIdx})" onclick="event.stopPropagation()">⠿</span>
              <button class="item-edit" onclick="event.stopPropagation();edit${cap}Item('${it.id}')" title="수정">✎</button>
              <button class="item-delete" onclick="event.stopPropagation();delete${cap}Item('${it.id}')" title="삭제">×</button>
+             <span class="item-drag" title="드래그해서 순서 변경"
+               onpointerdown="startItemDrag(event,'${type}',${sIdx})" onclick="event.stopPropagation()">⠿</span>
            </div>`
         : '';
       return `<div class="item" id="cl-item-${type}-${it.id}" data-iidx="${it.iIdx}" onclick="toggleChecklistItem('${type}','${it.id}')">
@@ -4815,9 +4835,13 @@ function startItemDrag(e, type, sIdx) {
   const ghost = itemEl.cloneNode(true);
   ghost.classList.add('item-drag-ghost');
   ghost.style.width = rect.width + 'px';
+  ghost.style.margin = '0';
   ghost.style.left = rect.left + 'px';
   ghost.style.top = rect.top + 'px';
-  document.body.appendChild(ghost);
+  // .item 관련 스타일은 .checklist-page 하위에서만 적용되므로,
+  // ghost도 반드시 .checklist-page 안에 붙여야 스타일이 깨지지 않음
+  const pageEl = itemEl.closest('.checklist-page') || document.body;
+  pageEl.appendChild(ghost);
 
   itemEl.classList.add('dragging');
 
