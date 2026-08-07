@@ -4348,16 +4348,8 @@ function renderChecklist(type) {
   const wrap = document.getElementById('sections-' + type);
   const data = checklistData[type][day] || [];
 
-  // 주말 공유 안내 배너
-  const isWeekend = (day === 'sat' || day === 'sun');
-  const weekendBanner = isWeekend
-    ? `<div style="margin-bottom:1rem;padding:10px 14px;background:#fffbf0;border:1px solid #f0e5c0;border-radius:10px;font-size:13px;color:#7a5c00;">
-        🔒 주말은 운영하지 않아요. 오픈·마감 체크리스트가 동일하게 표시됩니다.
-       </div>`
-    : '';
-
   if (!data.length) {
-    wrap.innerHTML = weekendBanner + '<div class="empty">이 요일에는 체크리스트 항목이 없어요</div>';
+    wrap.innerHTML = '<div class="empty">이 요일에는 체크리스트 항목이 없어요</div>';
     updateChecklistProgress(type, 0, 0);
     renderChecklistDone(type);
     return;
@@ -4400,7 +4392,7 @@ function renderChecklist(type) {
     </div>`;
   }).join('');
 
-  wrap.innerHTML = weekendBanner + (sectionsHtml || '');
+  wrap.innerHTML = sectionsHtml || '';
   updateChecklistProgress(type, checked, total);
   renderChecklistDone(type);
 }
