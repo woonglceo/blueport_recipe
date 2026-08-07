@@ -5,10 +5,12 @@
 <title>Bluepot 레시피 검색</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+  :root { --gutter: 1.25rem; }
+  @media (max-width: 500px) { :root { --gutter: 0.55rem; } }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { overflow-x: clip; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; overflow-x: clip; }
-  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem var(--gutter); }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
   .last-updated { font-size: 10.5px; color: #b3b0aa; letter-spacing: 0; text-transform: none; white-space: nowrap; flex-shrink: 0; }
@@ -130,8 +132,7 @@
     display: flex; gap: 4px; margin-bottom: 0;
     border-bottom: 1px solid #e8e5e0;
     background: #f5f4f0;
-    padding-left: 1.25rem; padding-right: 1.25rem;
-    overflow-x: auto;
+    padding-left: var(--gutter); padding-right: var(--gutter);
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
     flex: 1; min-width: 0;
@@ -143,8 +144,7 @@
   .tab-bar-wrap {
     position: sticky !important; top: 0 !important; z-index: 60 !important;
     background: #f5f4f0 !important;
-    margin-left: -1.25rem; margin-right: -1.25rem;
-    margin-bottom: 1.75rem;
+    margin-left: calc(-1 * var(--gutter)); margin-right: calc(-1 * var(--gutter));
     display: flex; align-items: stretch;
   }
   .tab-bar::-webkit-scrollbar { display: none; }
@@ -306,10 +306,10 @@
     background: #f5f4f0;
     padding-top: 10px;
     padding-bottom: 0;
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    margin-left: calc(-1 * var(--gutter));
+    margin-right: calc(-1 * var(--gutter));
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
   }
   @media (max-width: 500px) {
     .recipe-sticky { padding-top: 0; }
@@ -325,10 +325,10 @@
     background: #f5f4f0;
     padding-top: 10px;
     padding-bottom: 0;
-    margin-left: -1.25rem;
-    margin-right: -1.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
+    margin-left: calc(-1 * var(--gutter));
+    margin-right: calc(-1 * var(--gutter));
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
   }
   .progress-sticky .progress-wrap {
     margin-bottom: 0;
@@ -414,6 +414,7 @@
   .checklist-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; opacity: 0.6; }
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
+    .checklist-page .item { padding: 12px 6px; }
   }
   /* 커스텀 체크리스트 항목 수정/삭제/드래그 버튼 - 라벨 아래 별도 줄에 오른쪽 정렬로 표시 */
   .checklist-page .item-actions {
