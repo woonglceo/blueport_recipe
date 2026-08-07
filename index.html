@@ -1239,10 +1239,10 @@
   </div>
   <div class="tab-bar-wrap" id="tabBarWrap">
   <div class="tab-bar" id="mainTabBar">
-    <button class="tab-item" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
+    <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
     <button class="tab-item" id="tab-closing" onclick="switchTab('closing')"><span class="tab-icon">🌙</span>마감 체크리스트</button>
-    <button class="tab-item active" id="tab-datemanage" onclick="switchTab('datemanage')"><span class="tab-icon">📅</span>날짜관리</button>
+    <button class="tab-item" id="tab-datemanage" onclick="switchTab('datemanage')"><span class="tab-icon">📅</span>날짜관리</button>
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
@@ -1471,7 +1471,7 @@
   </div>
 
 
-  <div id="view-recipe" style="display: none;">
+  <div id="view-recipe" style="">
   <h1>레시피 검색</h1>
   <div class="recipe-sticky">
     <div class="search-row">
@@ -3599,7 +3599,7 @@
     </div>
   </div>
 
-  <div id="view-datemanage" class="checklist-page datemanage-page" style="">
+  <div id="view-datemanage" class="checklist-page datemanage-page" style="display:none;">
     <h1>날짜관리</h1>
     <div class="subtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <span>교체/점검일을 등록하면 만료일과 남은 일수를 자동으로 계산해요</span>
@@ -3782,6 +3782,10 @@ const menus = [
     R: { hot: "-", ice: "-" },
     L: { hot: "-", ice: "엘리자베스 베이스(주전자 끝) + 얼음 + 달고나 30g(토핑)" },
     D: { hot: "-", ice: "-" } },
+  { name: "얼그레이밀크티", cat: "논커피", note: "",
+    R: { hot: "얼그레이밀크티베이스 20g + 스팀우유 230g(스팀 시 얼그레이 1EA 넣어 스팀)", ice: "우린 후 혼합[얼그레이 티백 1 + 온수] + 얼그레이밀크티베이스 20g + 우유 120g + 얼음 가득" },
+    L: { hot: "얼그레이밀크티베이스 35g + 스팀우유 300g(스팀 시 얼그레이 1EA 넣어 스팀)", ice: "우린 후 혼합[얼그레이 티백 1 + 온수] + 얼그레이밀크티베이스 35g + 우유 170g + 얼음 가득" },
+    D: { hot: "얼그레이밀크티베이스 45g + 스팀우유 350g(스팀 시 얼그레이 1EA 넣어 스팀)", ice: "우린 후 혼합[얼그레이 티백 1 + 온수] + 얼그레이밀크티베이스 45g + 우유 200g + 얼음 가득" } },
   { name: "꿀자몽블랙티", cat: "논커피",
     R: { hot: "설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수", ice: "우리기[온수 + 일글리쉬 티백]<br/>+ 자몽청 2s + 설탕시럽 2p + 얼음" },
     L: { hot: "설탕시럽 2p + 자몽청 2s + 잉글리쉬 티백 + 온수", ice: "우리기[온수 + 일글리쉬 티백]<br/>+ 자몽청 3s + 설탕시럽 2p + 얼음" },
@@ -6011,7 +6015,7 @@ window.moveSelectedDown = moveSelectedDown;
       { id: 'dm-1', name: '정수기 1차 필터(흰색)', startDate: '2026-07-11', period: 1, unit: 'month', isSample: true }
     , { id: 'dm-2', name: '제빙기 분해청소', startDate: '2026-07-14', period: 3, unit: 'month', isSample: true }
     , { id: 'dm-3', name: '정수기 2차 필터(ACF)', startDate: '2026-07-15', period: 6, unit: 'month', isSample: true }
-    , { id: 'dm-4', name: '제빙기 먼지필터', startDate: '2026-07-17', period: 14, unit: 'day', isSample: true }
+    , { id: 'dm-4', name: '제빙기 먼지필터', startDate: '2026-08-06', period: 14, unit: 'day', isSample: true }
   ];
 
   const DM_SNAPSHOT_KEY = 'date-manage-sample-snapshot-v1';
