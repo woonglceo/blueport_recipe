@@ -2514,6 +2514,10 @@
         <div class="item-label">음악 켜기</div>
       </div></div>
     </div></div>
+    <div class="custom-add-row" style="margin-bottom:1.5rem;">
+      <input type="text" id="openingItemInput" placeholder="오픈 체크리스트에 항목 추가" onkeydown="if(event.key==='Enter')addOpeningItem()">
+      <button class="reset-btn" onclick="addOpeningItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
+    </div>
     <!-- 커스텀 체크리스트 (오픈·마감 공유) -->
     <div class="section">
       <div class="custom-section-header">
@@ -4637,12 +4641,19 @@ function renderChecklist(type) {
 
     if (!uncheckedItems.length) return '';
 
-    const itemsHtml = uncheckedItems.map(it =>
-      `<div class="item" id="cl-item-${type}-${it.id}" onclick="toggleChecklistItem('${type}','${it.id}')">
+    const itemsHtml = uncheckedItems.map(it => {
+      const editableActions = type === 'opening'
+        ? `<div class="item-actions" id="cl-actions-${type}-${it.id}">
+             <button class="item-edit" onclick="event.stopPropagation();editOpeningItem('${it.id}')" title="수정">✎</button>
+             <button class="item-delete" onclick="event.stopPropagation();deleteOpeningItem('${it.id}')" title="삭제">×</button>
+           </div>`
+        : '';
+      return `<div class="item" id="cl-item-${type}-${it.id}" onclick="toggleChecklistItem('${type}','${it.id}')">
         <div class="checkbox">${CHECK_ICON}</div>
-        <div class="item-label">${it.label}</div>
-      </div>`
-    ).join('');
+        <div class="item-label" id="cl-label-${type}-${it.id}">${escapeHtml(it.label)}</div>
+        ${editableActions}
+      </div>`;
+    }).join('');
 
     return `<div class="section">
       <div class="section-title">${section.title}</div>
@@ -4683,7 +4694,7 @@ function renderChecklistDone(type) {
   doneList.innerHTML = doneItems.map(it =>
     `<div class="item checked" onclick="toggleChecklistItem('${type}','${it.id}')">
       <div class="checkbox">${CHECK_ICON}</div>
-      <div class="item-label">${it.label}</div>
+      <div class="item-label">${escapeHtml(it.label)}</div>
     </div>`
   ).join('');
 }
@@ -4745,9 +4756,154 @@ renderDayTabs('opening');
 renderDayTabs('closing');
 document.getElementById('sections-opening').innerHTML = '<div class="empty">불러오는 중...</div>';
 document.getElementById('sections-closing').innerHTML = '<div class="empty">불러오는 중...</div>';
+
+/* ============================================================
+   오픈 체크리스트 항목 구성(섹션/항목) 편집 - 클라우드(Firestore) 저장
+   마감은 아직 하드코딩 그대로입니다. 필요해지면 같은 방식으로 확장하면 됩니다.
+============================================================ */
+const OPENING_STRUCT_DOC = checklistDb.collection('checklistStructure').doc('opening');
+
+// Firestore에서 오픈 체크리스트의 항목 구성을 불러옵니다. 매장의 모든 기기가
+// 같은 문서를 보므로, 한 기기에서 항목을 추가/수정/삭제하면 다른 기기에도 반영됩니다.
+async function loadOpeningStructureCloud() {
+  const snap = await OPENING_STRUCT_DOC.get();
+  if (snap.exists && snap.data().days) return snap.data().days;
+  return null; // 클라우드에 아직 저장된 구성이 없음 (최초 실행)
+}
+
+// 현재 오픈 체크리스트 항목 구성 전체를 Firestore에 저장합니다.
+function saveOpeningStructure() {
+  OPENING_STRUCT_DOC.set({
+    days: checklistData.opening,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.error('오픈 체크리스트 항목 구성 저장 실패:', e));
+}
+
+// 오픈 탭에 새 항목을 추가합니다. "직접 추가한 항목" 섹션이 없으면 새로 만듭니다.
+function addOpeningItem() {
+  const input = document.getElementById('openingItemInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const day = checklistActiveDay.opening;
+  const sections = checklistData.opening[day];
+  let extraSection = sections.find(s => s.title === '직접 추가한 항목');
+  if (!extraSection) {
+    extraSection = { title: '직접 추가한 항목', items: [] };
+    sections.push(extraSection);
+  }
+  extraSection.items.push(text);
+  saveOpeningStructure();
+  renderChecklist('opening');
+  input.value = '';
+  input.focus();
+}
+
+// 오픈 체크리스트 항목을 수정합니다. id는 "섹션인덱스-항목인덱스" 형식입니다.
+function editOpeningItem(id) {
+  const day = checklistActiveDay.opening;
+  const [sIdx, iIdx] = id.split('-').map(Number);
+  const section = checklistData.opening[day][sIdx];
+  if (!section) return;
+  const labelEl = document.getElementById('cl-label-opening-' + id);
+  const actionsEl = document.getElementById('cl-actions-opening-' + id);
+  if (!labelEl || !actionsEl || labelEl.querySelector('input')) return;
+  const original = section.items[iIdx];
+
+  labelEl.innerHTML = '';
+  const inputEl = document.createElement('input');
+  inputEl.type = 'text';
+  inputEl.className = 'item-edit-input';
+  inputEl.value = original;
+  labelEl.appendChild(inputEl);
+
+  actionsEl.innerHTML = '';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'item-confirm';
+  confirmBtn.title = '완료';
+  confirmBtn.textContent = '✓';
+  actionsEl.appendChild(confirmBtn);
+
+  const stop = e => e.stopPropagation();
+  inputEl.addEventListener('click', stop);
+  inputEl.addEventListener('mousedown', stop);
+  confirmBtn.addEventListener('click', stop);
+  confirmBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    const val = inputEl.value.trim();
+    section.items[iIdx] = val || original;
+    saveOpeningStructure();
+    renderChecklist('opening');
+  };
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    renderChecklist('opening');
+  };
+
+  inputEl.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  inputEl.addEventListener('blur', commit);
+  confirmBtn.addEventListener('click', commit);
+
+  inputEl.focus();
+  const end = inputEl.value.length;
+  inputEl.setSelectionRange(end, end);
+}
+
+// 오픈 체크리스트 항목을 삭제합니다. 같은 섹션 안에서 뒤쪽 항목들의 체크 상태는
+// 인덱스가 한 칸씩 당겨지는 것에 맞춰 함께 이동시켜서 최대한 보존합니다.
+function deleteOpeningItem(id) {
+  const day = checklistActiveDay.opening;
+  const [sIdx, iIdx] = id.split('-').map(Number);
+  const section = checklistData.opening[day][sIdx];
+  if (!section) return;
+  const el = document.getElementById('cl-item-opening-' + id);
+  const doDelete = () => {
+    section.items.splice(iIdx, 1);
+    const state = checklistState.opening[day] || {};
+    const newState = {};
+    Object.keys(state).forEach(key => {
+      const parts = key.split('-').map(Number);
+      const ks = parts[0], ki = parts[1];
+      if (ks !== sIdx) { newState[key] = state[key]; return; }
+      if (ki === iIdx) return; // 삭제된 항목의 체크 상태는 버림
+      newState[ks + '-' + (ki > iIdx ? ki - 1 : ki)] = state[key];
+    });
+    checklistState.opening[day] = newState;
+    saveChecklistState('opening', day);
+    saveOpeningStructure();
+    renderChecklist('opening');
+  };
+  if (el) { el.classList.add('removing'); setTimeout(doDelete, 180); }
+  else doDelete();
+}
+
+window.addOpeningItem = addOpeningItem;
+window.editOpeningItem = editOpeningItem;
+window.deleteOpeningItem = deleteOpeningItem;
+
 (async function initChecklistState() {
   checklistState.opening[checklistActiveDay.opening] = await loadChecklistState('opening', checklistActiveDay.opening);
   checklistState.closing[checklistActiveDay.closing] = await loadChecklistState('closing', checklistActiveDay.closing);
+  try {
+    const cloudDays = await loadOpeningStructureCloud();
+    if (cloudDays) {
+      checklistData.opening = cloudDays;
+    } else {
+      saveOpeningStructure(); // 최초 1회: 지금 코드에 있는 기본 구성을 클라우드에 업로드
+    }
+  } catch (e) {
+    console.error('오픈 체크리스트 항목 구성 불러오기 실패, 기본 구성 사용:', e);
+  }
   renderChecklist('opening');
   renderChecklist('closing');
 })();
