@@ -455,21 +455,6 @@
   .dm-card.dm-card-editing { border-color: #1a1a1a; box-shadow: 0 0 0 1px #1a1a1a inset; }
   .dm-card-main { flex: 1; min-width: 0; }
   .dm-card-name { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .dm-sample-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
-    background: #F3F0FF; color: #6D28D9; border: 1px solid #E3DBFF;
-    white-space: nowrap;
-  }
-  .dm-new-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
-    background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0;
-    white-space: nowrap;
-  }
-  .dm-modified-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
-    background: #FFF7ED; color: #C2410C; border: 1px solid #FED7AA;
-    white-space: nowrap;
-  }
   .dm-deleted-badge {
     font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px;
     background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA;
@@ -3396,7 +3381,7 @@
 
     <div id="dm-list" class="dm-list"><div class="dm-card">
         <div class="dm-card-main">
-          <div class="dm-card-name">에어컨 필터 청소<span class="dm-sample-badge">저장된 데이터</span></div>
+          <div class="dm-card-name">에어컨 필터 청소</div>
           <div class="dm-card-dates">2026.6.1 (월) 시작 · 주기 <b>3개월</b> · 만료 <b>2026.9.1 (화)</b></div>
         </div>
         <div class="dm-dday ok">D-46</div>
@@ -3404,7 +3389,7 @@
         <button class="dm-card-delete" onclick="deleteDateItem('dm-sample-2')" title="삭제">✕</button>
       </div><div class="dm-card">
         <div class="dm-card-main">
-          <div class="dm-card-name">정수기 필터<span class="dm-sample-badge">저장된 데이터</span></div>
+          <div class="dm-card-name">정수기 필터</div>
           <div class="dm-card-dates">2026.4.20 (월) 시작 · 주기 <b>6개월</b> · 만료 <b>2026.10.20 (화)</b></div>
         </div>
         <div class="dm-dday ok">D-95</div>
@@ -5939,17 +5924,6 @@ window.moveSelectedDown = moveSelectedDown;
     return null; // 클라우드에 아직 데이터가 없음 (최초 실행)
   }
 
-  // 소스코드(DM_SAMPLE_DATA)에 있는 값과 필드까지 완전히 똑같은 경우에만 '저장된 데이터'로 취급.
-  // id가 하드코딩 id와 같아도 이름/시작일/주기 등이 수정됐거나, 애초에 소스코드에 없는 항목이면 '신규데이터'로 표시.
-  function isUnmodifiedSample(item) {
-    const sample = DM_SAMPLE_DATA.find(s => s.id === item.id);
-    if (!sample) return false;
-    return sample.name === item.name
-      && sample.startDate === item.startDate
-      && Number(sample.period) === Number(item.period)
-      && sample.unit === item.unit;
-  }
-
   // 로컬(오프라인 대비 백업)과 Firestore(기기 간 공유) 양쪽에 저장합니다.
   function saveDateItems() {
     try { localStorage.setItem(DM_STORAGE_KEY, JSON.stringify(dateItems)); } catch (e) {}
@@ -6079,16 +6053,6 @@ window.moveSelectedDown = moveSelectedDown;
       const startD = item.startD;
       const activeCls = item.id === editingId ? ' dm-card-editing' : '';
       const deletedCls = item.deleted ? ' dm-card-deleted' : '';
-      let typeBadge;
-      if (isUnmodifiedSample(item)) {
-        typeBadge = '<span class="dm-sample-badge">저장된 데이터</span>';
-      } else if (DM_SAMPLE_DATA.some(s => s.id === item.id)) {
-        // 소스코드 샘플과 id는 같지만 값이 바뀐 경우
-        typeBadge = '<span class="dm-modified-badge">수정데이터</span>';
-      } else {
-        // 소스코드에 애초에 없던 완전히 새로운 항목
-        typeBadge = '<span class="dm-new-badge">신규데이터</span>';
-      }
       const deletedBadge = item.deleted ? '<span class="dm-deleted-badge">삭제됨</span>' : '';
       const ddLabel = (!item.deleted && item.isFutureStart) ? '<div class="dm-dday-label">교체예정</div>' : '';
       const actionBtns = item.deleted
@@ -6098,7 +6062,7 @@ window.moveSelectedDown = moveSelectedDown;
         <button class="dm-card-delete" onclick="deleteDateItem('${item.id}')" title="삭제">✕</button>`;
       return `<div class="dm-card${activeCls}${deletedCls}">
         <div class="dm-card-main">
-          <div class="dm-card-name">${escapeHtml(item.name)}${typeBadge}${deletedBadge}</div>
+          <div class="dm-card-name">${escapeHtml(item.name)}${deletedBadge}</div>
           <div class="dm-card-dates">${fmtDate(startD)} 시작 · 주기 <b>${item.period}${unitLabel(item.unit)}</b> · 만료 <b>${fmtDate(item.due)}</b></div>
         </div>
         <div class="dm-card-footer">
