@@ -361,12 +361,13 @@
     border-radius: 14px; overflow: hidden;
   }
   .checklist-page .item {
-    display: flex; align-items: center; gap: 12px; min-width: 0;
-    padding: 13px 16px; border-bottom: 1px solid #f0ede8;
+    display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    padding: 12px 16px; border-bottom: 1px solid #f0ede8;
     cursor: pointer; user-select: none; transition: background 0.12s;
   }
   .checklist-page .item:last-child { border-bottom: none; }
   .checklist-page .item:hover { background: #faf9f6; }
+  .checklist-page .item-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .checklist-page .checkbox {
     width: 22px; height: 22px; flex-shrink: 0; border-radius: 7px;
     border: 1.5px solid #ccc; background: #fff;
@@ -413,27 +414,12 @@
   .checklist-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; opacity: 0.6; }
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
-    /* 모바일에서 체크리스트 항목 라벨이 최대한 한 줄로 보이도록 여백/버튼을 축소 */
-    .checklist-page .item { padding: 12px 10px; gap: 8px; }
-    .checklist-page .checkbox { width: 20px; height: 20px; border-radius: 6px; }
-    .checklist-page .item-label { font-size: 14px; }
-    .checklist-page .item-actions { gap: 0; }
-    .checklist-page .item-edit,
-    .checklist-page .item-delete,
-    .checklist-page .item-drag { width: 24px; height: 24px; }
-    .checklist-page .item-edit { font-size: 12px; }
-    .checklist-page .item-delete { font-size: 15px; }
-    .checklist-page .item-drag { font-size: 14px; }
   }
-  @media (max-width: 360px) {
-    .checklist-page .item { padding: 11px 8px; gap: 6px; }
-    .checklist-page .item-label { font-size: 13.5px; }
-    .checklist-page .item-edit,
-    .checklist-page .item-delete,
-    .checklist-page .item-drag { width: 22px; height: 22px; }
+  /* 커스텀 체크리스트 항목 수정/삭제/드래그 버튼 - 라벨 아래 별도 줄에 오른쪽 정렬로 표시 */
+  .checklist-page .item-actions {
+    display: flex; align-items: center; justify-content: flex-end; gap: 2px;
+    padding-left: 34px; /* 체크박스 폭(22px) + gap(12px)만큼 라벨과 정렬 */
   }
-  /* 커스텀 체크리스트 항목 수정/삭제/드래그 버튼 */
-  .checklist-page .item-actions { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
   .checklist-page .item-edit,
   .checklist-page .item-delete,
   .checklist-page .item-drag {
@@ -447,10 +433,15 @@
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   .checklist-page .item-drag {
-    font-size: 15px; cursor: grab; touch-action: none; user-select: none;
+    font-size: 15px; cursor: grab; touch-action: pan-y; user-select: none;
   }
   .checklist-page .item-drag:hover { background: #f0ede8; color: #555; }
-  .checklist-page .item-drag:active { cursor: grabbing; background: #e8e4dc; color: #333; }
+  .checklist-page .item-drag:active { cursor: grabbing; }
+  .checklist-page .item-drag.armed {
+    background: #e8e4dc; color: #333; touch-action: none;
+    transform: scale(1.12); cursor: grabbing;
+  }
+  .checklist-page .item-drag.armed { background: #e8e4dc; color: #333; }
   .checklist-page .item.dragging { opacity: 0.35; }
   .item-drag-ghost {
     position: fixed; z-index: 1000; pointer-events: none; margin: 0;
@@ -4408,8 +4399,10 @@ function renderChecklist(type) {
            </div>`
         : '';
       return `<div class="item" id="cl-item-${type}-${it.id}" data-iidx="${it.iIdx}" onclick="toggleChecklistItem('${type}','${it.id}')">
-        <div class="checkbox">${CHECK_ICON}</div>
-        <div class="item-label" id="cl-label-${type}-${it.id}">${escapeHtml(it.label)}</div>
+        <div class="item-main">
+          <div class="checkbox">${CHECK_ICON}</div>
+          <div class="item-label" id="cl-label-${type}-${it.id}">${escapeHtml(it.label)}</div>
+        </div>
         ${editableActions}
       </div>`;
     }).join('');
@@ -4820,14 +4813,62 @@ window.deleteClosingItem = deleteClosingItem;
    오픈/마감 공통: 체크리스트 항목 드래그 앤 드롭으로 순서 변경
    (같은 섹션 안에서만 이동 가능. 체크된 항목은 화면에 안 보이므로
    그 슬롯(인덱스)은 그대로 두고, 안 보이는 항목들끼리만 자리를 바꿉니다.)
+
+   스크롤 중 실수로 드래그가 시작되는 것을 막기 위해, 손가락을 일정 시간
+   (DRAG_HOLD_MS) 동안 가만히 누르고 있어야 실제 드래그가 시작됩니다.
+   그 전에 손가락이 일정 거리 이상 움직이면(=스크롤로 판단) 드래그를 취소하고
+   평범한 스크롤 동작을 그대로 허용합니다.
 ============================================================ */
 let dragState = null;
+const DRAG_HOLD_MS = 350;
+const DRAG_MOVE_CANCEL_PX = 10;
+let dragArm = null;
 
 function startItemDrag(e, type, sIdx) {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
   e.stopPropagation();
-  e.preventDefault();
-  const itemEl = e.currentTarget.closest('.item');
+  cancelDragArm();
+
+  const handleEl = e.currentTarget; // setTimeout 안에서는 currentTarget이 null이 되므로 미리 저장
+  const startX = e.clientX, startY = e.clientY;
+
+  const onArmMove = (ev) => {
+    if (!dragArm) return;
+    const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
+    if (dx > DRAG_MOVE_CANCEL_PX || dy > DRAG_MOVE_CANCEL_PX) cancelDragArm();
+  };
+  const onArmRelease = () => cancelDragArm();
+
+  window.addEventListener('pointermove', onArmMove);
+  window.addEventListener('pointerup', onArmRelease);
+  window.addEventListener('pointercancel', onArmRelease);
+
+  const timer = setTimeout(() => {
+    window.removeEventListener('pointermove', onArmMove);
+    window.removeEventListener('pointerup', onArmRelease);
+    window.removeEventListener('pointercancel', onArmRelease);
+    handleEl.classList.remove('armed');
+    dragArm = null;
+    if (navigator.vibrate) { try { navigator.vibrate(6); } catch (_) {} }
+    beginItemDrag(handleEl, type, sIdx, startX, startY);
+  }, DRAG_HOLD_MS);
+
+  handleEl.classList.add('armed');
+  dragArm = { timer, onArmMove, onArmRelease };
+}
+
+function cancelDragArm() {
+  if (!dragArm) return;
+  clearTimeout(dragArm.timer);
+  window.removeEventListener('pointermove', dragArm.onArmMove);
+  window.removeEventListener('pointerup', dragArm.onArmRelease);
+  window.removeEventListener('pointercancel', dragArm.onArmRelease);
+  document.querySelectorAll('.checklist-page .item-drag.armed').forEach(el => el.classList.remove('armed'));
+  dragArm = null;
+}
+
+function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
+  const itemEl = handleEl.closest('.item');
   if (!itemEl) return;
   const container = itemEl.parentElement;
   const rect = itemEl.getBoundingClientRect();
@@ -4847,8 +4888,8 @@ function startItemDrag(e, type, sIdx) {
 
   dragState = {
     type, sIdx: Number(sIdx), itemEl, container, ghost,
-    offsetX: e.clientX - rect.left,
-    offsetY: e.clientY - rect.top
+    offsetX: clientX - rect.left,
+    offsetY: clientY - rect.top
   };
 
   window.addEventListener('pointermove', onItemDragMove);
