@@ -3661,6 +3661,23 @@
   </div>
 </div>
 
+<!-- 체크리스트 클라우드 저장용 Firebase (Firestore) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Firebase 초기화 — 오픈/마감 체크리스트 체크 상태를 기기 간 공유하기 위해 사용합니다.
+const firebaseConfig = {
+  apiKey: "AIzaSyCxnb4WizvuaKU5HUAmcDfGe6TLRoyEisQ",
+  authDomain: "bluepot-recipe.firebaseapp.com",
+  projectId: "bluepot-recipe",
+  storageBucket: "bluepot-recipe.firebasestorage.app",
+  messagingSenderId: "706581080951",
+  appId: "1:706581080951:web:64293782de9ade78a50f72"
+};
+firebase.initializeApp(firebaseConfig);
+const checklistDb = firebase.firestore();
+</script>
+
 <script>
 const menus = [
   { name: "아메리카노", cat: "커피",
@@ -4528,17 +4545,37 @@ function checklistStorageKey(type, day) {
   return `${prefix}-${day}-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
-// localStorage에서 특정 타입(opening/closing)과 요일의 체크 상태를 불러옵니다.
-function loadChecklistState(type, day) {
+// Firestore에서 특정 타입(opening/closing)과 요일의 체크 상태를 불러옵니다.
+// 매장의 모든 기기가 같은 문서를 보기 때문에 서로 다른 기기에서도 체크 상태가 공유됩니다.
+// 네트워크 오류 등으로 실패하면 이 기기에 남아있는 localStorage 백업을 대신 사용합니다.
+async function loadChecklistState(type, day) {
+  const key = checklistStorageKey(type, day);
   try {
-    const raw = localStorage.getItem(checklistStorageKey(type, day));
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) { return {}; }
+    const docSnap = await checklistDb.collection('checklistState').doc(key).get();
+    if (docSnap.exists) {
+      const items = docSnap.data().items || {};
+      try { localStorage.setItem(key, JSON.stringify(items)); } catch (e) {}
+      return items;
+    }
+    return {};
+  } catch (e) {
+    console.error('체크리스트 불러오기 실패, 로컬 백업 사용:', e);
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e2) { return {}; }
+  }
 }
 
-// 현재 체크 상태를 localStorage에 저장합니다.
+// 현재 체크 상태를 Firestore에 저장합니다. (localStorage에도 오프라인 대비용으로 함께 저장)
 function saveChecklistState(type, day) {
-  try { localStorage.setItem(checklistStorageKey(type, day), JSON.stringify(checklistState[type][day] || {})); } catch (e) {}
+  const key = checklistStorageKey(type, day);
+  const data = checklistState[type][day] || {};
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
+  checklistDb.collection('checklistState').doc(key).set({
+    items: data,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.error('체크리스트 저장 실패:', e));
 }
 
 // 오픈 또는 마감 탭의 요일 탭 버튼을 렌더링합니다. 오늘 요일에는 점 표시를 추가합니다.
@@ -4553,12 +4590,14 @@ function renderDayTabs(type) {
 }
 
 // 요일 탭 클릭 시 활성 요일을 변경하고 해당 요일의 체크리스트를 렌더링합니다.
-function switchChecklistDay(type, day) {
+async function switchChecklistDay(type, day) {
   checklistActiveDay[type] = day;
-  if (!checklistState[type][day]) {
-    checklistState[type][day] = loadChecklistState(type, day);
-  }
   renderDayTabs(type);
+  if (!checklistState[type][day]) {
+    const wrap = document.getElementById('sections-' + type);
+    if (wrap) wrap.innerHTML = '<div class="empty">불러오는 중...</div>';
+    checklistState[type][day] = await loadChecklistState(type, day);
+  }
   renderChecklist(type);
 }
 
@@ -4700,14 +4739,18 @@ function setChecklistDateLabel(type, suffix) {
     `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} (${days[d.getDay()]}) ${suffix}`;
 }
 
-checklistState.opening[checklistActiveDay.opening] = loadChecklistState('opening', checklistActiveDay.opening);
-checklistState.closing[checklistActiveDay.closing] = loadChecklistState('closing', checklistActiveDay.closing);
 setChecklistDateLabel('opening', '오픈');
 setChecklistDateLabel('closing', '마감');
 renderDayTabs('opening');
 renderDayTabs('closing');
-renderChecklist('opening');
-renderChecklist('closing');
+document.getElementById('sections-opening').innerHTML = '<div class="empty">불러오는 중...</div>';
+document.getElementById('sections-closing').innerHTML = '<div class="empty">불러오는 중...</div>';
+(async function initChecklistState() {
+  checklistState.opening[checklistActiveDay.opening] = await loadChecklistState('opening', checklistActiveDay.opening);
+  checklistState.closing[checklistActiveDay.closing] = await loadChecklistState('closing', checklistActiveDay.closing);
+  renderChecklist('opening');
+  renderChecklist('closing');
+})();
 
 /* ============================================================
    재고표 (바둑판 체크리스트) - 아래 inventoryData만 수정하면 됩니다.
