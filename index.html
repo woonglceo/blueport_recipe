@@ -472,24 +472,6 @@
     white-space: nowrap; transition: all 0.15s;
   }
   .dm-card-restore:hover { background: #f0ede8; border-color: #bbb; color: #333; }
-  .dm-update-banner {
-    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 14px;
-    padding: 12px 14px; margin-bottom: 1rem; font-size: 13px; color: #92400E;
-  }
-  .dm-update-banner-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .dm-update-banner ul { margin: 0 0 10px 0; padding-left: 18px; }
-  .dm-update-banner li { margin-bottom: 2px; }
-  .dm-update-banner-actions { display: flex; gap: 8px; }
-  .dm-update-apply-btn {
-    padding: 6px 12px; font-size: 12px; font-weight: 700; border: none; border-radius: 8px;
-    background: #92400E; color: #fff; cursor: pointer;
-  }
-  .dm-update-apply-btn:hover { background: #7c3510; }
-  .dm-update-dismiss-btn {
-    padding: 6px 12px; font-size: 12px; font-weight: 600; border: 1px solid #FDE68A; border-radius: 8px;
-    background: #fff; color: #92400E; cursor: pointer;
-  }
-  .dm-update-dismiss-btn:hover { background: #FEF3C7; }
   .dm-card-dates { font-size: 12px; color: #888; }
   .dm-card-dates b { color: #555; font-weight: 600; }
   .dm-dday {
@@ -3347,10 +3329,8 @@
     <h1>날짜관리</h1>
     <div class="subtitle" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <span>교체/점검일을 등록하면 만료일과 남은 일수를 자동으로 계산해요</span>
-      <button class="reset-btn" onclick="resetDateItems()">↺ 전체 초기화</button>
+      <button class="reset-btn" onclick="resetDateItems()">✕ 전체 삭제</button>
     </div>
-
-    <div id="dm-update-banner" class="dm-update-banner" style="display:none;"></div>
 
     <div class="dm-form">
       <div class="dm-form-row">
@@ -3379,23 +3359,7 @@
       </div>
     </div>
 
-    <div id="dm-list" class="dm-list"><div class="dm-card">
-        <div class="dm-card-main">
-          <div class="dm-card-name">에어컨 필터 청소</div>
-          <div class="dm-card-dates">2026.6.1 (월) 시작 · 주기 <b>3개월</b> · 만료 <b>2026.9.1 (화)</b></div>
-        </div>
-        <div class="dm-dday ok">D-46</div>
-        <button class="dm-card-edit" onclick="editDateItem('dm-sample-2')" title="수정">✎</button>
-        <button class="dm-card-delete" onclick="deleteDateItem('dm-sample-2')" title="삭제">✕</button>
-      </div><div class="dm-card">
-        <div class="dm-card-main">
-          <div class="dm-card-name">정수기 필터</div>
-          <div class="dm-card-dates">2026.4.20 (월) 시작 · 주기 <b>6개월</b> · 만료 <b>2026.10.20 (화)</b></div>
-        </div>
-        <div class="dm-dday ok">D-95</div>
-        <button class="dm-card-edit" onclick="editDateItem('dm-sample-1')" title="수정">✎</button>
-        <button class="dm-card-delete" onclick="deleteDateItem('dm-sample-1')" title="삭제">✕</button>
-      </div></div>
+    <div id="dm-list" class="dm-list"></div>
     <div id="dm-empty" class="empty" style="display:none;">등록된 항목이 없어요. 위에서 새 항목을 추가해보세요.</div>
   </div>
 </div>
@@ -5867,50 +5831,16 @@ window.moveSelectedDown = moveSelectedDown;
 (function () {
   const DM_STORAGE_KEY = 'date-manage-items-v1';
 
-  // 아래 2개는 예시로 넣어둔 실제 데이터예요. 앱 안에서 그대로 수정하거나 삭제할 수 있고,
-  // 한 번 수정/추가/삭제하면 그 상태가 계속 저장됩니다 (새로고침해도 유지).
-  const DM_SAMPLE_DATA = [
-      { id: 'dm-1', name: '정수기 1차 필터(흰색)', startDate: '2026-07-11', period: 1, unit: 'month', isSample: true }
-    , { id: 'dm-2', name: '제빙기 분해청소', startDate: '2026-07-14', period: 3, unit: 'month', isSample: true }
-    , { id: 'dm-3', name: '정수기 2차 필터(ACF)', startDate: '2026-07-15', period: 6, unit: 'month', isSample: true }
-    , { id: 'dm-4', name: '제빙기 먼지필터', startDate: '2026-08-06', period: 14, unit: 'day', isSample: true }
-  ];
-
-  const DM_SNAPSHOT_KEY = 'date-manage-sample-snapshot-v1';
-
-  function diffSampleData(oldArr, newArr) {
-    const oldMap = new Map(oldArr.map(i => [i.id, i]));
-    const newMap = new Map(newArr.map(i => [i.id, i]));
-    const changes = [];
-    newMap.forEach((item, id) => {
-      const old = oldMap.get(id);
-      if (!old) {
-        changes.push(`"${item.name}" 항목이 새로 추가됐어요`);
-        return;
-      }
-      const fieldDiffs = [];
-      if (old.name !== item.name) fieldDiffs.push(`이름 "${old.name}" → "${item.name}"`);
-      if (old.startDate !== item.startDate) fieldDiffs.push(`기준일 ${old.startDate} → ${item.startDate}`);
-      if (old.period !== item.period || old.unit !== item.unit) {
-        fieldDiffs.push(`주기 ${old.period}${unitLabel(old.unit)} → ${item.period}${unitLabel(item.unit)}`);
-      }
-      if (fieldDiffs.length) changes.push(`"${item.name}": ` + fieldDiffs.join(', '));
-    });
-    oldMap.forEach((item, id) => {
-      if (!newMap.has(id)) changes.push(`"${item.name}" 항목이 삭제됐어요`);
-    });
-    return changes;
-  }
-
   // 클라우드(Firestore)에서 아직 못 받아왔을 때 화면을 바로 그릴 수 있도록 쓰는 로컬 캐시입니다.
+  // 하드코딩된 기본 데이터는 없고, 실제 등록된(Firebase에 저장된) 데이터만 사용합니다.
   function loadDateItems() {
     try {
       const raw = localStorage.getItem(DM_STORAGE_KEY);
-      if (!raw) return DM_SAMPLE_DATA.slice();
+      if (!raw) return [];
       const data = JSON.parse(raw);
-      if (!Array.isArray(data)) return DM_SAMPLE_DATA.slice();
+      if (!Array.isArray(data)) return [];
       return data;
-    } catch (e) { return DM_SAMPLE_DATA.slice(); }
+    } catch (e) { return []; }
   }
 
   // Firestore에서 날짜관리 항목 전체를 불러옵니다. 매장의 모든 기기가 같은 문서를 보므로
@@ -5935,55 +5865,6 @@ window.moveSelectedDown = moveSelectedDown;
 
   let dateItems = loadDateItems(); // 클라우드 데이터가 도착하기 전, 로컬 캐시로 우선 화면 표시
   let editingId = null; // 수정 중인 항목 id (null이면 신규 추가 모드)
-
-  // 소스코드의 DM_SAMPLE_DATA가 이전에 기록해둔 스냅샷과 달라졌는지 확인
-  let dmSampleChanges = [];
-  (function checkSampleUpdate() {
-    try {
-      const rawSnap = localStorage.getItem(DM_SNAPSHOT_KEY);
-      if (!rawSnap) {
-        // 최초 실행: 지금 소스코드 상태를 기준 스냅샷으로 저장하고 알림은 띄우지 않음
-        localStorage.setItem(DM_SNAPSHOT_KEY, JSON.stringify(DM_SAMPLE_DATA));
-        return;
-      }
-      const oldSample = JSON.parse(rawSnap);
-      if (Array.isArray(oldSample)) {
-        dmSampleChanges = diffSampleData(oldSample, DM_SAMPLE_DATA);
-      }
-    } catch (e) {}
-  })();
-
-  function renderUpdateBanner() {
-    const el = document.getElementById('dm-update-banner');
-    if (!el) return;
-    if (!dmSampleChanges.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
-    el.style.display = '';
-    el.innerHTML = `
-      <div class="dm-update-banner-title">🔔 소스코드 기본 데이터가 업데이트됐어요</div>
-      <ul>${dmSampleChanges.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>
-      <div class="dm-update-banner-actions">
-        <button class="dm-update-apply-btn" onclick="applySampleUpdate()">새 값 적용하기</button>
-        <button class="dm-update-dismiss-btn" onclick="dismissSampleUpdate()">무시하고 닫기</button>
-      </div>`;
-  }
-
-  function applySampleUpdate() {
-    // 소스코드의 최신 기본 데이터 값을 실제 목록에 반영 (동일 id 항목의 값을 덮어씀)
-    DM_SAMPLE_DATA.forEach(sample => {
-      const idx = dateItems.findIndex(i => i.id === sample.id);
-      if (idx >= 0) dateItems[idx] = { ...sample };
-      else dateItems.push({ ...sample });
-    });
-    saveDateItems();
-    dismissSampleUpdate();
-    renderDateItems();
-  }
-
-  function dismissSampleUpdate() {
-    dmSampleChanges = [];
-    try { localStorage.setItem(DM_SNAPSHOT_KEY, JSON.stringify(DM_SAMPLE_DATA)); } catch (e) {}
-    renderUpdateBanner();
-  }
 
   // startDate('YYYY-MM-DD') + period(unit) => 만료일 Date 객체
   function calcDueDate(startDate, period, unit) {
@@ -6158,15 +6039,13 @@ window.moveSelectedDown = moveSelectedDown;
   }
 
   function deleteDateItem(id) {
+    const target = dateItems.find(i => i.id === id);
+    const itemName = target ? target.name : '이 항목';
+    if (!confirm(`"${itemName}" 항목을 정말 삭제하시겠습니까?\n삭제하면 복구할 수 없습니다.`)) return;
+
     if (editingId === id) cancelEditDateItem();
-    const isHardcoded = DM_SAMPLE_DATA.some(s => s.id === id);
-    if (isHardcoded) {
-      // 소스코드 하드코딩 항목은 목록에서 지우지 않고 '삭제됨' 상태로만 표시
-      const target = dateItems.find(i => i.id === id);
-      if (target) target.deleted = true;
-    } else {
-      dateItems = dateItems.filter(i => i.id !== id);
-    }
+    // 하드코딩 항목 여부와 상관없이 완전히 삭제 (localStorage + Firestore 모두 반영)
+    dateItems = dateItems.filter(i => i.id !== id);
     saveDateItems();
     renderDateItems();
   }
@@ -6194,9 +6073,10 @@ window.moveSelectedDown = moveSelectedDown;
   }
 
   function resetDateItems() {
-    if (!confirm('날짜관리 항목을 모두 초기화할까요? 직접 추가/수정한 항목은 사라지고 소스코드 기본 데이터만 남아요.')) return;
+    if (dateItems.length === 0) return;
+    if (!confirm('등록된 날짜관리 항목을 모두 삭제할까요?\n삭제하면 복구할 수 없습니다.')) return;
     if (editingId) cancelEditDateItem();
-    dateItems = DM_SAMPLE_DATA.map(item => ({ ...item }));
+    dateItems = [];
     saveDateItems();
     renderDateItems();
   }
@@ -6209,7 +6089,6 @@ window.moveSelectedDown = moveSelectedDown;
 
   initDateInput();
   renderDateItems();
-  renderUpdateBanner();
 
   // 클라우드에서 최신 날짜관리 데이터를 불러와 화면을 갱신합니다. (기기 간 공유)
   (async function initCloudDateItems() {
@@ -6218,7 +6097,7 @@ window.moveSelectedDown = moveSelectedDown;
       if (cloudItems) {
         dateItems = cloudItems;
       } else {
-        // 클라우드에 아직 데이터가 없으면 지금 상태(로컬 캐시 또는 샘플)를 최초 1회 업로드
+        // 클라우드에 아직 데이터가 없으면 지금 상태(로컬 캐시, 보통 빈 배열)를 최초 1회 업로드
         saveDateItems();
       }
     } catch (e) {
@@ -6234,8 +6113,6 @@ window.moveSelectedDown = moveSelectedDown;
   window.restoreDateItem = restoreDateItem;
   window.refreshDateItem = refreshDateItem;
   window.resetDateItems = resetDateItems;
-  window.applySampleUpdate = applySampleUpdate;
-  window.dismissSampleUpdate = dismissSampleUpdate;
 })();
 </script>
 
