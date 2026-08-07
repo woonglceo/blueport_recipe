@@ -2717,6 +2717,10 @@
         <div class="item-label">출입문 잠금 확인</div>
       </div></div>
     </div></div>
+    <div class="custom-add-row" style="margin-bottom:1.5rem;">
+      <input type="text" id="closingItemInput" placeholder="마감 체크리스트에 항목 추가" onkeydown="if(event.key==='Enter')addClosingItem()">
+      <button class="reset-btn" onclick="addClosingItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
+    </div>
     <!-- 커스텀 체크리스트 (오픈·마감 공유) -->
     <div class="section">
       <div class="custom-section-header">
@@ -4642,10 +4646,10 @@ function renderChecklist(type) {
     if (!uncheckedItems.length) return '';
 
     const itemsHtml = uncheckedItems.map(it => {
-      const editableActions = type === 'opening'
+      const editableActions = (type === 'opening' || type === 'closing')
         ? `<div class="item-actions" id="cl-actions-${type}-${it.id}">
-             <button class="item-edit" onclick="event.stopPropagation();editOpeningItem('${it.id}')" title="수정">✎</button>
-             <button class="item-delete" onclick="event.stopPropagation();deleteOpeningItem('${it.id}')" title="삭제">×</button>
+             <button class="item-edit" onclick="event.stopPropagation();edit${type === 'opening' ? 'Opening' : 'Closing'}Item('${it.id}')" title="수정">✎</button>
+             <button class="item-delete" onclick="event.stopPropagation();delete${type === 'opening' ? 'Opening' : 'Closing'}Item('${it.id}')" title="삭제">×</button>
            </div>`
         : '';
       return `<div class="item" id="cl-item-${type}-${it.id}" onclick="toggleChecklistItem('${type}','${it.id}')">
@@ -4891,6 +4895,133 @@ window.addOpeningItem = addOpeningItem;
 window.editOpeningItem = editOpeningItem;
 window.deleteOpeningItem = deleteOpeningItem;
 
+/* ============================================================
+   마감 체크리스트 항목 구성(섹션/항목) 편집 - 클라우드(Firestore) 저장
+   오픈과 완전히 동일한 방식입니다.
+============================================================ */
+const CLOSING_STRUCT_DOC = checklistDb.collection('checklistStructure').doc('closing');
+
+async function loadClosingStructureCloud() {
+  const snap = await CLOSING_STRUCT_DOC.get();
+  if (snap.exists && snap.data().days) return snap.data().days;
+  return null;
+}
+
+function saveClosingStructure() {
+  CLOSING_STRUCT_DOC.set({
+    days: checklistData.closing,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.error('마감 체크리스트 항목 구성 저장 실패:', e));
+}
+
+function addClosingItem() {
+  const input = document.getElementById('closingItemInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const day = checklistActiveDay.closing;
+  const sections = checklistData.closing[day];
+  let extraSection = sections.find(s => s.title === '직접 추가한 항목');
+  if (!extraSection) {
+    extraSection = { title: '직접 추가한 항목', items: [] };
+    sections.push(extraSection);
+  }
+  extraSection.items.push(text);
+  saveClosingStructure();
+  renderChecklist('closing');
+  input.value = '';
+  input.focus();
+}
+
+function editClosingItem(id) {
+  const day = checklistActiveDay.closing;
+  const [sIdx, iIdx] = id.split('-').map(Number);
+  const section = checklistData.closing[day][sIdx];
+  if (!section) return;
+  const labelEl = document.getElementById('cl-label-closing-' + id);
+  const actionsEl = document.getElementById('cl-actions-closing-' + id);
+  if (!labelEl || !actionsEl || labelEl.querySelector('input')) return;
+  const original = section.items[iIdx];
+
+  labelEl.innerHTML = '';
+  const inputEl = document.createElement('input');
+  inputEl.type = 'text';
+  inputEl.className = 'item-edit-input';
+  inputEl.value = original;
+  labelEl.appendChild(inputEl);
+
+  actionsEl.innerHTML = '';
+  const confirmBtn = document.createElement('button');
+  confirmBtn.type = 'button';
+  confirmBtn.className = 'item-confirm';
+  confirmBtn.title = '완료';
+  confirmBtn.textContent = '✓';
+  actionsEl.appendChild(confirmBtn);
+
+  const stop = e => e.stopPropagation();
+  inputEl.addEventListener('click', stop);
+  inputEl.addEventListener('mousedown', stop);
+  confirmBtn.addEventListener('click', stop);
+  confirmBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    const val = inputEl.value.trim();
+    section.items[iIdx] = val || original;
+    saveClosingStructure();
+    renderChecklist('closing');
+  };
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    renderChecklist('closing');
+  };
+
+  inputEl.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  inputEl.addEventListener('blur', commit);
+  confirmBtn.addEventListener('click', commit);
+
+  inputEl.focus();
+  const end = inputEl.value.length;
+  inputEl.setSelectionRange(end, end);
+}
+
+function deleteClosingItem(id) {
+  const day = checklistActiveDay.closing;
+  const [sIdx, iIdx] = id.split('-').map(Number);
+  const section = checklistData.closing[day][sIdx];
+  if (!section) return;
+  const el = document.getElementById('cl-item-closing-' + id);
+  const doDelete = () => {
+    section.items.splice(iIdx, 1);
+    const state = checklistState.closing[day] || {};
+    const newState = {};
+    Object.keys(state).forEach(key => {
+      const parts = key.split('-').map(Number);
+      const ks = parts[0], ki = parts[1];
+      if (ks !== sIdx) { newState[key] = state[key]; return; }
+      if (ki === iIdx) return;
+      newState[ks + '-' + (ki > iIdx ? ki - 1 : ki)] = state[key];
+    });
+    checklistState.closing[day] = newState;
+    saveChecklistState('closing', day);
+    saveClosingStructure();
+    renderChecklist('closing');
+  };
+  if (el) { el.classList.add('removing'); setTimeout(doDelete, 180); }
+  else doDelete();
+}
+
+window.addClosingItem = addClosingItem;
+window.editClosingItem = editClosingItem;
+window.deleteClosingItem = deleteClosingItem;
+
 (async function initChecklistState() {
   checklistState.opening[checklistActiveDay.opening] = await loadChecklistState('opening', checklistActiveDay.opening);
   checklistState.closing[checklistActiveDay.closing] = await loadChecklistState('closing', checklistActiveDay.closing);
@@ -4899,10 +5030,20 @@ window.deleteOpeningItem = deleteOpeningItem;
     if (cloudDays) {
       checklistData.opening = cloudDays;
     } else {
-      saveOpeningStructure(); // 최초 1회: 지금 코드에 있는 기본 구성을 클라우드에 업로드
+      saveOpeningStructure();
     }
   } catch (e) {
     console.error('오픈 체크리스트 항목 구성 불러오기 실패, 기본 구성 사용:', e);
+  }
+  try {
+    const cloudDaysClosing = await loadClosingStructureCloud();
+    if (cloudDaysClosing) {
+      checklistData.closing = cloudDaysClosing;
+    } else {
+      saveClosingStructure();
+    }
+  } catch (e) {
+    console.error('마감 체크리스트 항목 구성 불러오기 실패, 기본 구성 사용:', e);
   }
   renderChecklist('opening');
   renderChecklist('closing');
