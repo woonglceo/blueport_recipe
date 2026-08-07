@@ -362,7 +362,7 @@
   }
   .checklist-page .item {
     display: flex; flex-direction: column; gap: 4px; min-width: 0;
-    padding: 12px 16px; border-bottom: 1px solid #f0ede8;
+    padding: 12px 10px; border-bottom: 1px solid #f0ede8;
     cursor: pointer; user-select: none; transition: background 0.12s;
   }
   .checklist-page .item:last-child { border-bottom: none; }
@@ -433,12 +433,12 @@
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   .checklist-page .item-drag {
-    font-size: 15px; cursor: grab; touch-action: pan-y; user-select: none;
+    font-size: 15px; cursor: grab; touch-action: none; user-select: none;
   }
   .checklist-page .item-drag:hover { background: #f0ede8; color: #555; }
   .checklist-page .item-drag:active { cursor: grabbing; }
   .checklist-page .item-drag.armed {
-    background: #e8e4dc; color: #333; touch-action: none;
+    background: #e8e4dc; color: #333;
     transform: scale(1.12); cursor: grabbing;
   }
   .checklist-page .item-drag.armed { background: #e8e4dc; color: #333; }
@@ -4816,8 +4816,9 @@ window.deleteClosingItem = deleteClosingItem;
 
    스크롤 중 실수로 드래그가 시작되는 것을 막기 위해, 손가락을 일정 시간
    (DRAG_HOLD_MS) 동안 가만히 누르고 있어야 실제 드래그가 시작됩니다.
-   그 전에 손가락이 일정 거리 이상 움직이면(=스크롤로 판단) 드래그를 취소하고
-   평범한 스크롤 동작을 그대로 허용합니다.
+   드래그 핸들은 touch-action:none이라 브라우저가 자동으로 스크롤해주지
+   않으므로, 롱프레스가 확정되기 전에 손가락이 움직이면(=스크롤 의도) 드래그를
+   취소하고 남은 움직임은 직접 window.scrollBy로 스크롤 처리해줍니다.
 ============================================================ */
 let dragState = null;
 const DRAG_HOLD_MS = 350;
@@ -4831,40 +4832,53 @@ function startItemDrag(e, type, sIdx) {
 
   const handleEl = e.currentTarget; // setTimeout 안에서는 currentTarget이 null이 되므로 미리 저장
   const startX = e.clientX, startY = e.clientY;
+  let lastY = startY;
+  let manualScrolling = false;
+
+  const cleanup = () => {
+    window.removeEventListener('pointermove', onArmMove);
+    window.removeEventListener('pointerup', onArmRelease);
+    window.removeEventListener('pointercancel', onArmRelease);
+    handleEl.classList.remove('armed');
+    dragArm = null;
+  };
 
   const onArmMove = (ev) => {
-    if (!dragArm) return;
-    const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
-    if (dx > DRAG_MOVE_CANCEL_PX || dy > DRAG_MOVE_CANCEL_PX) cancelDragArm();
+    if (manualScrolling) {
+      // touch-action:none이라 브라우저가 스크롤을 안 해주므로 직접 스크롤시켜줌
+      window.scrollBy(0, lastY - ev.clientY);
+      lastY = ev.clientY;
+      return;
+    }
+    const dx = Math.abs(ev.clientX - startX), dy = ev.clientY - startY;
+    if (Math.abs(dy) > DRAG_MOVE_CANCEL_PX || dx > DRAG_MOVE_CANCEL_PX) {
+      clearTimeout(dragArm.timer);
+      handleEl.classList.remove('armed');
+      manualScrolling = true;
+      lastY = ev.clientY;
+      window.scrollBy(0, startY - ev.clientY);
+    }
   };
-  const onArmRelease = () => cancelDragArm();
+  const onArmRelease = () => cleanup();
 
   window.addEventListener('pointermove', onArmMove);
   window.addEventListener('pointerup', onArmRelease);
   window.addEventListener('pointercancel', onArmRelease);
 
   const timer = setTimeout(() => {
-    window.removeEventListener('pointermove', onArmMove);
-    window.removeEventListener('pointerup', onArmRelease);
-    window.removeEventListener('pointercancel', onArmRelease);
-    handleEl.classList.remove('armed');
-    dragArm = null;
+    cleanup();
     if (navigator.vibrate) { try { navigator.vibrate(6); } catch (_) {} }
-    beginItemDrag(handleEl, type, sIdx, startX, startY);
+    beginItemDrag(handleEl, type, sIdx, startX, lastY);
   }, DRAG_HOLD_MS);
 
   handleEl.classList.add('armed');
-  dragArm = { timer, onArmMove, onArmRelease };
+  dragArm = { timer, cleanup };
 }
 
 function cancelDragArm() {
   if (!dragArm) return;
   clearTimeout(dragArm.timer);
-  window.removeEventListener('pointermove', dragArm.onArmMove);
-  window.removeEventListener('pointerup', dragArm.onArmRelease);
-  window.removeEventListener('pointercancel', dragArm.onArmRelease);
-  document.querySelectorAll('.checklist-page .item-drag.armed').forEach(el => el.classList.remove('armed'));
-  dragArm = null;
+  dragArm.cleanup();
 }
 
 function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
