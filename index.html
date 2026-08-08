@@ -4909,17 +4909,59 @@ function startItemDrag(e, type, sIdx) {
 
 // 이동 버튼 위에서 시작된 스크롤 제스처를 이어받아 직접 화면을 움직여줍니다.
 // (touch-action: none 때문에 브라우저가 이 손가락으로는 자동 스크롤을 해주지 않으므로 필요)
+// 손을 뗄 때는 마지막 속도로 서서히 감속하는 관성(모멘텀) 스크롤을 흉내내서
+// 네이티브 스크롤처럼 매끄럽게 멈추도록 합니다.
 function followAsManualScroll(initialEv) {
   let lastY = initialEv.clientY;
-  const onMove = (ev) => {
-    const dy = lastY - ev.clientY;
-    if (dy !== 0) window.scrollBy(0, dy);
-    lastY = ev.clientY;
+  let lastT = initialEv.timeStamp || performance.now();
+  let velocity = 0; // px/ms, 최근 이동 속도 (감속 시작 속도로 사용)
+  let momentumRAF = null;
+
+  const stopMomentum = () => {
+    if (momentumRAF !== null) {
+      cancelAnimationFrame(momentumRAF);
+      momentumRAF = null;
+    }
   };
+
+  const onMove = (ev) => {
+    stopMomentum();
+    const now = ev.timeStamp || performance.now();
+    const dy = lastY - ev.clientY;
+    const dt = Math.max(1, now - lastT); // 0으로 나눔 방지
+    if (dy !== 0) window.scrollBy(0, dy);
+    // 순간 속도를 다음 프레임 값에 크게 흔들리지 않도록 이전 값과 살짝 섞어(smoothing) 계산
+    velocity = velocity * 0.3 + (dy / dt) * 0.7;
+    lastY = ev.clientY;
+    lastT = now;
+  };
+
+  // 손을 뗀 시점의 속도로 시작해서 매 프레임 감속시키며 계속 스크롤합니다.
+  // (마찰계수 0.95 정도면 네이티브 iOS/안드로이드 관성 스크롤과 비슷한 감속 느낌)
+  const startMomentum = () => {
+    const FRICTION = 0.95;
+    const MIN_VELOCITY = 0.02; // 이보다 느려지면 멈춘 것으로 간주
+    let v = velocity;
+    let lastFrameT = performance.now();
+    const step = (now) => {
+      const dt = now - lastFrameT;
+      lastFrameT = now;
+      if (Math.abs(v) < MIN_VELOCITY) {
+        momentumRAF = null;
+        return;
+      }
+      window.scrollBy(0, v * dt);
+      v *= Math.pow(FRICTION, dt / 16.7); // 프레임 간격이 달라도 감속 속도가 일정하도록 보정
+      momentumRAF = requestAnimationFrame(step);
+    };
+    momentumRAF = requestAnimationFrame(step);
+  };
+
   const onEnd = () => {
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onEnd);
     window.removeEventListener('pointercancel', onEnd);
+    startMomentum();
   };
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onEnd);
