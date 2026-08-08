@@ -4886,11 +4886,18 @@ function startItemDrag(e, type, sIdx) {
 
   const handleEl = e.currentTarget; // setTimeout 안에서는 currentTarget이 null이 되므로 미리 저장
   const startX = e.clientX, startY = e.clientY;
+  const pointerType = e.pointerType;
 
   const onArmMove = (ev) => {
     if (!dragArm) return;
     const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
-    if (dx > DRAG_MOVE_CANCEL_PX || dy > DRAG_MOVE_CANCEL_PX) cancelDragArm();
+    if (dx > DRAG_MOVE_CANCEL_PX || dy > DRAG_MOVE_CANCEL_PX) {
+      cancelDragArm();
+      // 이동 버튼을 누르자마자(꾹 누르기 전에) 움직였다면 드래그가 아니라 스크롤을 하려던
+      // 것으로 본다. touch-action: none 때문에 브라우저가 이 손가락으로는 화면을 스크롤해
+      // 주지 않으므로, 남은 손가락 이동을 그대로 스크롤량으로 변환해서 직접 화면을 움직여준다.
+      if (pointerType === 'touch') followAsManualScroll(ev);
+    }
   };
   const onArmRelease = () => cancelDragArm();
 
@@ -4910,6 +4917,25 @@ function startItemDrag(e, type, sIdx) {
 
   handleEl.classList.add('armed');
   dragArm = { timer, onArmMove, onArmRelease };
+}
+
+// 이동 버튼 위에서 시작된 스크롤 제스처를 이어받아 직접 화면을 움직여줍니다.
+// (touch-action: none 때문에 브라우저가 이 손가락으로는 자동 스크롤을 해주지 않으므로 필요)
+function followAsManualScroll(initialEv) {
+  let lastY = initialEv.clientY;
+  const onMove = (ev) => {
+    const dy = lastY - ev.clientY;
+    if (dy !== 0) window.scrollBy(0, dy);
+    lastY = ev.clientY;
+  };
+  const onEnd = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onEnd);
+    window.removeEventListener('pointercancel', onEnd);
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onEnd);
+  window.addEventListener('pointercancel', onEnd);
 }
 
 function cancelDragArm() {
@@ -4940,8 +4966,8 @@ function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
   pageEl.appendChild(ghost);
 
   itemEl.classList.add('dragging');
-  // 실제 드래그가 시작된 동안에만 터치 스크롤을 막아서 이동 핸들을 살짝 스치기만 해도
-  // 화면 스크롤이 막히는 문제를 방지합니다 (평소엔 pan-y로 스크롤을 허용).
+  // 이동 핸들은 CSS에서 항상 touch-action: none 이라 이미 스크롤이 막혀 있지만,
+  // 혹시 모를 기기별 예외 상황에 대비해 명시적으로도 한 번 더 막아준다.
   handleEl.style.touchAction = 'none';
   // 모바일에서는 touch-action을 이 시점에 바꿔도 이미 시작된 터치 제스처에는
   // 적용되지 않아(브라우저가 touchstart 시점 값으로 고정) 드래그 중 화면이
