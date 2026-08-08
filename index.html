@@ -41,6 +41,35 @@
     scroll-margin-top: calc(var(--tabbar-h, 48px) + 12px);
   }
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .recipe-actions { display: inline-flex; align-items: center; gap: 2px; margin-left: auto; }
+  .recipe-edit-btn, .recipe-delete-btn {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: none; background: transparent;
+    color: #ccc; font-size: 13px; cursor: pointer; transition: all 0.15s;
+    padding: 0; line-height: 1; position: relative;
+  }
+  .recipe-edit-btn::after, .recipe-delete-btn::after {
+    content: ''; position: absolute; top: -8px; bottom: -8px; left: -8px; right: -8px;
+  }
+  .recipe-edit-btn:hover { background: #eef2ff; color: #4f46e5; }
+  .recipe-delete-btn:hover { background: #fee2e2; color: #ef4444; }
+  .recipe-add-toggle-btn {
+    background: #fff; border: 1px solid #e0ddd6; color: #555;
+    font-size: 13px; font-weight: 600; padding: 8px 14px;
+    border-radius: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .recipe-add-toggle-btn:hover { background: #f0ede8; border-color: #bbb; }
+  .recipe-form { display: none; margin-bottom: 1rem; }
+  .recipe-form.show { display: flex; flex-direction: column; gap: 10px; }
+  .rf-size-block {
+    border: 1px solid #f0ede8; border-radius: 10px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .rf-size-title { font-size: 12px; font-weight: 700; color: #888; }
+  .rf-temp-row { display: flex; align-items: center; gap: 8px; }
+  .rf-temp-tag { font-size: 11px; font-weight: 700; color: #aaa; width: 34px; flex-shrink: 0; }
+  .rf-temp-row textarea.dm-input { flex: 1; resize: vertical; min-height: 34px; }
   .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
   .cat-커피        { background: #FEF3C7; color: #92400E; }
   .cat-논커피      { background: #D1FAE5; color: #065F46; }
@@ -1466,6 +1495,74 @@
     </div>
   </div>
   <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
+
+  <button type="button" class="recipe-add-toggle-btn" id="recipeFormToggleBtn" onclick="toggleRecipeForm()">+ 새 메뉴 추가</button>
+
+  <div class="recipe-form" id="recipeForm">
+    <div class="dm-form-row">
+      <input type="text" id="rf-name" class="dm-input" placeholder="메뉴명 (예: 아메리카노)">
+    </div>
+    <div class="dm-form-row dm-form-row-inline">
+      <div class="dm-field">
+        <label class="dm-field-label">카테고리</label>
+        <select id="rf-cat" class="dm-input dm-select" onchange="onRecipeCatChange()">
+          <option value="커피">커피</option>
+          <option value="논커피">논커피</option>
+          <option value="에이드/주스">에이드/주스</option>
+          <option value="스무디/프라페">스무디/프라페</option>
+          <option value="베이스">베이스</option>
+        </select>
+      </div>
+      <div class="dm-field" style="flex:2;">
+        <label class="dm-field-label">비고 (선택)</label>
+        <input type="text" id="rf-note" class="dm-input" placeholder="예: + 시나몬파우더(선택)">
+      </div>
+    </div>
+
+    <div id="rf-base-fields" style="display:none; flex-direction:column; gap:10px;">
+      <div class="dm-form-row">
+        <div class="dm-field">
+          <label class="dm-field-label">보관 방법</label>
+          <input type="text" id="rf-storage" class="dm-input" placeholder="냉장보관">
+        </div>
+      </div>
+      <div class="dm-form-row">
+        <div class="dm-field">
+          <label class="dm-field-label">레시피</label>
+          <textarea id="rf-recipe" class="dm-input" rows="3" placeholder="레시피 내용"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div id="rf-size-fields" style="display:flex; flex-direction:column; gap:10px;">
+      <div class="rf-size-block">
+        <div class="rf-size-title">R 사이즈</div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">HOT</span><textarea id="rf-R-hot" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">ICE</span><textarea id="rf-R-ice" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+      </div>
+      <div class="rf-size-block">
+        <div class="rf-size-title">L 사이즈</div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">HOT</span><textarea id="rf-L-hot" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">ICE</span><textarea id="rf-L-ice" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+      </div>
+      <div class="rf-size-block">
+        <div class="rf-size-title">D 사이즈</div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">HOT</span><textarea id="rf-D-hot" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+        <div class="rf-temp-row"><span class="rf-temp-tag">ICE</span><textarea id="rf-D-ice" class="dm-input" rows="1" placeholder="해당 없으면 비워두세요"></textarea></div>
+      </div>
+    </div>
+
+    <div class="dm-form-actions">
+      <button class="dm-add-btn" id="rf-submit-btn" onclick="addRecipeItem()">+ 메뉴 추가</button>
+      <button class="dm-cancel-btn" id="rf-cancel-btn" onclick="cancelEditRecipeItem()" style="display:none;">취소</button>
+    </div>
+  </div>
+
+  <div class="pending-sync-bar" id="pendingSync-recipes">
+    <span>⚠️ 변경사항이 아직 저장되지 않았어요</span>
+    <button class="pending-sync-btn" onclick="applyRecipes()">변경사항 적용</button>
+  </div>
+
   <div class="results" id="results"><div class="card">
       <div class="card-header">
         <span class="cat-badge cat-커피">커피</span>
@@ -3409,14 +3506,14 @@ const checklistDb = firebase.firestore();
 
 // 체크리스트 구성(항목 텍스트)/날짜관리처럼 "적용" 버튼을 눌러야만 파이어베이스에 반영되는
 // 화면들을 위한 공통 상태 표시 헬퍼입니다. type: 'opening' | 'closing' | 'datemanage'
-const pendingSyncState = { opening: false, closing: false, datemanage: false };
+const pendingSyncState = { opening: false, closing: false, datemanage: false, recipes: false };
 function updatePendingSyncUI(type, isDirty) {
   pendingSyncState[type] = isDirty;
   const bar = document.getElementById('pendingSync-' + type);
   if (bar) bar.classList.toggle('show', isDirty);
 }
 window.addEventListener('beforeunload', function (e) {
-  if (pendingSyncState.opening || pendingSyncState.closing || pendingSyncState.datemanage) {
+  if (pendingSyncState.opening || pendingSyncState.closing || pendingSyncState.datemanage || pendingSyncState.recipes) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -3424,7 +3521,9 @@ window.addEventListener('beforeunload', function (e) {
 </script>
 
 <script>
-const menus = [
+// 기본(하드코딩) 레시피 목록입니다. 클라우드(Firestore)에 아직 데이터가 없을 때
+// 최초 1회 이 값을 그대로 업로드하는 용도로 쓰이고, 이후에는 클라우드 데이터를 사용합니다.
+let menus = [
   { name: "아메리카노", cat: "커피",
     R: { hot: "온수 1번 + 샷 2", ice: "정수 1번 + 얼음 + 샷 2" },
     L: { hot: "온수 2번 + 샷 3", ice: "정수 2번 + 얼음 + 샷 3" },
@@ -3856,6 +3955,10 @@ function render() {
         <div class="card-header">
           <span class="cat-badge cat-${ck}">${m.cat}</span>
           <span class="menu-name">${m.name}</span>
+          <span class="recipe-actions">
+            <button type="button" class="recipe-edit-btn" title="수정" onclick="editRecipeItem('${m.id}')">✎</button>
+            <button type="button" class="recipe-delete-btn" title="삭제" onclick="deleteRecipeItem('${m.id}')">🗑</button>
+          </span>
         </div>
         <div class="base-recipe-block">
           <div class="base-recipe-label">🧊 ${storageText}</div>
@@ -3885,6 +3988,10 @@ function render() {
       <div class="card-header">
         <span class="cat-badge cat-${ck}">${m.cat}</span>
         <span class="menu-name">${m.name}</span>
+        <span class="recipe-actions">
+          <button type="button" class="recipe-edit-btn" title="수정" onclick="editRecipeItem('${m.id}')">✎</button>
+          <button type="button" class="recipe-delete-btn" title="삭제" onclick="deleteRecipeItem('${m.id}')">🗑</button>
+        </span>
       </div>
       <div class="size-grid">${sizeBlocks}</div>
       ${noteHtml}
@@ -3965,7 +4072,191 @@ function clearFocus() {
   if (backBtn) backBtn.classList.remove('visible');
 }
 
+// 기본 메뉴 배열에 id가 없는 항목이 있으면 채워 넣습니다.
+// (최초 실행 때만 해당 - 클라우드에 한 번 저장되면 이후에는 그 id가 계속 유지됩니다.)
+function ensureMenuIds() {
+  menus.forEach((m, idx) => {
+    if (!m.id) m.id = 'r' + Date.now().toString(36) + idx + Math.random().toString(36).slice(2, 6);
+  });
+}
+ensureMenuIds();
+
+// 레시피 데이터를 Firestore에 저장/불러오기 위한 문서 참조입니다.
+// 체크리스트 항목 구성과 동일하게 배열 전체를 하나의 문서로 관리합니다.
+const RECIPES_DOC = checklistDb.collection('recipes').doc('menus');
+
+async function loadRecipesCloud() {
+  const snap = await RECIPES_DOC.get();
+  if (snap.exists && Array.isArray(snap.data().items)) return snap.data().items;
+  return null; // 클라우드에 아직 데이터가 없음 (최초 실행)
+}
+
+function syncRecipesToCloud() {
+  RECIPES_DOC.set({
+    items: menus,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    updatePendingSyncUI('recipes', false);
+  }).catch(e => {
+    console.error('레시피 저장 실패:', e);
+    alert('저장에 실패했어요. 네트워크 상태를 확인하고 다시 시도해주세요.');
+  });
+}
+
+function markRecipesDirty() {
+  updatePendingSyncUI('recipes', true);
+}
+
+function applyRecipes() {
+  syncRecipesToCloud();
+}
+window.applyRecipes = applyRecipes;
+
+let editingRecipeId = null; // 수정 중인 메뉴 id (null이면 신규 추가 모드)
+
+// 카테고리 선택에 따라 "베이스" 전용 필드 / 사이즈(R·L·D) 필드를 서로 바꿔 보여줍니다.
+function onRecipeCatChange() {
+  const cat = document.getElementById('rf-cat').value;
+  const isBase = cat === '베이스';
+  document.getElementById('rf-base-fields').style.display = isBase ? 'flex' : 'none';
+  document.getElementById('rf-size-fields').style.display = isBase ? 'none' : 'flex';
+}
+
+// 메뉴 추가 폼을 펼치거나 접습니다.
+function toggleRecipeForm() {
+  const form = document.getElementById('recipeForm');
+  const isShown = form.classList.contains('show');
+  if (isShown) {
+    cancelEditRecipeItem();
+  } else {
+    form.classList.add('show');
+    document.getElementById('recipeFormToggleBtn').textContent = '− 메뉴 추가 닫기';
+    document.getElementById('rf-name').focus();
+  }
+}
+
+function resetRecipeFormFields() {
+  ['rf-name', 'rf-note', 'rf-storage', 'rf-recipe', 'rf-R-hot', 'rf-R-ice', 'rf-L-hot', 'rf-L-ice', 'rf-D-hot', 'rf-D-ice']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('rf-cat').value = '커피';
+  onRecipeCatChange();
+}
+
+// 메뉴를 추가하거나(신규) 수정 중이던 메뉴를 저장합니다(수정).
+function addRecipeItem() {
+  const name = document.getElementById('rf-name').value.trim();
+  if (!name) { document.getElementById('rf-name').focus(); return; }
+  const cat = document.getElementById('rf-cat').value;
+  const note = document.getElementById('rf-note').value.trim();
+
+  let data;
+  if (cat === '베이스') {
+    data = {
+      name, cat,
+      storage: document.getElementById('rf-storage').value.trim() || '냉장보관',
+      recipe: document.getElementById('rf-recipe').value.trim()
+    };
+  } else {
+    const val = id => document.getElementById(id).value.trim() || '-';
+    data = {
+      name, cat,
+      R: { hot: val('rf-R-hot'), ice: val('rf-R-ice') },
+      L: { hot: val('rf-L-hot'), ice: val('rf-L-ice') },
+      D: { hot: val('rf-D-hot'), ice: val('rf-D-ice') }
+    };
+  }
+  if (note) data.note = note;
+
+  if (editingRecipeId) {
+    const idx = menus.findIndex(m => m.id === editingRecipeId);
+    if (idx !== -1) menus[idx] = Object.assign({ id: editingRecipeId }, data);
+  } else {
+    data.id = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    menus.push(data);
+  }
+
+  markRecipesDirty();
+  cancelEditRecipeItem();
+  render();
+}
+window.addRecipeItem = addRecipeItem;
+
+// 기존 메뉴를 수정 폼에 불러와 편집 상태로 전환합니다.
+function editRecipeItem(id) {
+  const m = menus.find(x => x.id === id);
+  if (!m) return;
+  editingRecipeId = id;
+
+  document.getElementById('rf-name').value = m.name || '';
+  document.getElementById('rf-cat').value = m.cat || '커피';
+  document.getElementById('rf-note').value = m.note || '';
+  onRecipeCatChange();
+
+  if (m.cat === '베이스') {
+    document.getElementById('rf-storage').value = m.storage || '';
+    document.getElementById('rf-recipe').value = m.recipe || '';
+  } else {
+    ['R', 'L', 'D'].forEach(s => {
+      const d = m[s] || {};
+      document.getElementById('rf-' + s + '-hot').value = (d.hot && d.hot !== '-') ? d.hot : '';
+      document.getElementById('rf-' + s + '-ice').value = (d.ice && d.ice !== '-') ? d.ice : '';
+    });
+  }
+
+  const form = document.getElementById('recipeForm');
+  form.classList.add('show');
+  document.getElementById('recipeFormToggleBtn').textContent = '− 메뉴 추가 닫기';
+  document.getElementById('rf-submit-btn').textContent = '수정 완료';
+  document.getElementById('rf-cancel-btn').style.display = '';
+
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('rf-name').focus();
+}
+window.editRecipeItem = editRecipeItem;
+
+// 메뉴를 삭제합니다. 삭제는 확인 팝업 후 바로 클라우드에 반영됩니다.
+function deleteRecipeItem(id) {
+  const m = menus.find(x => x.id === id);
+  if (!m) return;
+  if (!confirm(`"${m.name}" 메뉴를 정말 삭제하시겠습니까?\n삭제하면 복구할 수 없습니다.`)) return;
+  menus = menus.filter(x => x.id !== id);
+  if (editingRecipeId === id) cancelEditRecipeItem();
+  syncRecipesToCloud();
+  render();
+}
+window.deleteRecipeItem = deleteRecipeItem;
+
+// 수정/추가 폼을 닫고 초기 상태(신규 추가 모드)로 되돌립니다.
+function cancelEditRecipeItem() {
+  editingRecipeId = null;
+  resetRecipeFormFields();
+  document.getElementById('recipeForm').classList.remove('show');
+  document.getElementById('recipeFormToggleBtn').textContent = '+ 새 메뉴 추가';
+  document.getElementById('rf-submit-btn').textContent = '+ 메뉴 추가';
+  document.getElementById('rf-cancel-btn').style.display = 'none';
+}
+window.cancelEditRecipeItem = cancelEditRecipeItem;
+window.toggleRecipeForm = toggleRecipeForm;
+window.onRecipeCatChange = onRecipeCatChange;
+
 render();
+
+// 클라우드(Firestore)에서 최신 레시피 데이터를 불러옵니다. 기기 간 공유되며,
+// 클라우드에 아직 데이터가 없는 최초 실행 시에는 지금의 기본 목록을 그대로 업로드합니다.
+(async function initRecipesCloud() {
+  try {
+    const cloudMenus = await loadRecipesCloud();
+    if (cloudMenus) {
+      menus = cloudMenus;
+      ensureMenuIds();
+    } else {
+      syncRecipesToCloud();
+    }
+  } catch (e) {
+    console.error('레시피 불러오기 실패, 기본 목록 사용:', e);
+  }
+  render();
+})();
 
 // 카테고리 칩 영역: 마우스 휠 위아래 → 좌우 스크롤
 (function() {
