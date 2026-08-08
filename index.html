@@ -4847,6 +4847,30 @@ let dragState = null;
 const DRAG_HOLD_MS = 350;
 const DRAG_MOVE_CANCEL_PX = 10;
 let dragArm = null;
+let bodyScrollLockY = null;
+
+// 드래그 중 모바일 화면이 스크롤(또는 바운스)되는 것을 막기 위해 body를 그 자리에 고정합니다.
+function lockBodyScroll() {
+  if (bodyScrollLockY !== null) return; // 이미 잠겨 있으면 무시
+  bodyScrollLockY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.position = 'fixed';
+  document.body.style.top = (-bodyScrollLockY) + 'px';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+}
+
+function unlockBodyScroll() {
+  if (bodyScrollLockY === null) return;
+  const y = bodyScrollLockY;
+  bodyScrollLockY = null;
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, y);
+}
 
 function startItemDrag(e, type, sIdx) {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -4916,6 +4940,10 @@ function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
   // 실제 드래그가 시작된 동안에만 터치 스크롤을 막아서 이동 핸들을 살짝 스치기만 해도
   // 화면 스크롤이 막히는 문제를 방지합니다 (평소엔 pan-y로 스크롤을 허용).
   handleEl.style.touchAction = 'none';
+  // 모바일에서는 touch-action을 이 시점에 바꿔도 이미 시작된 터치 제스처에는
+  // 적용되지 않아(브라우저가 touchstart 시점 값으로 고정) 드래그 중 화면이
+  // 계속 스크롤되어 버립니다. body를 강제로 고정시켜 확실히 막습니다.
+  lockBodyScroll();
 
   dragState = {
     type, sIdx: Number(sIdx), itemEl, container, ghost,
@@ -4961,6 +4989,7 @@ function onItemDragEnd() {
   itemEl.classList.remove('dragging');
   const handleEl = itemEl.querySelector('.item-drag');
   if (handleEl) handleEl.style.touchAction = '';
+  unlockBodyScroll();
 
   const newOrderIidx = Array.from(container.querySelectorAll(':scope > .item')).map(el => Number(el.dataset.iidx));
   dragState = null;
