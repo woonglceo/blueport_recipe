@@ -5,12 +5,10 @@
 <title>Bluepot 레시피 검색</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-  :root { --gutter: 1.25rem; }
-  @media (max-width: 500px) { :root { --gutter: 0.55rem; } }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { overflow-x: clip; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; overflow-x: clip; }
-  .container { max-width: 760px; margin: 0 auto; padding: 2rem var(--gutter); }
+  .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
   .last-updated { font-size: 10.5px; color: #b3b0aa; letter-spacing: 0; text-transform: none; white-space: nowrap; flex-shrink: 0; }
@@ -132,7 +130,8 @@
     display: flex; gap: 4px; margin-bottom: 0;
     border-bottom: 1px solid #e8e5e0;
     background: #f5f4f0;
-    padding-left: var(--gutter); padding-right: var(--gutter);
+    padding-left: 1.25rem; padding-right: 1.25rem;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
     flex: 1; min-width: 0;
@@ -144,7 +143,8 @@
   .tab-bar-wrap {
     position: sticky !important; top: 0 !important; z-index: 60 !important;
     background: #f5f4f0 !important;
-    margin-left: calc(-1 * var(--gutter)); margin-right: calc(-1 * var(--gutter));
+    margin-left: -1.25rem; margin-right: -1.25rem;
+    margin-bottom: 1.75rem;
     display: flex; align-items: stretch;
   }
   .tab-bar::-webkit-scrollbar { display: none; }
@@ -306,10 +306,10 @@
     background: #f5f4f0;
     padding-top: 10px;
     padding-bottom: 0;
-    margin-left: calc(-1 * var(--gutter));
-    margin-right: calc(-1 * var(--gutter));
-    padding-left: var(--gutter);
-    padding-right: var(--gutter);
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
   @media (max-width: 500px) {
     .recipe-sticky { padding-top: 0; }
@@ -325,10 +325,10 @@
     background: #f5f4f0;
     padding-top: 10px;
     padding-bottom: 0;
-    margin-left: calc(-1 * var(--gutter));
-    margin-right: calc(-1 * var(--gutter));
-    padding-left: var(--gutter);
-    padding-right: var(--gutter);
+    margin-left: -1.25rem;
+    margin-right: -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
   }
   .progress-sticky .progress-wrap {
     margin-bottom: 0;
@@ -362,7 +362,7 @@
   }
   .checklist-page .item {
     display: flex; flex-direction: column; gap: 4px; min-width: 0;
-    padding: 12px 10px; border-bottom: 1px solid #f0ede8;
+    padding: 12px 16px; border-bottom: 1px solid #f0ede8;
     cursor: pointer; user-select: none; transition: background 0.12s;
   }
   .checklist-page .item:last-child { border-bottom: none; }
@@ -414,7 +414,6 @@
   .checklist-page .done-chip .undo-icon { font-size: 10px; text-decoration: none; opacity: 0.6; }
   @media (max-width: 500px) {
     .checklist-page .day-tab { font-size: 11px; padding: 5px 0; }
-    .checklist-page .item { padding: 12px 6px; }
   }
   /* 커스텀 체크리스트 항목 수정/삭제/드래그 버튼 - 라벨 아래 별도 줄에 오른쪽 정렬로 표시 */
   .checklist-page .item-actions {
@@ -434,12 +433,12 @@
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   .checklist-page .item-drag {
-    font-size: 15px; cursor: grab; touch-action: none; user-select: none;
+    font-size: 15px; cursor: grab; touch-action: pan-y; user-select: none;
   }
   .checklist-page .item-drag:hover { background: #f0ede8; color: #555; }
   .checklist-page .item-drag:active { cursor: grabbing; }
   .checklist-page .item-drag.armed {
-    background: #e8e4dc; color: #333;
+    background: #e8e4dc; color: #333; touch-action: none;
     transform: scale(1.12); cursor: grabbing;
   }
   .checklist-page .item-drag.armed { background: #e8e4dc; color: #333; }
@@ -4817,9 +4816,8 @@ window.deleteClosingItem = deleteClosingItem;
 
    스크롤 중 실수로 드래그가 시작되는 것을 막기 위해, 손가락을 일정 시간
    (DRAG_HOLD_MS) 동안 가만히 누르고 있어야 실제 드래그가 시작됩니다.
-   드래그 핸들은 touch-action:none이라 브라우저가 자동으로 스크롤해주지
-   않으므로, 롱프레스가 확정되기 전에 손가락이 움직이면(=스크롤 의도) 드래그를
-   취소하고 남은 움직임은 직접 window.scrollBy로 스크롤 처리해줍니다.
+   그 전에 손가락이 일정 거리 이상 움직이면(=스크롤로 판단) 드래그를 취소하고
+   평범한 스크롤 동작을 그대로 허용합니다.
 ============================================================ */
 let dragState = null;
 const DRAG_HOLD_MS = 350;
@@ -4833,53 +4831,40 @@ function startItemDrag(e, type, sIdx) {
 
   const handleEl = e.currentTarget; // setTimeout 안에서는 currentTarget이 null이 되므로 미리 저장
   const startX = e.clientX, startY = e.clientY;
-  let lastY = startY;
-  let manualScrolling = false;
-
-  const cleanup = () => {
-    window.removeEventListener('pointermove', onArmMove);
-    window.removeEventListener('pointerup', onArmRelease);
-    window.removeEventListener('pointercancel', onArmRelease);
-    handleEl.classList.remove('armed');
-    dragArm = null;
-  };
 
   const onArmMove = (ev) => {
-    if (manualScrolling) {
-      // touch-action:none이라 브라우저가 스크롤을 안 해주므로 직접 스크롤시켜줌
-      window.scrollBy(0, lastY - ev.clientY);
-      lastY = ev.clientY;
-      return;
-    }
-    const dx = Math.abs(ev.clientX - startX), dy = ev.clientY - startY;
-    if (Math.abs(dy) > DRAG_MOVE_CANCEL_PX || dx > DRAG_MOVE_CANCEL_PX) {
-      clearTimeout(dragArm.timer);
-      handleEl.classList.remove('armed');
-      manualScrolling = true;
-      lastY = ev.clientY;
-      window.scrollBy(0, startY - ev.clientY);
-    }
+    if (!dragArm) return;
+    const dx = Math.abs(ev.clientX - startX), dy = Math.abs(ev.clientY - startY);
+    if (dx > DRAG_MOVE_CANCEL_PX || dy > DRAG_MOVE_CANCEL_PX) cancelDragArm();
   };
-  const onArmRelease = () => cleanup();
+  const onArmRelease = () => cancelDragArm();
 
   window.addEventListener('pointermove', onArmMove);
   window.addEventListener('pointerup', onArmRelease);
   window.addEventListener('pointercancel', onArmRelease);
 
   const timer = setTimeout(() => {
-    cleanup();
+    window.removeEventListener('pointermove', onArmMove);
+    window.removeEventListener('pointerup', onArmRelease);
+    window.removeEventListener('pointercancel', onArmRelease);
+    handleEl.classList.remove('armed');
+    dragArm = null;
     if (navigator.vibrate) { try { navigator.vibrate(6); } catch (_) {} }
-    beginItemDrag(handleEl, type, sIdx, startX, lastY);
+    beginItemDrag(handleEl, type, sIdx, startX, startY);
   }, DRAG_HOLD_MS);
 
   handleEl.classList.add('armed');
-  dragArm = { timer, cleanup };
+  dragArm = { timer, onArmMove, onArmRelease };
 }
 
 function cancelDragArm() {
   if (!dragArm) return;
   clearTimeout(dragArm.timer);
-  dragArm.cleanup();
+  window.removeEventListener('pointermove', dragArm.onArmMove);
+  window.removeEventListener('pointerup', dragArm.onArmRelease);
+  window.removeEventListener('pointercancel', dragArm.onArmRelease);
+  document.querySelectorAll('.checklist-page .item-drag.armed').forEach(el => el.classList.remove('armed'));
+  dragArm = null;
 }
 
 function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
