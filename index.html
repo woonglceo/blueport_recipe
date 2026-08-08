@@ -179,7 +179,7 @@
     user-select: none;
   }
   .tab-bar.dragging { cursor: grabbing; }
-  /* tab-bar-wrap이 sticky 컨테이너 역할 — flex로 다운로드 버튼과 나란히 */
+  /* tab-bar-wrap이 sticky 컨테이너 역할 */
   .tab-bar-wrap {
     position: sticky !important; top: 0 !important; z-index: 60 !important;
     background: #f5f4f0 !important;
@@ -201,21 +201,19 @@
     transition: opacity 0.2s;
   }
   .tab-bar-wrap.scrolled-start::before { opacity: 1; }
-  .tab-bar-wrap.scrolled-end::after { opacity: 0; }
-  /* 다운로드 버튼 — flex 아이템으로 항상 우측에 고정 */
-  .tab-download-btn {
-    flex-shrink: 0;
-    padding: 0 14px;
-    border: none; border-left: 1px solid #e8e5e0; border-bottom: 1px solid #e8e5e0;
-    background: #f5f4f0; color: #777;
-    font-size: 13px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; gap: 5px;
-    transition: background 0.15s, color 0.15s;
-    white-space: nowrap;
-    min-width: 64px;
+  /* 탭바 우측 페이드 그라데이션 — 스크롤로 더 볼 항목이 남아있을 때 표시 */
+  .tab-bar-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, #f5f4f0);
+    pointer-events: none;
+    z-index: 61;
+    opacity: 1;
+    transition: opacity 0.2s;
   }
-  .tab-download-btn .dl-icon { font-size: 15px; line-height: 1; }
-  .tab-download-btn:hover { background: #eae8e3; color: #222; }
+  .tab-bar-wrap.scrolled-end::after { opacity: 0; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -1274,7 +1272,6 @@
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
-  <button class="tab-download-btn" onclick="downloadSource()" title="소스코드 다운로드"><span class="dl-icon">⬇</span>저장</button>
   </div>
 
   
