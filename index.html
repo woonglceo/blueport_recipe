@@ -3991,7 +3991,8 @@ function editRecipeItem(id) {
   document.getElementById('rf-delete-btn').style.display = '';
 
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  document.getElementById('rf-name').focus();
+  // 모바일에서 수정 버튼을 누르면 메뉴명 입력칸에 자동 포커스가 가면서
+  // 키보드가 바로 튀어나와 불편하므로, 수정 진입 시에는 자동 포커스를 주지 않습니다.
 }
 window.editRecipeItem = editRecipeItem;
 
@@ -4024,7 +4025,10 @@ window.restoreRecipeItem = restoreRecipeItem;
 function toggleRecipeTrash() {
   const panel = document.getElementById('recipeTrashPanel');
   panel.classList.toggle('show');
-  if (panel.classList.contains('show')) renderRecipeTrash();
+  const isOpen = panel.classList.contains('show');
+  if (isOpen) renderRecipeTrash();
+  const results = document.getElementById('results');
+  if (results) results.style.display = isOpen ? 'none' : '';
 }
 window.toggleRecipeTrash = toggleRecipeTrash;
 
@@ -4051,7 +4055,11 @@ function updateRecipeTrashUI() {
   document.getElementById('recipeTrashCount').textContent = count;
   btn.style.display = count > 0 ? '' : 'none';
   const panel = document.getElementById('recipeTrashPanel');
-  if (count === 0) panel.classList.remove('show');
+  if (count === 0) {
+    panel.classList.remove('show');
+    const results = document.getElementById('results');
+    if (results) results.style.display = '';
+  }
   else if (panel.classList.contains('show')) renderRecipeTrash();
 }
 
@@ -4692,7 +4700,9 @@ window.restoreOpeningItem = restoreOpeningItem;
 function toggleOpeningTrash() {
   const panel = document.getElementById('openingTrashPanel');
   panel.classList.toggle('show');
-  if (panel.classList.contains('show')) renderChecklistTrash('opening');
+  const isOpen = panel.classList.contains('show');
+  if (isOpen) renderChecklistTrash('opening');
+  toggleChecklistContentVisibility('opening', isOpen);
 }
 window.toggleOpeningTrash = toggleOpeningTrash;
 
@@ -4871,7 +4881,9 @@ window.restoreClosingItem = restoreClosingItem;
 function toggleClosingTrash() {
   const panel = document.getElementById('closingTrashPanel');
   panel.classList.toggle('show');
-  if (panel.classList.contains('show')) renderChecklistTrash('closing');
+  const isOpen = panel.classList.contains('show');
+  if (isOpen) renderChecklistTrash('closing');
+  toggleChecklistContentVisibility('closing', isOpen);
 }
 window.toggleClosingTrash = toggleClosingTrash;
 
@@ -4902,8 +4914,23 @@ function updateChecklistTrashUI(type) {
   if (countEl) countEl.textContent = count;
   btn.style.display = count > 0 ? '' : 'none';
   const panel = document.getElementById(type + 'TrashPanel');
-  if (count === 0) { if (panel) panel.classList.remove('show'); }
+  if (count === 0) {
+    if (panel) panel.classList.remove('show');
+    toggleChecklistContentVisibility(type, false);
+  }
   else if (panel && panel.classList.contains('show')) renderChecklistTrash(type);
+}
+
+// 오픈/마감 공용: 휴지통 패널이 열려있는 동안 기존 체크리스트(진행중/완료) 목록을 숨깁니다.
+function toggleChecklistContentVisibility(type, hide) {
+  const sections = document.getElementById('sections-' + type);
+  if (sections) sections.style.display = hide ? 'none' : '';
+  const done = document.getElementById('done-section-' + type);
+  if (hide) {
+    if (done) done.style.display = 'none';
+  } else if (typeof renderChecklistDone === 'function') {
+    renderChecklistDone(type); // 완료 항목 유무에 맞춰 done-section 표시 상태를 다시 계산
+  }
 }
 
 window.addClosingItem = addClosingItem;
@@ -6539,7 +6566,17 @@ window.moveSelectedDown = moveSelectedDown;
   function toggleDateTrash() {
     const panel = document.getElementById('dmTrashPanel');
     panel.classList.toggle('show');
-    if (panel.classList.contains('show')) renderDateTrash();
+    const isOpen = panel.classList.contains('show');
+    if (isOpen) renderDateTrash();
+    const list = document.getElementById('dm-list');
+    const emptyEl = document.getElementById('dm-empty');
+    if (isOpen) {
+      if (list) list.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'none';
+    } else {
+      if (list) list.style.display = '';
+      renderDateItems(); // 목록/빈 상태 표시를 최신 데이터 기준으로 다시 계산
+    }
   }
   window.toggleDateTrash = toggleDateTrash;
 
@@ -6568,7 +6605,11 @@ window.moveSelectedDown = moveSelectedDown;
     if (countEl) countEl.textContent = count;
     btn.style.display = count > 0 ? '' : 'none';
     const panel = document.getElementById('dmTrashPanel');
-    if (count === 0) { if (panel) panel.classList.remove('show'); }
+    if (count === 0) {
+      if (panel) panel.classList.remove('show');
+      const list = document.getElementById('dm-list');
+      if (list) list.style.display = '';
+    }
     else if (panel && panel.classList.contains('show')) renderDateTrash();
   }
 
