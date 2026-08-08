@@ -49,6 +49,7 @@
   .card {
     background: #fff; border: 1px solid #e8e5e0;
     border-radius: 14px; padding: 1rem 1.25rem;
+    scroll-margin-top: calc(var(--tabbar-h, 48px) + 12px);
   }
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
@@ -3930,6 +3931,11 @@ function focusRecipe(row) {
   card.querySelectorAll('.size-block').forEach(b => { if (b !== sizeBlock) b.style.display = 'none'; });
   row.classList.add('focused');
   document.getElementById('backBtn').classList.add('visible');
+  // 포커스 후 레이아웃이 바뀌면서(다른 카드/블록이 접힘) 클릭한 위치가 화면 밖으로 밀려나
+  // 잘려 보이는 문제 방지 - 레이아웃 반영 후 해당 카드가 화면 상단(탭바 아래)에 오도록 스크롤
+  requestAnimationFrame(() => {
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 // 모든 카드·사이즈블록·온도행의 포커스/dim 상태를 초기화합니다.
