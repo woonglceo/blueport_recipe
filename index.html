@@ -431,7 +431,13 @@
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%; border: none; background: transparent;
     color: #ccc; font-size: 16px; cursor: pointer; transition: all 0.15s;
-    padding: 0; line-height: 1;
+    padding: 0; line-height: 1; position: relative;
+  }
+  /* 버튼 자체 크기(=보이는 크기)는 그대로 두고, 터치 인식 영역만 보이지 않게 넓힙니다 */
+  .checklist-page .item-edit::after,
+  .checklist-page .item-delete::after,
+  .checklist-page .item-drag::after {
+    content: ''; position: absolute; top: -9px; bottom: -9px; left: -4px; right: -4px;
   }
   .checklist-page .item-edit { font-size: 13px; }
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
