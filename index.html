@@ -235,6 +235,7 @@
     .tab-item { font-size: 12.5px; padding: 10px 10px 12px; }
     .tab-item .tab-icon { font-size: 14px; }
     .results .card { padding: 1rem 0.65rem; }
+    .search-reset-btn { padding: 10px 8px; font-size: 11.5px; }
   }
 
   /* ── 체크리스트 탭 좌측 목차(섹션 바로가기) ── */
@@ -1501,7 +1502,7 @@
   <div class="recipe-sticky">
     <div class="search-row">
       <input type="text" id="q" placeholder="메뉴명 또는 초성 검색 (예: ㄱㄱㅁㄹㄸ)" oninput="render()" onkeydown="handleEnter(event)">
-      <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
+      <button class="reset-btn search-reset-btn" onclick="resetAll()">↺ 검색 초기화</button>
     </div>
     <div class="chips" style="">
       <button class="chip active" onclick="setFilter('전체')">전체</button>
