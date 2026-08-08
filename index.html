@@ -67,6 +67,8 @@
     border-radius: 10px; cursor: pointer; transition: all 0.15s; margin-left: 8px;
   }
   .trash-toggle-btn:hover { background: #f0ede8; border-color: #bbb; }
+  .trash-toggle-btn.active { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+  .trash-toggle-btn.active:hover { background: #333; border-color: #333; color: #fff; }
   .trash-panel { display: none; margin: 12px 0 16px; padding: 10px 12px; background: #fafaf8; border: 1px solid #eee; border-radius: 10px; }
   .trash-panel.show { display: block; }
   .trash-panel-title { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; }
@@ -3542,7 +3544,10 @@ function updatePendingSyncUI(type, isDirty) {
   if (bar) bar.classList.toggle('show', isDirty);
 }
 window.addEventListener('beforeunload', function (e) {
-  if (pendingSyncState.opening || pendingSyncState.closing || pendingSyncState.datemanage || pendingSyncState.recipes) {
+  const isEditingRecipe = typeof editingRecipeId !== 'undefined' && editingRecipeId !== null;
+  const isEditingDateItem = typeof window.isDateManageEditing === 'function' && window.isDateManageEditing();
+  if (pendingSyncState.opening || pendingSyncState.closing || pendingSyncState.datemanage || pendingSyncState.recipes
+      || isEditingRecipe || isEditingDateItem) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -4032,11 +4037,35 @@ function toggleRecipeTrash() {
   const panel = document.getElementById('recipeTrashPanel');
   panel.classList.toggle('show');
   const isOpen = panel.classList.contains('show');
+  const btn = document.getElementById('recipeTrashToggleBtn');
+  if (btn) btn.classList.toggle('active', isOpen);
   if (isOpen) renderRecipeTrash();
   const results = document.getElementById('results');
   if (results) results.style.display = isOpen ? 'none' : '';
+  // 휴지통이 열려있는 동안에는 "새 메뉴 추가" 버튼을 숨깁니다.
+  const addToggleBtn = document.getElementById('recipeFormToggleBtn');
+  if (addToggleBtn) addToggleBtn.style.display = isOpen ? 'none' : '';
+  // 휴지통을 열 때 메뉴 추가/수정 폼이 펼쳐져 있으면 함께 닫습니다.
+  if (isOpen) {
+    const form = document.getElementById('recipeForm');
+    if (form && form.classList.contains('show')) cancelEditRecipeItem();
+  }
 }
 window.toggleRecipeTrash = toggleRecipeTrash;
+
+// 휴지통을 강제로 닫고 버튼/화면 상태를 원래대로 되돌립니다. (다른 탭으로 이동할 때 사용)
+function closeRecipeTrash() {
+  const panel = document.getElementById('recipeTrashPanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  panel.classList.remove('show');
+  const btn = document.getElementById('recipeTrashToggleBtn');
+  if (btn) btn.classList.remove('active');
+  const results = document.getElementById('results');
+  if (results) results.style.display = '';
+  const addToggleBtn = document.getElementById('recipeFormToggleBtn');
+  if (addToggleBtn) addToggleBtn.style.display = '';
+}
+window.closeRecipeTrash = closeRecipeTrash;
 
 // 휴지통 패널 내용을 그립니다. (메뉴명만이 아니라 사이즈별 레시피/비고까지 모두 보여줍니다)
 function renderRecipeTrash() {
@@ -4104,9 +4133,7 @@ function updateRecipeTrashUI() {
   btn.style.display = count > 0 ? '' : 'none';
   const panel = document.getElementById('recipeTrashPanel');
   if (count === 0) {
-    panel.classList.remove('show');
-    const results = document.getElementById('results');
-    if (results) results.style.display = '';
+    closeRecipeTrash();
   }
   else if (panel.classList.contains('show')) renderRecipeTrash();
 }
@@ -4749,6 +4776,8 @@ function toggleOpeningTrash() {
   const panel = document.getElementById('openingTrashPanel');
   panel.classList.toggle('show');
   const isOpen = panel.classList.contains('show');
+  const btn = document.getElementById('openingTrashToggleBtn');
+  if (btn) btn.classList.toggle('active', isOpen);
   if (isOpen) renderChecklistTrash('opening');
   toggleChecklistContentVisibility('opening', isOpen);
 }
@@ -4930,6 +4959,8 @@ function toggleClosingTrash() {
   const panel = document.getElementById('closingTrashPanel');
   panel.classList.toggle('show');
   const isOpen = panel.classList.contains('show');
+  const btn = document.getElementById('closingTrashToggleBtn');
+  if (btn) btn.classList.toggle('active', isOpen);
   if (isOpen) renderChecklistTrash('closing');
   toggleChecklistContentVisibility('closing', isOpen);
 }
@@ -4963,11 +4994,21 @@ function updateChecklistTrashUI(type) {
   btn.style.display = count > 0 ? '' : 'none';
   const panel = document.getElementById(type + 'TrashPanel');
   if (count === 0) {
-    if (panel) panel.classList.remove('show');
-    toggleChecklistContentVisibility(type, false);
+    closeChecklistTrash(type);
   }
   else if (panel && panel.classList.contains('show')) renderChecklistTrash(type);
 }
+
+// 휴지통을 강제로 닫고 버튼/화면 상태를 원래대로 되돌립니다. (다른 탭으로 이동할 때 사용)
+function closeChecklistTrash(type) {
+  const panel = document.getElementById(type + 'TrashPanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  panel.classList.remove('show');
+  const btn = document.getElementById(type + 'TrashToggleBtn');
+  if (btn) btn.classList.remove('active');
+  toggleChecklistContentVisibility(type, false);
+}
+window.closeChecklistTrash = closeChecklistTrash;
 
 // 오픈/마감 공용: 휴지통 패널이 열려있는 동안 기존 체크리스트(진행중/완료/항목추가) 화면을 숨깁니다.
 function toggleChecklistContentVisibility(type, hide) {
@@ -5472,6 +5513,24 @@ renderInventory();
 // 메인 탭(레시피/오픈/마감/커스텀/재고/트레이닝)을 전환하고 해당 뷰만 표시합니다.
 // 레시피 탭에서만 우하단 FAB 버튼 그룹을 표시합니다.
 function switchTab(tab) {
+  const currentActiveEl = document.querySelector('.tab-item.active');
+  const currentTab = currentActiveEl ? currentActiveEl.id.replace('tab-', '') : null;
+  if (tab === currentTab) return; // 이미 보고 있는 탭이면 아무 것도 하지 않음
+
+  // 메뉴/항목을 수정하던 중이면, 저장하지 않고 탭을 이동해도 되는지 먼저 확인합니다.
+  const isEditingRecipe = typeof editingRecipeId !== 'undefined' && editingRecipeId !== null;
+  const isEditingDateItem = typeof window.isDateManageEditing === 'function' && window.isDateManageEditing();
+  if (isEditingRecipe || isEditingDateItem) {
+    if (!confirm('수정 중인 내용이 있어요. 저장하지 않고 다른 탭으로 이동할까요?')) return;
+  }
+  if (isEditingRecipe && typeof cancelEditRecipeItem === 'function') cancelEditRecipeItem();
+  if (isEditingDateItem && typeof cancelEditDateItem === 'function') cancelEditDateItem();
+
+  // 다른 탭으로 이동할 때는 열려있던 휴지통 패널과 버튼 상태를 모두 원래대로 되돌립니다.
+  if (typeof closeRecipeTrash === 'function') closeRecipeTrash();
+  if (typeof closeChecklistTrash === 'function') { closeChecklistTrash('opening'); closeChecklistTrash('closing'); }
+  if (typeof closeDateTrash === 'function') closeDateTrash();
+
   ['recipe', 'opening', 'closing', 'inventory', 'training', 'datemanage'].forEach(t => {
     document.getElementById('view-' + t).style.display = (t === tab) ? '' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
@@ -6584,6 +6643,8 @@ window.moveSelectedDown = moveSelectedDown;
     cancelEl.style.display = 'none';
     renderDateItems();
   }
+  window.cancelEditDateItem = cancelEditDateItem;
+  window.isDateManageEditing = () => editingId !== null;
 
   function deleteDateItem(id) {
     const target = dateItems.find(i => i.id === id);
@@ -6617,6 +6678,8 @@ window.moveSelectedDown = moveSelectedDown;
     const panel = document.getElementById('dmTrashPanel');
     panel.classList.toggle('show');
     const isOpen = panel.classList.contains('show');
+    const btn = document.getElementById('dmTrashToggleBtn');
+    if (btn) btn.classList.toggle('active', isOpen);
     if (isOpen) renderDateTrash();
     const list = document.getElementById('dm-list');
     const emptyEl = document.getElementById('dm-empty');
@@ -6629,6 +6692,19 @@ window.moveSelectedDown = moveSelectedDown;
     }
   }
   window.toggleDateTrash = toggleDateTrash;
+
+  // 휴지통을 강제로 닫고 버튼/화면 상태를 원래대로 되돌립니다. (다른 탭으로 이동할 때 사용)
+  function closeDateTrash() {
+    const panel = document.getElementById('dmTrashPanel');
+    if (!panel || !panel.classList.contains('show')) return;
+    panel.classList.remove('show');
+    const btn = document.getElementById('dmTrashToggleBtn');
+    if (btn) btn.classList.remove('active');
+    const list = document.getElementById('dm-list');
+    if (list) list.style.display = '';
+    renderDateItems();
+  }
+  window.closeDateTrash = closeDateTrash;
 
   // 휴지통 패널 내용을 그립니다.
   function renderDateTrash() {
@@ -6656,9 +6732,7 @@ window.moveSelectedDown = moveSelectedDown;
     btn.style.display = count > 0 ? '' : 'none';
     const panel = document.getElementById('dmTrashPanel');
     if (count === 0) {
-      if (panel) panel.classList.remove('show');
-      const list = document.getElementById('dm-list');
-      if (list) list.style.display = '';
+      closeDateTrash();
     }
     else if (panel && panel.classList.contains('show')) renderDateTrash();
   }
