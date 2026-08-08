@@ -52,14 +52,6 @@
     scroll-margin-top: calc(var(--tabbar-h, 48px) + 12px);
   }
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  /* 레시피 포커스(사이즈/온도 클릭) 중에는 메뉴명 헤더를 상단에 고정해서
-     스크롤해도 어떤 메뉴인지 계속 보이게 함 */
-  .card.recipe-focused .card-header {
-    position: sticky; top: var(--tabbar-h, 48px);
-    background: #fff; z-index: 5;
-    margin: -1rem -1.25rem 14px; padding: 12px 1.25rem 10px;
-    border-bottom: 1px solid #f0ede8;
-  }
   .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
   .cat-커피        { background: #FEF3C7; color: #92400E; }
   .cat-논커피      { background: #D1FAE5; color: #065F46; }
@@ -3919,13 +3911,16 @@ function resetAll() {
 // 이미 포커스된 경우 포커스를 해제합니다.
 function focusRecipe(row) {
   if (row.classList.contains('focused')) { clearFocus(); return; }
+  // 이미 다른 레시피가 포커스된 상태에서 블러 처리(dimmed)된 카드의 레시피를 누르면
+  // 그 레시피로 전환하지 않고 그냥 포커스를 해제한다.
+  const clickedCard = row.closest('.card');
+  if (clickedCard && clickedCard.classList.contains('dimmed')) { clearFocus(); return; }
   document.querySelectorAll('.card').forEach(card => card.classList.add('dimmed'));
   document.querySelectorAll('.size-block').forEach(b => b.classList.add('dimmed'));
   const sizeBlock = row.closest('.size-block');
   const card = row.closest('.card');
   const grid = card.querySelector('.size-grid');
   card.classList.remove('dimmed');
-  card.classList.add('recipe-focused');
   sizeBlock.classList.remove('dimmed');
   sizeBlock.classList.add('focused-block');
   // dimmed된 카드 클릭하면 clearFocus
@@ -3941,16 +3936,24 @@ function focusRecipe(row) {
   row.classList.add('focused');
   document.getElementById('backBtn').classList.add('visible');
   // 포커스 후 레이아웃이 바뀌면서(다른 카드/블록이 접힘) 클릭한 위치가 화면 밖으로 밀려나
-  // 잘려 보이는 문제 방지 - 레이아웃 반영 후 해당 카드가 화면 상단(탭바 아래)에 오도록 스크롤
+  // 잘려 보이는 문제 방지 - 레이아웃 반영 후 해당 카드가 화면 상단(탭바+검색바 아래)에 오도록 스크롤.
+  // 탭바뿐 아니라 검색창(recipe-sticky)까지 겹쳐서 메뉴 제목이 가려지므로, 두 높이를 모두 더해 여유 공간을 확보한다.
   requestAnimationFrame(() => {
-    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const tabBarWrap = document.getElementById('tabBarWrap');
+    let offset = tabBarWrap ? tabBarWrap.getBoundingClientRect().height : 0;
+    const stickyEl = document.querySelector('.recipe-sticky');
+    if (stickyEl) offset += stickyEl.getBoundingClientRect().height;
+    offset += 16; // 추가 여유 공간
+    const rect = card.getBoundingClientRect();
+    const targetY = window.scrollY + rect.top - offset;
+    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
   });
 }
 
 // 모든 카드·사이즈블록·온도행의 포커스/dim 상태를 초기화합니다.
 function clearFocus() {
   document.querySelectorAll('.card').forEach(card => {
-    card.classList.remove('dimmed', 'recipe-focused');
+    card.classList.remove('dimmed');
     card.onclick = null;
   });
   document.querySelectorAll('.size-block').forEach(b => {
