@@ -443,7 +443,7 @@
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   .checklist-page .item-drag {
-    font-size: 15px; cursor: grab; touch-action: pan-y; user-select: none;
+    font-size: 15px; cursor: grab; touch-action: none; user-select: none;
   }
   .checklist-page .item-drag:hover { background: #f0ede8; color: #555; }
   .checklist-page .item-drag:active { cursor: grabbing; }
@@ -4874,9 +4874,12 @@ function unlockBodyScroll() {
 
 function startItemDrag(e, type, sIdx) {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
-  // 터치에서는 여기서 preventDefault()를 걸면 누르자마자 스크롤 자체가 막혀버리므로,
-  // 실제로 손가락을 들거나 화면을 움직이는 스크롤 동작은 그대로 허용한다
-  // (touch-action: pan-y + 아래 onArmMove의 이동거리 판정으로 드래그/스크롤을 구분).
+  // 이동 핸들은 CSS에서 touch-action: none 으로 고정되어 있어서(아래 .item-drag 참고),
+  // 이 핸들을 누른 시점부터는 브라우저가 절대 자체적으로 화면을 스크롤하지 않는다.
+  // (touch-action은 손가락이 처음 닿는 순간의 값으로 제스처 내내 고정되기 때문에,
+  //  드래그가 실제로 시작된 뒤에 값을 바꾸는 방식은 모바일에서 이미 시작된 스크롤을
+  //  막지 못해 "화면이 움직이며 항목을 놓치는" 문제가 있었다. 처음부터 none으로 두고
+  //  아래 onArmMove의 이동거리 판정으로만 드래그 의도를 확인한다.)
   if (e.pointerType !== 'touch') e.preventDefault();
   e.stopPropagation();
   cancelDragArm();
