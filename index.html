@@ -61,6 +61,21 @@
     margin: 16px 0;
   }
   .recipe-add-toggle-btn:hover { background: #f0ede8; border-color: #bbb; }
+  .trash-toggle-btn {
+    background: #fff; border: 1px solid #e0ddd6; color: #888;
+    font-size: 12px; font-weight: 600; padding: 8px 12px;
+    border-radius: 10px; cursor: pointer; transition: all 0.15s; margin-left: 8px;
+  }
+  .trash-toggle-btn:hover { background: #f0ede8; border-color: #bbb; }
+  .trash-panel { display: none; margin: 12px 0 16px; padding: 10px 12px; background: #fafaf8; border: 1px solid #eee; border-radius: 10px; }
+  .trash-panel.show { display: block; }
+  .trash-panel-title { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; }
+  .trash-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
+  .trash-item:last-child { margin-bottom: 0; }
+  .trash-item-name { color: #555; }
+  .trash-restore-btn { flex-shrink: 0; background: #eef2ff; color: #4f46e5; border: 1px solid #dde3ff; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .trash-restore-btn:hover { background: #e0e7ff; }
+  .trash-empty-msg { color: #aaa; font-size: 12px; padding: 4px 2px; }
   .recipe-form { display: none; margin-bottom: 1rem; }
   .recipe-form.show { display: flex; flex-direction: column; gap: 10px; }
   .rf-size-block {
@@ -1498,6 +1513,9 @@
   <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
 
   <button type="button" class="recipe-add-toggle-btn" id="recipeFormToggleBtn" onclick="toggleRecipeForm()">+ 새 메뉴 추가</button>
+  <button type="button" class="trash-toggle-btn" id="recipeTrashToggleBtn" onclick="toggleRecipeTrash()" style="display:none;">🗑 삭제된 메뉴 (<span id="recipeTrashCount">0</span>)</button>
+
+  <div class="trash-panel" id="recipeTrashPanel"></div>
 
   <div class="recipe-form" id="recipeForm">
     <div class="dm-form-row">
@@ -1556,6 +1574,7 @@
     <div class="dm-form-actions">
       <button class="dm-add-btn" id="rf-submit-btn" onclick="addRecipeItem()">+ 메뉴 추가</button>
       <button class="dm-cancel-btn" id="rf-cancel-btn" onclick="cancelEditRecipeItem()" style="display:none;">취소</button>
+      <button class="recipe-delete-btn" id="rf-delete-btn" onclick="deleteRecipeItem(editingRecipeId)" title="삭제" style="display:none; font-size:16px; margin-left:auto;">🗑</button>
     </div>
   </div>
 
@@ -2505,7 +2524,9 @@
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('opening')">↺ 전체 초기화</button>
+      <button type="button" class="trash-toggle-btn" id="openingTrashToggleBtn" onclick="toggleOpeningTrash()" style="display:none;">🗑 삭제된 항목 (<span id="openingTrashCount">0</span>)</button>
     </div>
+    <div class="trash-panel" id="openingTrashPanel"></div>
     <div class="pending-sync-bar" id="pendingSync-opening">
       <span>⚠️ 항목 변경사항이 아직 저장되지 않았어요</span>
       <button class="pending-sync-btn" onclick="applyOpeningStructure()">변경사항 적용</button>
@@ -2614,7 +2635,9 @@
     </div>
     <div class="top-actions">
       <button class="reset-btn" onclick="resetChecklist('closing')">↺ 전체 초기화</button>
+      <button type="button" class="trash-toggle-btn" id="closingTrashToggleBtn" onclick="toggleClosingTrash()" style="display:none;">🗑 삭제된 항목 (<span id="closingTrashCount">0</span>)</button>
     </div>
+    <div class="trash-panel" id="closingTrashPanel"></div>
     <div class="pending-sync-bar" id="pendingSync-closing">
       <span>⚠️ 항목 변경사항이 아직 저장되지 않았어요</span>
       <button class="pending-sync-btn" onclick="applyClosingStructure()">변경사항 적용</button>
@@ -3484,6 +3507,8 @@
       <span>⚠️ 변경사항이 아직 저장되지 않았어요</span>
       <button class="pending-sync-btn" onclick="applyDateItems()">변경사항 적용</button>
     </div>
+    <button type="button" class="trash-toggle-btn" id="dmTrashToggleBtn" onclick="toggleDateTrash()" style="display:none; margin:0 0 12px;">🗑 삭제된 항목 (<span id="dmTrashCount">0</span>)</button>
+    <div class="trash-panel" id="dmTrashPanel"></div>
     <div id="dm-list" class="dm-list"></div>
     <div id="dm-empty" class="empty" style="display:none;">등록된 항목이 없어요. 위에서 새 항목을 추가해보세요.</div>
   </div>
@@ -3679,12 +3704,14 @@ function matchesSearch(menu, nameNoSpace) {
 
 // 검색어와 필터 조건에 따라 메뉴 목록을 필터링하고 결과 카드를 렌더링합니다.
 function render() {
+  updateRecipeTrashUI();
   const raw = document.getElementById('q').value;
   const { name, sizes, temps } = parseQuery(raw);
   // 메뉴명 띄어쓰기 무시: 검색어와 메뉴명 모두 공백 제거 후 비교
   const nameNoSpace = name.replace(/\s/g, '');
 
   const filtered = menus.filter(m => {
+    if (m.deleted) return false;
     const matchName = matchesSearch(m, nameNoSpace);
     const matchCat = activeFilter === '전체' || m.cat === activeFilter;
     if (m.cat === '베이스') return matchName && matchCat;
@@ -3712,7 +3739,6 @@ function render() {
           <span class="menu-name">${m.name}</span>
           <span class="recipe-actions">
             <button type="button" class="recipe-edit-btn" title="수정" onclick="editRecipeItem('${m.id}')">✎</button>
-            <button type="button" class="recipe-delete-btn" title="삭제" onclick="deleteRecipeItem('${m.id}')">🗑</button>
           </span>
         </div>
         <div class="base-recipe-block">
@@ -3745,7 +3771,6 @@ function render() {
         <span class="menu-name">${m.name}</span>
         <span class="recipe-actions">
           <button type="button" class="recipe-edit-btn" title="수정" onclick="editRecipeItem('${m.id}')">✎</button>
-          <button type="button" class="recipe-delete-btn" title="삭제" onclick="deleteRecipeItem('${m.id}')">🗑</button>
         </span>
       </div>
       <div class="size-grid">${sizeBlocks}</div>
@@ -3963,23 +3988,72 @@ function editRecipeItem(id) {
   document.getElementById('recipeFormToggleBtn').textContent = '− 메뉴 추가 닫기';
   document.getElementById('rf-submit-btn').textContent = '수정 완료';
   document.getElementById('rf-cancel-btn').style.display = '';
+  document.getElementById('rf-delete-btn').style.display = '';
 
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.getElementById('rf-name').focus();
 }
 window.editRecipeItem = editRecipeItem;
 
-// 메뉴를 삭제합니다. 삭제는 확인 팝업 후 바로 클라우드에 반영됩니다.
+// 메뉴를 삭제합니다. 실제로 지우지 않고 "삭제됨" 표시만 해서 검색결과에서 숨기고,
+// 휴지통에서 언제든 복구할 수 있게 합니다.
 function deleteRecipeItem(id) {
   const m = menus.find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`"${m.name}" 메뉴를 정말 삭제하시겠습니까?\n삭제하면 복구할 수 없습니다.`)) return;
-  menus = menus.filter(x => x.id !== id);
+  if (!confirm(`"${m.name}" 메뉴를 휴지통으로 이동할까요?\n삭제된 메뉴는 "삭제된 메뉴" 목록에서 언제든 복구할 수 있어요.`)) return;
+  m.deleted = true;
+  m.deletedAt = Date.now();
   if (editingRecipeId === id) cancelEditRecipeItem();
   syncRecipesToCloud();
   render();
 }
 window.deleteRecipeItem = deleteRecipeItem;
+
+// 휴지통에 있는 메뉴를 원래대로 복구합니다.
+function restoreRecipeItem(id) {
+  const m = menus.find(x => x.id === id);
+  if (!m) return;
+  delete m.deleted;
+  delete m.deletedAt;
+  syncRecipesToCloud();
+  render();
+}
+window.restoreRecipeItem = restoreRecipeItem;
+
+// 삭제된 메뉴 목록(휴지통) 패널을 펼치거나 접습니다.
+function toggleRecipeTrash() {
+  const panel = document.getElementById('recipeTrashPanel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) renderRecipeTrash();
+}
+window.toggleRecipeTrash = toggleRecipeTrash;
+
+// 휴지통 패널 내용을 그립니다.
+function renderRecipeTrash() {
+  const panel = document.getElementById('recipeTrashPanel');
+  const deletedMenus = menus.filter(m => m.deleted).sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+  if (!deletedMenus.length) {
+    panel.innerHTML = '<div class="trash-panel-title">삭제된 메뉴</div><div class="trash-empty-msg">삭제된 메뉴가 없어요.</div>';
+    return;
+  }
+  panel.innerHTML = '<div class="trash-panel-title">삭제된 메뉴</div>' + deletedMenus.map(m => `
+    <div class="trash-item">
+      <span class="trash-item-name">${m.name}</span>
+      <button type="button" class="trash-restore-btn" onclick="restoreRecipeItem('${m.id}')">복구</button>
+    </div>`).join('');
+}
+
+// 휴지통 토글 버튼의 표시 여부와 개수를 최신 상태로 갱신합니다.
+function updateRecipeTrashUI() {
+  const btn = document.getElementById('recipeTrashToggleBtn');
+  if (!btn) return;
+  const count = menus.filter(m => m.deleted).length;
+  document.getElementById('recipeTrashCount').textContent = count;
+  btn.style.display = count > 0 ? '' : 'none';
+  const panel = document.getElementById('recipeTrashPanel');
+  if (count === 0) panel.classList.remove('show');
+  else if (panel.classList.contains('show')) renderRecipeTrash();
+}
 
 // 수정/추가 폼을 닫고 초기 상태(신규 추가 모드)로 되돌립니다.
 function cancelEditRecipeItem() {
@@ -3989,6 +4063,7 @@ function cancelEditRecipeItem() {
   document.getElementById('recipeFormToggleBtn').textContent = '+ 새 메뉴 추가';
   document.getElementById('rf-submit-btn').textContent = '+ 메뉴 추가';
   document.getElementById('rf-cancel-btn').style.display = 'none';
+  document.getElementById('rf-delete-btn').style.display = 'none';
 }
 window.cancelEditRecipeItem = cancelEditRecipeItem;
 window.toggleRecipeForm = toggleRecipeForm;
@@ -4051,6 +4126,8 @@ const checklistData = {
   opening: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] },
   closing: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }
 };
+// 삭제된 체크리스트 항목(휴지통). 실제로 지우지 않고 여기 보관해뒀다가 복구할 수 있게 합니다.
+const checklistTrash = { opening: [], closing: [] };
 /* ============================================================ */
 
 const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
@@ -4442,18 +4519,21 @@ document.getElementById('sections-closing').innerHTML = '<div class="empty">불�
 ============================================================ */
 const OPENING_STRUCT_DOC = checklistDb.collection('checklistStructure').doc('opening');
 
-// Firestore에서 오픈 체크리스트의 항목 구성을 불러옵니다. 매장의 모든 기기가
+// Firestore에서 오픈 체크리스트의 항목 구성(+휴지통)을 불러옵니다. 매장의 모든 기기가
 // 같은 문서를 보므로, 한 기기에서 항목을 추가/수정/삭제하면 다른 기기에도 반영됩니다.
 async function loadOpeningStructureCloud() {
   const snap = await OPENING_STRUCT_DOC.get();
-  if (snap.exists && snap.data().days) return snap.data().days;
+  if (snap.exists && snap.data().days) {
+    return { days: snap.data().days, trash: Array.isArray(snap.data().trash) ? snap.data().trash : [] };
+  }
   return null; // 클라우드에 아직 저장된 구성이 없음 (최초 실행)
 }
 
-// 현재 오픈 체크리스트 항목 구성 전체를 Firestore에 저장합니다.
+// 현재 오픈 체크리스트 항목 구성(+휴지통) 전체를 Firestore에 저장합니다.
 function syncOpeningStructure() {
   OPENING_STRUCT_DOC.set({
     days: checklistData.opening,
+    trash: checklistTrash.opening,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     updatePendingSyncUI('opening', false);
@@ -4556,18 +4636,20 @@ function editOpeningItem(id) {
   inputEl.setSelectionRange(end, end);
 }
 
-// 오픈 체크리스트 항목을 삭제합니다. 같은 섹션 안에서 뒤쪽 항목들의 체크 상태는
-// 인덱스가 한 칸씩 당겨지는 것에 맞춰 함께 이동시켜서 최대한 보존합니다.
+// 오픈 체크리스트 항목을 삭제합니다. 실제로 지우지 않고 휴지통으로 옮겨서 나중에 복구할 수 있게 합니다.
+// 같은 섹션 안에서 뒤쪽 항목들의 체크 상태는 인덱스가 한 칸씩 당겨지는 것에 맞춰 함께 이동시켜서 최대한 보존합니다.
 // 삭제는 확인 팝업이 뜨므로 적용 버튼 없이 바로 반영합니다.
 function deleteOpeningItem(id) {
   const day = checklistActiveDay.opening;
   const [sIdx, iIdx] = id.split('-').map(Number);
   const section = checklistData.opening[day][sIdx];
   if (!section) return;
-  if (!confirm(`"${section.items[iIdx]}" 항목을 정말 삭제하시겠습니까?`)) return;
+  const itemText = section.items[iIdx];
+  if (!confirm(`"${itemText}" 항목을 휴지통으로 이동할까요?\n삭제된 항목은 "삭제된 항목" 목록에서 복구할 수 있어요.`)) return;
   const el = document.getElementById('cl-item-opening-' + id);
   const doDelete = () => {
     section.items.splice(iIdx, 1);
+    checklistTrash.opening.push({ day, sectionTitle: section.title, text: itemText, deletedAt: Date.now() });
     const state = checklistState.opening[day] || {};
     const newState = {};
     Object.keys(state).forEach(key => {
@@ -4581,10 +4663,38 @@ function deleteOpeningItem(id) {
     saveChecklistState('opening', day);
     syncOpeningStructure();
     renderChecklist('opening');
+    updateChecklistTrashUI('opening');
   };
   if (el) { el.classList.add('removing'); setTimeout(doDelete, 180); }
   else doDelete();
 }
+
+// 휴지통에 있는 오픈 체크리스트 항목을 원래 섹션(요일 기준)에 복구합니다.
+// 해당 섹션이 더 이상 없으면 같은 제목의 섹션을 새로 만들어서 넣어줍니다.
+function restoreOpeningItem(trashIdx) {
+  const entry = checklistTrash.opening[trashIdx];
+  if (!entry) return;
+  const daySections = checklistData.opening[entry.day] || (checklistData.opening[entry.day] = []);
+  let section = daySections.find(s => s.title === entry.sectionTitle);
+  if (!section) {
+    section = { title: entry.sectionTitle, items: [] };
+    daySections.push(section);
+  }
+  section.items.push(entry.text);
+  checklistTrash.opening.splice(trashIdx, 1);
+  syncOpeningStructure();
+  if (checklistActiveDay.opening === entry.day) renderChecklist('opening');
+  updateChecklistTrashUI('opening');
+}
+window.restoreOpeningItem = restoreOpeningItem;
+
+// 오픈 체크리스트 휴지통 패널을 펼치거나 접습니다.
+function toggleOpeningTrash() {
+  const panel = document.getElementById('openingTrashPanel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) renderChecklistTrash('opening');
+}
+window.toggleOpeningTrash = toggleOpeningTrash;
 
 window.addOpeningItem = addOpeningItem;
 window.editOpeningItem = editOpeningItem;
@@ -4598,13 +4708,16 @@ const CLOSING_STRUCT_DOC = checklistDb.collection('checklistStructure').doc('clo
 
 async function loadClosingStructureCloud() {
   const snap = await CLOSING_STRUCT_DOC.get();
-  if (snap.exists && snap.data().days) return snap.data().days;
+  if (snap.exists && snap.data().days) {
+    return { days: snap.data().days, trash: Array.isArray(snap.data().trash) ? snap.data().trash : [] };
+  }
   return null;
 }
 
 function syncClosingStructure() {
   CLOSING_STRUCT_DOC.set({
     days: checklistData.closing,
+    trash: checklistTrash.closing,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     updatePendingSyncUI('closing', false);
@@ -4704,16 +4817,19 @@ function editClosingItem(id) {
   inputEl.setSelectionRange(end, end);
 }
 
+// 마감 체크리스트 항목을 삭제합니다. 실제로 지우지 않고 휴지통으로 옮겨서 나중에 복구할 수 있게 합니다.
 // 삭제는 확인 팝업이 뜨므로 적용 버튼 없이 바로 반영합니다.
 function deleteClosingItem(id) {
   const day = checklistActiveDay.closing;
   const [sIdx, iIdx] = id.split('-').map(Number);
   const section = checklistData.closing[day][sIdx];
   if (!section) return;
-  if (!confirm(`"${section.items[iIdx]}" 항목을 정말 삭제하시겠습니까?`)) return;
+  const itemText = section.items[iIdx];
+  if (!confirm(`"${itemText}" 항목을 휴지통으로 이동할까요?\n삭제된 항목은 "삭제된 항목" 목록에서 복구할 수 있어요.`)) return;
   const el = document.getElementById('cl-item-closing-' + id);
   const doDelete = () => {
     section.items.splice(iIdx, 1);
+    checklistTrash.closing.push({ day, sectionTitle: section.title, text: itemText, deletedAt: Date.now() });
     const state = checklistState.closing[day] || {};
     const newState = {};
     Object.keys(state).forEach(key => {
@@ -4727,9 +4843,67 @@ function deleteClosingItem(id) {
     saveChecklistState('closing', day);
     syncClosingStructure();
     renderChecklist('closing');
+    updateChecklistTrashUI('closing');
   };
   if (el) { el.classList.add('removing'); setTimeout(doDelete, 180); }
   else doDelete();
+}
+
+// 휴지통에 있는 마감 체크리스트 항목을 원래 섹션(요일 기준)에 복구합니다.
+function restoreClosingItem(trashIdx) {
+  const entry = checklistTrash.closing[trashIdx];
+  if (!entry) return;
+  const daySections = checklistData.closing[entry.day] || (checklistData.closing[entry.day] = []);
+  let section = daySections.find(s => s.title === entry.sectionTitle);
+  if (!section) {
+    section = { title: entry.sectionTitle, items: [] };
+    daySections.push(section);
+  }
+  section.items.push(entry.text);
+  checklistTrash.closing.splice(trashIdx, 1);
+  syncClosingStructure();
+  if (checklistActiveDay.closing === entry.day) renderChecklist('closing');
+  updateChecklistTrashUI('closing');
+}
+window.restoreClosingItem = restoreClosingItem;
+
+// 마감 체크리스트 휴지통 패널을 펼치거나 접습니다.
+function toggleClosingTrash() {
+  const panel = document.getElementById('closingTrashPanel');
+  panel.classList.toggle('show');
+  if (panel.classList.contains('show')) renderChecklistTrash('closing');
+}
+window.toggleClosingTrash = toggleClosingTrash;
+
+// 오픈/마감 공용: 휴지통 패널 내용을 그립니다.
+function renderChecklistTrash(type) {
+  const panel = document.getElementById(type + 'TrashPanel');
+  if (!panel) return;
+  const dayLabelMap = { mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일' };
+  const entries = checklistTrash[type];
+  if (!entries.length) {
+    panel.innerHTML = '<div class="trash-panel-title">삭제된 항목</div><div class="trash-empty-msg">삭제된 항목이 없어요.</div>';
+    return;
+  }
+  const restoreFn = type === 'opening' ? 'restoreOpeningItem' : 'restoreClosingItem';
+  panel.innerHTML = '<div class="trash-panel-title">삭제된 항목</div>' + entries.map((entry, idx) => `
+    <div class="trash-item">
+      <span class="trash-item-name">[${dayLabelMap[entry.day] || entry.day}] ${entry.sectionTitle} · ${entry.text}</span>
+      <button type="button" class="trash-restore-btn" onclick="${restoreFn}(${idx})">복구</button>
+    </div>`).join('');
+}
+
+// 오픈/마감 공용: 휴지통 토글 버튼의 표시 여부와 개수를 최신 상태로 갱신합니다.
+function updateChecklistTrashUI(type) {
+  const btn = document.getElementById(type + 'TrashToggleBtn');
+  if (!btn) return;
+  const count = checklistTrash[type].length;
+  const countEl = document.getElementById(type + 'TrashCount');
+  if (countEl) countEl.textContent = count;
+  btn.style.display = count > 0 ? '' : 'none';
+  const panel = document.getElementById(type + 'TrashPanel');
+  if (count === 0) { if (panel) panel.classList.remove('show'); }
+  else if (panel && panel.classList.contains('show')) renderChecklistTrash(type);
 }
 
 window.addClosingItem = addClosingItem;
@@ -5000,9 +5174,10 @@ window.startItemDrag = startItemDrag;
   checklistState.opening[checklistActiveDay.opening] = await loadChecklistState('opening', checklistActiveDay.opening);
   checklistState.closing[checklistActiveDay.closing] = await loadChecklistState('closing', checklistActiveDay.closing);
   try {
-    const cloudDays = await loadOpeningStructureCloud();
-    if (cloudDays) {
-      checklistData.opening = cloudDays;
+    const cloudOpening = await loadOpeningStructureCloud();
+    if (cloudOpening) {
+      checklistData.opening = cloudOpening.days;
+      checklistTrash.opening = cloudOpening.trash;
     } else {
       // 클라우드 문서가 아직 없는 경우: 빈 구성을 업로드하지 않고 콘솔에만 경고를 남깁니다.
       // (하드코딩 기본 데이터가 없으므로 여기서 syncOpeningStructure()를 호출하면
@@ -5013,9 +5188,10 @@ window.startItemDrag = startItemDrag;
     console.error('오픈 체크리스트 항목 구성 불러오기 실패:', e);
   }
   try {
-    const cloudDaysClosing = await loadClosingStructureCloud();
-    if (cloudDaysClosing) {
-      checklistData.closing = cloudDaysClosing;
+    const cloudClosing = await loadClosingStructureCloud();
+    if (cloudClosing) {
+      checklistData.closing = cloudClosing.days;
+      checklistTrash.closing = cloudClosing.trash;
     } else {
       // 클라우드 문서가 아직 없는 경우: 빈 구성을 업로드하지 않고 콘솔에만 경고를 남깁니다.
       console.warn('클라우드에 마감 체크리스트 구성이 없습니다. Firestore의 checklistStructure/closing 문서를 확인하세요.');
@@ -5025,6 +5201,8 @@ window.startItemDrag = startItemDrag;
   }
   renderChecklist('opening');
   renderChecklist('closing');
+  updateChecklistTrashUI('opening');
+  updateChecklistTrashUI('closing');
 })();
 
 /* ============================================================
@@ -6333,15 +6511,65 @@ window.moveSelectedDown = moveSelectedDown;
   function deleteDateItem(id) {
     const target = dateItems.find(i => i.id === id);
     const itemName = target ? target.name : '이 항목';
-    if (!confirm(`"${itemName}" 항목을 정말 삭제하시겠습니까?\n삭제하면 복구할 수 없습니다.`)) return;
+    if (!confirm(`"${itemName}" 항목을 휴지통으로 이동할까요?\n삭제된 항목은 "삭제된 항목" 목록에서 언제든 복구할 수 있어요.`)) return;
 
     if (editingId === id) cancelEditDateItem();
-    // 하드코딩 항목 여부와 상관없이 완전히 삭제 (localStorage + Firestore 모두 반영)
-    // 삭제는 확인 팝업이 뜨므로 적용 버튼 없이 바로 반영합니다.
-    dateItems = dateItems.filter(i => i.id !== id);
+    // 실제로 지우지 않고 "삭제됨" 표시만 해서 목록에서 숨기고, 휴지통에서 복구할 수 있게 합니다.
+    if (target) { target.deleted = true; target.deletedAt = Date.now(); }
     saveDateItemsLocal();
     syncDateItemsToCloud();
     renderDateItems();
+    updateDateTrashUI();
+  }
+
+  // 휴지통에 있는 날짜관리 항목을 원래대로 복구합니다.
+  function restoreDateItem(id) {
+    const target = dateItems.find(i => i.id === id);
+    if (!target) return;
+    delete target.deleted;
+    delete target.deletedAt;
+    saveDateItemsLocal();
+    syncDateItemsToCloud();
+    renderDateItems();
+    updateDateTrashUI();
+  }
+  window.restoreDateItem = restoreDateItem;
+
+  // 날짜관리 휴지통 패널을 펼치거나 접습니다.
+  function toggleDateTrash() {
+    const panel = document.getElementById('dmTrashPanel');
+    panel.classList.toggle('show');
+    if (panel.classList.contains('show')) renderDateTrash();
+  }
+  window.toggleDateTrash = toggleDateTrash;
+
+  // 휴지통 패널 내용을 그립니다.
+  function renderDateTrash() {
+    const panel = document.getElementById('dmTrashPanel');
+    if (!panel) return;
+    const deletedItems = dateItems.filter(i => i.deleted).sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
+    if (!deletedItems.length) {
+      panel.innerHTML = '<div class="trash-panel-title">삭제된 항목</div><div class="trash-empty-msg">삭제된 항목이 없어요.</div>';
+      return;
+    }
+    panel.innerHTML = '<div class="trash-panel-title">삭제된 항목</div>' + deletedItems.map(item => `
+      <div class="trash-item">
+        <span class="trash-item-name">${escapeHtml(item.name)}</span>
+        <button type="button" class="trash-restore-btn" onclick="restoreDateItem('${item.id}')">복구</button>
+      </div>`).join('');
+  }
+
+  // 휴지통 토글 버튼의 표시 여부와 개수를 최신 상태로 갱신합니다.
+  function updateDateTrashUI() {
+    const btn = document.getElementById('dmTrashToggleBtn');
+    if (!btn) return;
+    const count = dateItems.filter(i => i.deleted).length;
+    const countEl = document.getElementById('dmTrashCount');
+    if (countEl) countEl.textContent = count;
+    btn.style.display = count > 0 ? '' : 'none';
+    const panel = document.getElementById('dmTrashPanel');
+    if (count === 0) { if (panel) panel.classList.remove('show'); }
+    else if (panel && panel.classList.contains('show')) renderDateTrash();
   }
 
   // 기준일(startDate)만 오늘 날짜로 최신화. 주기(period/unit)는 그대로 유지되므로
@@ -6367,6 +6595,7 @@ window.moveSelectedDown = moveSelectedDown;
 
   initDateInput();
   renderDateItems();
+  updateDateTrashUI();
 
   // 클라우드에서 최신 날짜관리 데이터를 불러와 화면을 갱신합니다. (기기 간 공유)
   (async function initCloudDateItems() {
@@ -6385,6 +6614,7 @@ window.moveSelectedDown = moveSelectedDown;
       console.error('날짜관리 클라우드 불러오기 실패, 로컬 데이터 사용:', e);
     }
     if (editingId === null) renderDateItems();
+    updateDateTrashUI();
   })();
 
   window.addDateItem = addDateItem;
