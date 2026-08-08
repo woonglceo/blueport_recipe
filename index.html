@@ -11,17 +11,6 @@
   .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
-  .last-updated { font-size: 10.5px; color: #b3b0aa; letter-spacing: 0; text-transform: none; white-space: nowrap; flex-shrink: 0; }
-  .last-updated .lu-sep { color: #d8d5cf; margin: 0 1px; }
-  .last-updated .lu-time { color: #7a7670; font-weight: 700; }
-  .last-updated .lu-fallback { color: inherit; }
-  /* 유효한 캐시값을 보여주는 중 (API 호출 없이 즉시 표시) — 파란빛으로 구분 */
-  .last-updated.is-cached { color: #6b8fb3; }
-  .last-updated.is-cached .lu-time { color: #45688c; }
-  .last-updated.is-cached .lu-cache-badge { color: #8fa9c4; font-weight: 600; }
-  /* API 호출이 실패해서 옛 값을 대신 보여주는 중 — 주황빛으로 구분 */
-  .last-updated.is-fail { color: #c9a34a; }
-  .last-updated.is-fail .lu-time { color: #a8863a; }
   h1 { font-size: 26px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; }
   .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
   .search-row input {
@@ -1225,7 +1214,6 @@
 <div class="container">
   <div class="brand-row">
     <div class="brand">Bluepot Cafe</div>
-    <div class="last-updated" id="lastUpdated"></div>
   </div>
   <div class="tab-bar-wrap" id="tabBarWrap">
   <div class="tab-bar" id="mainTabBar">
@@ -6549,104 +6537,6 @@ function downloadSource() {
     const el2 = document.getElementById('tabBarWrap');
     if (el2) new ResizeObserver(updateTabbarHeight).observe(el2);
   }
-})();
-
-// ── 마지막 업데이트 표시 ──────────────────────────────────
-// GitHub API로 이 파일(index.html)의 가장 최근 커밋 시각을 가져와 표시합니다.
-// 즉, "커밋해서 GitHub에 올린 시각" = "업데이트 시각" 기준입니다.
-(function () {
-  const el = document.getElementById('lastUpdated');
-  if (!el) return;
-  const GH_OWNER = 'woonglceo';
-  const GH_REPO = 'blueport_recipe';
-  const GH_BRANCH = 'main';
-  const GH_FILE = 'index.html';
-
-  // 캐싱 설정: 같은 브라우저에서는 CACHE_TTL_MS 동안 GitHub API를 다시 호출하지 않고
-  // localStorage에 저장된 값을 재사용합니다. (비인증 API는 시간당 60회 제한)
-  const CACHE_KEY = 'lastUpdatedCache_' + GH_OWNER + '_' + GH_REPO;
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5분
-
-  const pad = n => String(n).padStart(2, '0');
-  // 날짜와 시간 사이에 가운뎃점(·)을 넣고 시간 부분은 별도 span으로 감싸서
-  // 스타일(색 진하기)을 다르게 줘 한눈에 구분되도록 합니다.
-  const formatDateHtml = d => {
-    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    return `${dateStr} <span class="lu-sep">·</span> <span class="lu-time">${timeStr}</span>`;
-  };
-
-  function readCache() {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function writeCache(dateStr) {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ dateStr, fetchedAt: Date.now() }));
-    } catch (e) {
-      // localStorage 접근 불가(프라이빗 모드 등) 시에는 캐싱을 건너뜁니다.
-    }
-  }
-
-  // mode: 'live'(방금 API로 새로 받아온 값) / 'cache'(아직 유효한 캐시를 그냥 보여주는 중) /
-  //       'fail'(API 호출 실패로 캐시값을 대신 보여주는 중)
-  function applyDate(dateStr, mode) {
-    const d = new Date(dateStr);
-    let suffix = '';
-    if (mode === 'cache') suffix = ' <span class="lu-cache-badge">(캐시)</span>';
-    else if (mode === 'fail') suffix = ' <span class="lu-fallback">(오프라인, 이전 확인값)</span>';
-    el.innerHTML = '업데이트 ' + formatDateHtml(d) + suffix;
-    el.classList.toggle('is-cached', mode === 'cache');
-    el.classList.toggle('is-fail', mode === 'fail');
-    el.title = mode === 'fail'
-      ? 'GitHub API 호출 실패로 마지막으로 확인된 값을 표시 중입니다.'
-      : mode === 'cache'
-        ? '저장된 캐시값입니다. 잠시 후 최신 값으로 자동 갱신됩니다.'
-        : 'GitHub 커밋 기준 (' + GH_BRANCH + ' 브랜치)';
-  }
-
-  const cached = readCache();
-
-  // 캐시가 있고 아직 유효(TTL 이내)하면 API 호출 없이 캐시값을 표시하고 종료합니다.
-  if (cached && cached.dateStr && (Date.now() - cached.fetchedAt) < CACHE_TTL_MS) {
-    applyDate(cached.dateStr, 'cache');
-    return;
-  }
-
-  // 캐시가 없거나 만료됐으면, 우선 있는 캐시라도 화면에 먼저 보여준 뒤 백그라운드에서 갱신합니다.
-  if (cached && cached.dateStr) {
-    applyDate(cached.dateStr, 'cache');
-  } else {
-    el.textContent = '업데이트 확인 중...';
-    el.classList.remove('is-cached');
-  }
-
-  fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/commits?path=${GH_FILE}&sha=${GH_BRANCH}&per_page=1`)
-    .then(res => {
-      if (!res.ok) throw new Error('github api error: ' + res.status);
-      return res.json();
-    })
-    .then(data => {
-      const dateStr = data && data[0] && data[0].commit && data[0].commit.committer && data[0].commit.committer.date;
-      if (!dateStr) throw new Error('no commit date');
-      writeCache(dateStr);
-      applyDate(dateStr, 'live');
-    })
-    .catch(() => {
-      // API 실패(오프라인, 레이트리밋 등) 시: 캐시가 있으면 "캐시값 + 실패 표시"로 보여주고,
-      // 캐시조차 없을 때만 표시를 비웁니다.
-      if (cached && cached.dateStr) {
-        applyDate(cached.dateStr, 'fail');
-      } else {
-        el.textContent = '';
-      }
-    });
 })();
 </script>
 
