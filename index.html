@@ -2528,7 +2528,7 @@
       </div>
     </div>
     <div class="top-actions">
-      <button class="reset-btn" onclick="resetChecklist('opening')">↺ 전체 초기화</button>
+      <button class="reset-btn" id="openingResetBtn" onclick="resetChecklist('opening')">↺ 체크 초기화</button>
       <button type="button" class="trash-toggle-btn" id="openingTrashToggleBtn" onclick="toggleOpeningTrash()" style="display:none;">🗑 삭제된 항목 (<span id="openingTrashCount">0</span>)</button>
     </div>
     <div class="trash-panel" id="openingTrashPanel"></div>
@@ -2639,7 +2639,7 @@
       </div>
     </div>
     <div class="top-actions">
-      <button class="reset-btn" onclick="resetChecklist('closing')">↺ 전체 초기화</button>
+      <button class="reset-btn" id="closingResetBtn" onclick="resetChecklist('closing')">↺ 체크 초기화</button>
       <button type="button" class="trash-toggle-btn" id="closingTrashToggleBtn" onclick="toggleClosingTrash()" style="display:none;">🗑 삭제된 항목 (<span id="closingTrashCount">0</span>)</button>
     </div>
     <div class="trash-panel" id="closingTrashPanel"></div>
@@ -5016,6 +5016,8 @@ function toggleChecklistContentVisibility(type, hide) {
   if (sections) sections.style.display = hide ? 'none' : '';
   const addRow = document.getElementById('customAddRow-' + type);
   if (addRow) addRow.style.display = hide ? 'none' : '';
+  const resetBtn = document.getElementById(type + 'ResetBtn');
+  if (resetBtn) resetBtn.style.display = hide ? 'none' : '';
   const done = document.getElementById('done-section-' + type);
   if (hide) {
     if (done) done.style.display = 'none';
