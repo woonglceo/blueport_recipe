@@ -437,12 +437,12 @@
   .checklist-page .item-edit:hover { background: #eef2ff; color: #4f46e5; }
   .checklist-page .item-delete:hover { background: #fee2e2; color: #ef4444; }
   .checklist-page .item-drag {
-    font-size: 15px; cursor: grab; touch-action: none; user-select: none;
+    font-size: 15px; cursor: grab; touch-action: pan-y; user-select: none;
   }
   .checklist-page .item-drag:hover { background: #f0ede8; color: #555; }
   .checklist-page .item-drag:active { cursor: grabbing; }
   .checklist-page .item-drag.armed {
-    background: #e8e4dc; color: #333; touch-action: none;
+    background: #e8e4dc; color: #333;
     transform: scale(1.12); cursor: grabbing;
   }
   .checklist-page .item-drag.armed { background: #e8e4dc; color: #333; }
@@ -4844,7 +4844,10 @@ let dragArm = null;
 
 function startItemDrag(e, type, sIdx) {
   if (e.pointerType === 'mouse' && e.button !== 0) return;
-  e.preventDefault();
+  // 터치에서는 여기서 preventDefault()를 걸면 누르자마자 스크롤 자체가 막혀버리므로,
+  // 실제로 손가락을 들거나 화면을 움직이는 스크롤 동작은 그대로 허용한다
+  // (touch-action: pan-y + 아래 onArmMove의 이동거리 판정으로 드래그/스크롤을 구분).
+  if (e.pointerType !== 'touch') e.preventDefault();
   e.stopPropagation();
   cancelDragArm();
 
@@ -4904,6 +4907,9 @@ function beginItemDrag(handleEl, type, sIdx, clientX, clientY) {
   pageEl.appendChild(ghost);
 
   itemEl.classList.add('dragging');
+  // 실제 드래그가 시작된 동안에만 터치 스크롤을 막아서 이동 핸들을 살짝 스치기만 해도
+  // 화면 스크롤이 막히는 문제를 방지합니다 (평소엔 pan-y로 스크롤을 허용).
+  handleEl.style.touchAction = 'none';
 
   dragState = {
     type, sIdx: Number(sIdx), itemEl, container, ghost,
@@ -4947,6 +4953,8 @@ function onItemDragEnd() {
   window.removeEventListener('pointercancel', onItemDragEnd);
   ghost.remove();
   itemEl.classList.remove('dragging');
+  const handleEl = itemEl.querySelector('.item-drag');
+  if (handleEl) handleEl.style.touchAction = '';
 
   const newOrderIidx = Array.from(container.querySelectorAll(':scope > .item')).map(el => Number(el.dataset.iidx));
   dragState = null;
