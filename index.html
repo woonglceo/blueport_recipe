@@ -76,6 +76,9 @@
   .trash-restore-btn { flex-shrink: 0; background: #eef2ff; color: #4f46e5; border: 1px solid #dde3ff; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
   .trash-restore-btn:hover { background: #e0e7ff; }
   .trash-empty-msg { color: #aaa; font-size: 12px; padding: 4px 2px; }
+  .trash-recipe-card { background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+  .trash-recipe-card:last-child { margin-bottom: 0; }
+  .trash-recipe-card .card-header { margin-bottom: 10px; }
   .recipe-form { display: none; margin-bottom: 1rem; }
   .recipe-form.show { display: flex; flex-direction: column; gap: 10px; }
   .rf-size-block {
@@ -2610,7 +2613,7 @@
         <div class="item-label">음악 켜기</div>
       </div></div>
     </div></div>
-    <div class="custom-add-row" style="margin-bottom:1.5rem;">
+    <div class="custom-add-row" id="customAddRow-opening" style="margin-bottom:1.5rem;">
       <input type="text" id="openingItemInput" placeholder="오픈 체크리스트에 항목 추가" onkeydown="if(event.key==='Enter')addOpeningItem()">
       <button class="reset-btn" onclick="addOpeningItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
     </div>
@@ -2697,7 +2700,7 @@
         <div class="item-label">출입문 잠금 확인</div>
       </div></div>
     </div></div>
-    <div class="custom-add-row" style="margin-bottom:1.5rem;">
+    <div class="custom-add-row" id="customAddRow-closing" style="margin-bottom:1.5rem;">
       <input type="text" id="closingItemInput" placeholder="마감 체크리스트에 항목 추가" onkeydown="if(event.key==='Enter')addClosingItem()">
       <button class="reset-btn" onclick="addClosingItem()" style="flex-shrink:0;background:#1a1a1a;color:#fff;border-color:#1a1a1a;white-space:nowrap;">＋ 추가</button>
     </div>
@@ -4032,7 +4035,7 @@ function toggleRecipeTrash() {
 }
 window.toggleRecipeTrash = toggleRecipeTrash;
 
-// 휴지통 패널 내용을 그립니다.
+// 휴지통 패널 내용을 그립니다. (메뉴명만이 아니라 사이즈별 레시피/비고까지 모두 보여줍니다)
 function renderRecipeTrash() {
   const panel = document.getElementById('recipeTrashPanel');
   const deletedMenus = menus.filter(m => m.deleted).sort((a, b) => (b.deletedAt || 0) - (a.deletedAt || 0));
@@ -4040,11 +4043,53 @@ function renderRecipeTrash() {
     panel.innerHTML = '<div class="trash-panel-title">삭제된 메뉴</div><div class="trash-empty-msg">삭제된 메뉴가 없어요.</div>';
     return;
   }
-  panel.innerHTML = '<div class="trash-panel-title">삭제된 메뉴</div>' + deletedMenus.map(m => `
-    <div class="trash-item">
-      <span class="trash-item-name">${m.name}</span>
-      <button type="button" class="trash-restore-btn" onclick="restoreRecipeItem('${m.id}')">복구</button>
-    </div>`).join('');
+  panel.innerHTML = '<div class="trash-panel-title">삭제된 메뉴</div>' + deletedMenus.map(m => {
+    const ck = catKey(m.cat);
+    const restoreBtn = `<button type="button" class="trash-restore-btn" onclick="restoreRecipeItem('${m.id}')">복구</button>`;
+    const noteHtml = m.note ? `<div class="note-bar"><span class="note-label">📌 비고</span>${escapeHtml(m.note)}</div>` : '';
+
+    if (m.cat === '베이스') {
+      const storageText = m.storage || '냉장보관';
+      const recipeText = m.recipe || '';
+      return `<div class="trash-recipe-card">
+        <div class="card-header">
+          <span class="cat-badge cat-${ck}">${escapeHtml(m.cat)}</span>
+          <span class="menu-name">${escapeHtml(m.name)}</span>
+          <span class="recipe-actions">${restoreBtn}</span>
+        </div>
+        <div class="base-recipe-block">
+          <div class="base-recipe-label">🧊 ${escapeHtml(storageText)}</div>
+          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${escapeHtml(recipeText)}</div>` : ''}
+        </div>
+        ${noteHtml}
+      </div>`;
+    }
+
+    const sizeBlocks = ['R', 'L', 'D'].map(s => {
+      const d = m[s] || {};
+      const hotLine = d.hot && d.hot !== '-'
+        ? `<div class="temp-row"><span class="temp-tag hot-tag">HOT</span><span class="recipe-text">${formatRecipe(escapeHtml(d.hot))}</span></div>`
+        : '';
+      const iceLine = d.ice && d.ice !== '-'
+        ? `<div class="temp-row"><span class="temp-tag ice-tag">ICE</span><span class="recipe-text">${formatRecipe(escapeHtml(d.ice))}</span></div>`
+        : '';
+      const content = hotLine + iceLine || '<span class="none-text">해당 없음</span>';
+      return `<div class="size-block">
+        <div class="size-label">${s} 사이즈</div>
+        ${content}
+      </div>`;
+    }).join('');
+
+    return `<div class="trash-recipe-card">
+      <div class="card-header">
+        <span class="cat-badge cat-${ck}">${escapeHtml(m.cat)}</span>
+        <span class="menu-name">${escapeHtml(m.name)}</span>
+        <span class="recipe-actions">${restoreBtn}</span>
+      </div>
+      <div class="size-grid">${sizeBlocks}</div>
+      ${noteHtml}
+    </div>`;
+  }).join('');
 }
 
 // 휴지통 토글 버튼의 표시 여부와 개수를 최신 상태로 갱신합니다.
@@ -4921,10 +4966,12 @@ function updateChecklistTrashUI(type) {
   else if (panel && panel.classList.contains('show')) renderChecklistTrash(type);
 }
 
-// 오픈/마감 공용: 휴지통 패널이 열려있는 동안 기존 체크리스트(진행중/완료) 목록을 숨깁니다.
+// 오픈/마감 공용: 휴지통 패널이 열려있는 동안 기존 체크리스트(진행중/완료/항목추가) 화면을 숨깁니다.
 function toggleChecklistContentVisibility(type, hide) {
   const sections = document.getElementById('sections-' + type);
   if (sections) sections.style.display = hide ? 'none' : '';
+  const addRow = document.getElementById('customAddRow-' + type);
+  if (addRow) addRow.style.display = hide ? 'none' : '';
   const done = document.getElementById('done-section-' + type);
   if (hide) {
     if (done) done.style.display = 'none';
