@@ -163,7 +163,7 @@
   .ice-tag { background: #DBEAFE; color: #1D4ED8; }
   .recipe-text { font-size: 12px; color: #555; line-height: 1.55; flex: 1; min-width: 0; }
   .none-text { font-size: 12px; color: #ccc; }
-  .note-bar { margin-top: 10px; padding: 7px 10px; background: #fffbf0; border: 1px solid #f0e5c0; border-radius: 8px; font-size: 12px; color: #7a5c00; }
+  .note-bar { margin-top: 10px; padding: 7px 10px; background: #fffbf0; border: 1px solid #f0e5c0; border-radius: 8px; font-size: 12px; color: #7a5c00; white-space: pre-wrap; }
   .note-label { font-weight: 700; margin-right: 4px; }
   .empty { text-align: center; padding: 4rem 0; color: #aaa; font-size: 15px; }
   .tab-bar {
@@ -1539,7 +1539,7 @@
       </div>
       <div class="dm-field" style="flex:2;">
         <label class="dm-field-label">비고 (선택)</label>
-        <input type="text" id="rf-note" class="dm-input" placeholder="예: + 시나몬파우더(선택)">
+        <textarea id="rf-note" class="dm-input" rows="2" placeholder="예: + 시나몬파우더(선택)"></textarea>
       </div>
     </div>
 
