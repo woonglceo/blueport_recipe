@@ -52,6 +52,14 @@
     scroll-margin-top: calc(var(--tabbar-h, 48px) + 12px);
   }
   .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  /* 레시피 포커스(사이즈/온도 클릭) 중에는 메뉴명 헤더를 상단에 고정해서
+     스크롤해도 어떤 메뉴인지 계속 보이게 함 */
+  .card.recipe-focused .card-header {
+    position: sticky; top: var(--tabbar-h, 48px);
+    background: #fff; z-index: 5;
+    margin: -1rem -1.25rem 14px; padding: 12px 1.25rem 10px;
+    border-bottom: 1px solid #f0ede8;
+  }
   .cat-badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
   .cat-커피        { background: #FEF3C7; color: #92400E; }
   .cat-논커피      { background: #D1FAE5; color: #065F46; }
@@ -3917,6 +3925,7 @@ function focusRecipe(row) {
   const card = row.closest('.card');
   const grid = card.querySelector('.size-grid');
   card.classList.remove('dimmed');
+  card.classList.add('recipe-focused');
   sizeBlock.classList.remove('dimmed');
   sizeBlock.classList.add('focused-block');
   // dimmed된 카드 클릭하면 clearFocus
@@ -3941,7 +3950,7 @@ function focusRecipe(row) {
 // 모든 카드·사이즈블록·온도행의 포커스/dim 상태를 초기화합니다.
 function clearFocus() {
   document.querySelectorAll('.card').forEach(card => {
-    card.classList.remove('dimmed');
+    card.classList.remove('dimmed', 'recipe-focused');
     card.onclick = null;
   });
   document.querySelectorAll('.size-block').forEach(b => {
