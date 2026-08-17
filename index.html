@@ -3686,11 +3686,14 @@ function buildSearchTokens(menuName) {
   return tokens;
 }
 
-// 섞기[...], 블렌더 N번[...] 패턴에서 레이블(대괄호 포함)만 굵게, 내용은 일반 텍스트로
-// 레시피 텍스트에서 "섞기[...]", "블렌더N번[...]" 패턴의 레이블을 굵게 강조합니다.
+// 대괄호 [...] 앞에 오는 단어(라벨)와 대괄호 자체를 굵게, 내용은 일반 텍스트로
+// "+" 는 구분자로 작동: "+" 뒤에서부터 "[" 앞까지의 텍스트만 라벨로 인식해 굵게 처리합니다.
+// 예) "섞기[...]" → "섞기[" "]" 굵게 / "+ 가나 다라[마바사] +" → "가나 다라[" "]" 만 굵게, "+"는 그대로.
 function formatRecipe(text) {
-  return text.replace(/((?:블렌더\s*\d*번?|섞기)\s*)\[([^\]]+)\]/g, (_, label, content) => {
-    return `<b>${label.trim()}[</b>${content}<b>]</b>`;
+  return text.replace(/([^+\[\]\n]*?)\[([^\]]+)\]/g, (_, label, content) => {
+    const leadingWs = label.match(/^\s*/)[0];
+    const trimmedLabel = label.trim();
+    return `${leadingWs}<b>${trimmedLabel}[</b>${content}<b>]</b>`;
   });
 }
 
@@ -3751,7 +3754,7 @@ function render() {
         </div>
         <div class="base-recipe-block">
           <div class="base-recipe-label">🧊 ${storageText}</div>
-          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${recipeText}</div>` : ''}
+          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${formatRecipe(recipeText)}</div>` : ''}
         </div>
         ${noteHtml}
       </div>`;
@@ -4091,7 +4094,7 @@ function renderRecipeTrash() {
         </div>
         <div class="base-recipe-block">
           <div class="base-recipe-label">🧊 ${escapeHtml(storageText)}</div>
-          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${escapeHtml(recipeText)}</div>` : ''}
+          ${recipeText ? `<div style="font-size:13px;color:#333;line-height:1.7;">${formatRecipe(escapeHtml(recipeText))}</div>` : ''}
         </div>
         ${noteHtml}
       </div>`;
