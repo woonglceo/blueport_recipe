@@ -95,8 +95,9 @@
   html.dark-mode .dm-card-dates b { color: #c2c2c2 !important; }
   html.dark-mode .checklist-page .progress-text,
   html.dark-mode .checklist-page .item-label { color: #d8d8d8 !important; }
-  /* POS 트레이닝 화면은 이미 고유 색상 테마라 다크모드 반전에서 제외 */
-  html.dark-mode .training-split { filter: invert(1) hue-rotate(180deg); }
+  /* POS 트레이닝 화면: 왼쪽 카페 연습 패널은 원래 밝은 흰색 테마라 다크모드 기본 반전을 그대로 적용해 어둡게 만들고,
+     오른쪽 POS 메뉴 화면은 이미 어두운 네이비 케이스 + 밝은 화면 배색으로 디자인돼 있어 반전에서 제외합니다. */
+  html.dark-mode #posMenuView { filter: invert(1) hue-rotate(180deg); }
   /* 재고표 */
   html.dark-mode .inventory-page .grid-item,
   html.dark-mode .inventory-page .done-chip {
@@ -143,6 +144,9 @@
   html.dark-mode .trash-toggle-btn:hover,
   html.dark-mode .dm-cancel-btn:hover { color: #f0f0f0 !important; }
   html.dark-mode .base-recipe-block { color: #c2c2c2 !important; }
+  html.dark-mode .base-recipe-block > div[style] { color: #c2c2c2 !important; }
+  html.dark-mode .checklist-page .today-dot { background: #999 !important; }
+  html.dark-mode .checklist-page .day-tab.active .today-dot { background: #1a1a1a !important; }
   /* 체크박스 & 항목 수정 텍스트박스 */
   html.dark-mode .checklist-page .checkbox { background: #2b2b2b !important; border-color: #555 !important; }
   html.dark-mode .checklist-page .item.checked .checkbox { background: #e8e8e8 !important; border-color: #e8e8e8 !important; }
