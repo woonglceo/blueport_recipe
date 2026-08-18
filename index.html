@@ -368,10 +368,10 @@
   .tab-scroll-btn {
     position: absolute;
     top: 0; bottom: 0;
-    width: 26px;
+    width: 34px;
     display: flex; align-items: center; justify-content: center;
     border: none; background: #f5f4f0;
-    color: #777; font-size: 17px; line-height: 1;
+    color: #777; font-size: 21px; line-height: 1;
     cursor: pointer;
     z-index: 62;
     opacity: 0;
@@ -383,6 +383,41 @@
   .tab-scroll-next { right: 0; }
   .tab-bar-wrap.scrolled-start .tab-scroll-prev { opacity: 1; pointer-events: auto; }
   .tab-bar-wrap:not(.scrolled-end) .tab-scroll-next { opacity: 1; pointer-events: auto; }
+  /* 레시피 검색 카테고리 칩 바 좌우 스크롤 화살표 */
+  .chips-wrap {
+    position: relative;
+    display: flex; align-items: stretch;
+    margin-bottom: 1.5rem;
+  }
+  .chips-wrap .chips { margin-bottom: 0; flex: 1; min-width: 0; }
+  .chips-wrap::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0; width: 30px;
+    background: linear-gradient(to left, transparent, #f5f4f0);
+    pointer-events: none; z-index: 61; opacity: 0; transition: opacity 0.2s;
+  }
+  .chips-wrap.scrolled-start::before { opacity: 1; }
+  .chips-wrap::after {
+    content: '';
+    position: absolute; top: 0; right: 0; bottom: 0; width: 30px;
+    background: linear-gradient(to right, transparent, #f5f4f0);
+    pointer-events: none; z-index: 61; opacity: 1; transition: opacity 0.2s;
+  }
+  .chips-wrap.scrolled-end::after { opacity: 0; }
+  .chips-scroll-btn {
+    position: absolute; top: 0; bottom: 0; width: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: #f5f4f0;
+    color: #777; font-size: 19px; line-height: 1;
+    cursor: pointer; z-index: 62;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, color 0.15s;
+  }
+  .chips-scroll-btn:hover { color: #1a1a1a; }
+  .chips-scroll-prev { left: 0; }
+  .chips-scroll-next { right: 0; }
+  .chips-wrap.scrolled-start .chips-scroll-prev { opacity: 1; pointer-events: auto; }
+  .chips-wrap:not(.scrolled-end) .chips-scroll-next { opacity: 1; pointer-events: auto; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -523,7 +558,8 @@
   @media (max-width: 500px) {
     .recipe-sticky { padding-top: 0; }
     .recipe-sticky .search-row { margin-bottom: 5px; }
-    .recipe-sticky .chips { margin-bottom: 4px; padding-bottom: 0; }
+    .recipe-sticky .chips-wrap { margin-bottom: 4px; }
+    .recipe-sticky .chips { padding-bottom: 0; }
   }
 
   /* ── 체크리스트·재고표 progress-wrap 상단 고정 ── */
@@ -1687,6 +1723,8 @@
       <input type="text" id="q" placeholder="메뉴명 또는 초성 검색 (예: ㄱㄱㅁㄹㄸ)" oninput="render()" onkeydown="handleEnter(event)">
       <button class="reset-btn search-reset-btn" onclick="resetAll()">↺ 검색 초기화</button>
     </div>
+    <div class="chips-wrap" id="chipsWrap">
+    <button class="chips-scroll-btn chips-scroll-prev" id="chipsScrollPrev" type="button" aria-label="카테고리 왼쪽으로 스크롤" onclick="scrollRecipeChips(-1)">‹</button>
     <div class="chips" style="">
       <button class="chip active" onclick="setFilter('전체')">전체</button>
       <button class="chip" onclick="setFilter('커피')">커피</button>
@@ -1694,6 +1732,8 @@
       <button class="chip" onclick="setFilter('에이드/주스')">에이드/주스</button>
       <button class="chip" onclick="setFilter('스무디/프라페')">스무디/프라페</button>
       <button class="chip" onclick="setFilter('베이스')">베이스</button>
+    </div>
+    <button class="chips-scroll-btn chips-scroll-next" id="chipsScrollNext" type="button" aria-label="카테고리 오른쪽으로 스크롤" onclick="scrollRecipeChips(1)">›</button>
     </div>
   </div>
   <button class="back-btn" id="backBtn" onclick="clearFocus()">← 결과로 돌아가기</button>
@@ -7084,6 +7124,25 @@ function downloadSource() {
     chipsEl.addEventListener('click', (e) => {
       if (dragMoved) { e.stopPropagation(); e.preventDefault(); dragMoved = false; }
     }, true);
+  })();
+
+  // ── 레시피 카테고리 칩 바 좌우 스크롤 화살표 ──
+  (function() {
+    const chipsEl = document.querySelector('#view-recipe .chips');
+    const chipsWrap = document.getElementById('chipsWrap');
+    if (!chipsEl || !chipsWrap) return;
+    function updateChipsScrollFade() {
+      const { scrollLeft, scrollWidth, clientWidth } = chipsEl;
+      chipsWrap.classList.toggle('scrolled-start', scrollLeft > 4);
+      chipsWrap.classList.toggle('scrolled-end', scrollLeft + clientWidth >= scrollWidth - 4);
+    }
+    chipsEl.addEventListener('scroll', updateChipsScrollFade, { passive: true });
+    window.addEventListener('resize', updateChipsScrollFade);
+    setTimeout(updateChipsScrollFade, 100);
+    window.scrollRecipeChips = function (dir) {
+      const amount = Math.max(chipsEl.clientWidth * 0.6, 100);
+      chipsEl.scrollBy({ left: dir * amount, behavior: 'smooth' });
+    };
   })();
 
   function updateTabbarHeight() {
