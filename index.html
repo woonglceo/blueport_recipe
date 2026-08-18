@@ -11,6 +11,150 @@
   .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
   .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
+  .top-actions { display: flex; gap: 6px; }
+  .top-action-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #e0ddd6; border-radius: 8px;
+    background: #fff; color: #666; font-size: 14px;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+  .top-action-btn:hover { background: #f0ede8; color: #1a1a1a; }
+  html.dark-mode {
+    filter: invert(1) hue-rotate(180deg) contrast(0.92);
+  }
+  /* 반전 후 순검정에 가깝지 않도록, 반전 전 원본 배경색만 밝은 회색으로 조정 */
+  html.dark-mode body { background: #e8e8e8 !important; }
+  html.dark-mode img, html.dark-mode video {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  /* 이모지 아이콘은 반전 대상에서 제외 (색이 이상해지는 것 방지) */
+  html.dark-mode .tab-icon {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  /* ── 다크모드: 카드/버튼류를 별도 다크 그레이 톤으로 재처리 ── */
+  /* 1) 다른 필터-취소 조상이 없는 최상위 컨테이너: filter로 전체 반전을 취소 */
+  html.dark-mode .card,
+  html.dark-mode .chip,
+  html.dark-mode .search-row input,
+  html.dark-mode .reset-btn,
+  html.dark-mode .recipe-add-toggle-btn,
+  html.dark-mode .trash-toggle-btn,
+  html.dark-mode .trash-panel,
+  html.dark-mode .rf-size-block,
+  html.dark-mode .top-action-btn,
+  html.dark-mode .checklist-page .progress-wrap,
+  html.dark-mode .checklist-page .card,
+  html.dark-mode .checklist-page .day-tab,
+  html.dark-mode .dm-card,
+  html.dark-mode .dm-input,
+  html.dark-mode .dm-select,
+  html.dark-mode .dm-add-btn,
+  html.dark-mode .dm-cancel-btn {
+    filter: invert(1) hue-rotate(180deg);
+    background: #242424 !important;
+    border-color: #3a3a3a !important;
+  }
+  html.dark-mode .dm-input,
+  html.dark-mode .dm-select { color: #eee !important; }
+  html.dark-mode .dm-input::placeholder { color: #777 !important; }
+  html.dark-mode .note-bar { background: #3a331a !important; border-color: #5c5030 !important; color: #e0c070 !important; }
+  /* 2) 위 컨테이너 내부에 중첩되는 요소는 조상이 이미 반전을 취소했으므로 filter 없이 색만 지정 */
+  html.dark-mode .size-block,
+  html.dark-mode .base-recipe-block,
+  html.dark-mode .trash-item,
+  html.dark-mode .trash-recipe-card {
+    background: #2b2b2b !important;
+    border-color: #3a3a3a !important;
+  }
+  html.dark-mode .rf-size-block,
+  html.dark-mode .chip,
+  html.dark-mode .reset-btn,
+  html.dark-mode .recipe-add-toggle-btn,
+  html.dark-mode .trash-toggle-btn,
+  html.dark-mode .top-action-btn,
+  html.dark-mode .checklist-page .day-tab {
+    background: #2b2b2b !important;
+  }
+  html.dark-mode .search-row input::placeholder { color: #777 !important; }
+  html.dark-mode .chip { color: #ccc !important; }
+  html.dark-mode .chip:hover { background: #3a3a3a !important; color: #eee !important; }
+  html.dark-mode .chip.active { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #e8e8e8 !important; }
+  html.dark-mode .top-action-btn:hover { background: #3a3a3a !important; color: #eee !important; }
+  html.dark-mode .reset-btn:hover,
+  html.dark-mode .recipe-add-toggle-btn:hover,
+  html.dark-mode .trash-toggle-btn:hover { background: #3a3a3a !important; }
+  html.dark-mode .checklist-page .day-tab.active { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #e8e8e8 !important; }
+  html.dark-mode .checklist-page .item.checked .checkbox { background: #e8e8e8 !important; border-color: #e8e8e8 !important; }
+  /* 원래 검정 계열이라 다크 배경에서 안 보이던 텍스트만 밝게 재지정 */
+  html.dark-mode .menu-name,
+  html.dark-mode .size-block.focused-block .recipe-text,
+  html.dark-mode .dm-card-name { color: #f0f0f0 !important; }
+  html.dark-mode .recipe-text,
+  html.dark-mode .trash-item-name,
+  html.dark-mode .dm-card-dates b { color: #c2c2c2 !important; }
+  html.dark-mode .checklist-page .progress-text,
+  html.dark-mode .checklist-page .item-label { color: #d8d8d8 !important; }
+  /* POS 트레이닝 화면은 이미 고유 색상 테마라 다크모드 반전에서 제외 */
+  html.dark-mode .training-split { filter: invert(1) hue-rotate(180deg); }
+  /* 재고표 */
+  html.dark-mode .inventory-page .grid-item,
+  html.dark-mode .inventory-page .done-chip {
+    filter: invert(1) hue-rotate(180deg);
+    background: #242424 !important;
+    border-color: #3a3a3a !important;
+  }
+  html.dark-mode .inventory-page .grid-input {
+    background: #2b2b2b !important;
+    border-color: #3a3a3a !important;
+  }
+  html.dark-mode .inventory-page .grid-item-label:hover { background: #333 !important; }
+  html.dark-mode .inventory-page .grid-item-label { color: #e5e5e5 !important; }
+  /* 밝은 hover 색상 보정 */
+  html.dark-mode .temp-row:hover { background: #333 !important; }
+  html.dark-mode .checklist-page .item:hover { background: #2c2c2c !important; }
+  html.dark-mode .checklist-page .drag-handle:hover { background: #333 !important; color: #ccc !important; }
+  /* 흰색에 가까운 아이콘 버튼들을 어둡게 */
+  html.dark-mode .recipe-edit-btn,
+  html.dark-mode .recipe-delete-btn,
+  html.dark-mode .checklist-page .item-edit,
+  html.dark-mode .checklist-page .item-cancel,
+  html.dark-mode .dm-card-edit,
+  html.dark-mode .dm-card-delete,
+  html.dark-mode .dm-card-refresh {
+    background: #2b2b2b !important; border-color: #3a3a3a !important; color: #999 !important;
+  }
+  html.dark-mode .recipe-edit-btn:hover,
+  html.dark-mode .checklist-page .item-edit:hover,
+  html.dark-mode .dm-card-edit:hover { background: #33395c !important; color: #a5b4fc !important; border-color: #4a5088 !important; }
+  html.dark-mode .checklist-page .item-cancel:hover { background: #3a3a3a !important; color: #ccc !important; border-color: #4a4a4a !important; }
+  html.dark-mode .recipe-delete-btn:hover,
+  html.dark-mode .dm-card-delete:hover { background: #5c2f2f !important; color: #f5a5a5 !important; border-color: #7a3a3a !important; }
+  html.dark-mode .dm-card-refresh:hover { background: #2f5c46 !important; color: #8fdcb3 !important; border-color: #3a7a5a !important; }
+  html.dark-mode .trash-restore-btn { background: #2c3358 !important; color: #a5b4fc !important; border-color: #3a4270 !important; }
+  html.dark-mode .trash-restore-btn:hover { background: #363f70 !important; }
+  /* 다크 배경에서 안 보이던 버튼 텍스트 밝게 */
+  html.dark-mode .reset-btn,
+  html.dark-mode .recipe-add-toggle-btn,
+  html.dark-mode .trash-toggle-btn,
+  html.dark-mode .dm-cancel-btn { color: #ccc !important; }
+  html.dark-mode .reset-btn:hover,
+  html.dark-mode .recipe-add-toggle-btn:hover,
+  html.dark-mode .trash-toggle-btn:hover,
+  html.dark-mode .dm-cancel-btn:hover { color: #f0f0f0 !important; }
+  html.dark-mode .base-recipe-block { color: #c2c2c2 !important; }
+  /* 체크박스 & 항목 수정 텍스트박스 */
+  html.dark-mode .checklist-page .checkbox { background: #2b2b2b !important; border-color: #555 !important; }
+  html.dark-mode .checklist-page .item.checked .checkbox { background: #e8e8e8 !important; border-color: #e8e8e8 !important; }
+  html.dark-mode .checklist-page .checkbox svg { stroke: #1a1a1a !important; }
+  html.dark-mode .checklist-page .item-edit-input { color: #f0f0f0 !important; border-bottom-color: #999 !important; }
+  /* rf-size-block 안에 중첩된 dm-input(HOT/ICE 입력칸)은 조상이 이미 반전을 취소했으므로 filter를 빼고 색만 지정 */
+  html.dark-mode .rf-size-block .dm-input {
+    filter: none;
+    background: #242424 !important;
+    border-color: #3a3a3a !important;
+    color: #eee !important;
+  }
   h1 { font-size: 26px; font-weight: 600; color: #1a1a1a; margin-bottom: 1.5rem; }
   .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
   .search-row input {
@@ -216,6 +360,25 @@
     transition: opacity 0.2s;
   }
   .tab-bar-wrap.scrolled-end::after { opacity: 0; }
+  /* 탭바 좌우 스크롤 화살표 버튼 */
+  .tab-scroll-btn {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: #f5f4f0;
+    color: #777; font-size: 17px; line-height: 1;
+    cursor: pointer;
+    z-index: 62;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, color 0.15s;
+  }
+  .tab-scroll-btn:hover { color: #1a1a1a; }
+  .tab-scroll-prev { left: 0; }
+  .tab-scroll-next { right: 0; }
+  .tab-bar-wrap.scrolled-start .tab-scroll-prev { opacity: 1; pointer-events: auto; }
+  .tab-bar-wrap:not(.scrolled-end) .tab-scroll-next { opacity: 1; pointer-events: auto; }
   .tab-item {
     flex: 0 0 auto; /* 줄바꿈 없이 최소 필요 너비만 사용 */
     display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -592,6 +755,14 @@
     padding: 0; line-height: 1;
   }
   .checklist-page .item-confirm:hover { background: #333; }
+  .checklist-page .item-cancel {
+    width: 26px; height: 26px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid #ddd; background: #fff;
+    color: #999; font-size: 13px; cursor: pointer; transition: all 0.15s;
+    padding: 0; line-height: 1; margin-right: 4px;
+  }
+  .checklist-page .item-cancel:hover { background: #f0ede8; border-color: #bbb; color: #555; }
   /* 항목 순서 변경(드래그) 핸들 */
   .checklist-page .drag-handle {
     flex-shrink: 0; width: 26px; height: 26px; margin-left: 2px;
@@ -1265,8 +1436,13 @@
 <div class="container">
   <div class="brand-row">
     <div class="brand">Bluepot Cafe</div>
+    <div class="top-actions">
+      <button class="top-action-btn" id="darkModeBtn" type="button" aria-label="다크모드 전환" onclick="toggleDarkMode()">🌙</button>
+      <button class="top-action-btn" id="fullscreenBtn" type="button" aria-label="전체화면 전환" onclick="toggleFullscreen()">⛶</button>
+    </div>
   </div>
   <div class="tab-bar-wrap" id="tabBarWrap">
+  <button class="tab-scroll-btn tab-scroll-prev" id="tabScrollPrev" type="button" aria-label="탭 왼쪽으로 스크롤" onclick="scrollMainTabBar(-1)">‹</button>
   <div class="tab-bar" id="mainTabBar">
     <button class="tab-item active" id="tab-recipe" onclick="switchTab('recipe')"><span class="tab-icon">🔍</span>레시피 검색</button>
     <button class="tab-item" id="tab-opening" onclick="switchTab('opening')"><span class="tab-icon">☀️</span>오픈 체크리스트</button>
@@ -1275,6 +1451,7 @@
     <button class="tab-item" id="tab-inventory" onclick="switchTab('inventory')"><span class="tab-icon">📦</span>재고표</button>
     <button class="tab-item" id="tab-training" onclick="switchTab('training')"><span class="tab-icon">🎓</span>POS 트레이닝</button>
   </div>
+  <button class="tab-scroll-btn tab-scroll-next" id="tabScrollNext" type="button" aria-label="탭 오른쪽으로 스크롤" onclick="scrollMainTabBar(1)">›</button>
   </div>
 
   
@@ -4681,6 +4858,13 @@ function editOpeningItem(id) {
   labelEl.appendChild(inputEl);
 
   actionsEl.innerHTML = '';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'item-cancel';
+  cancelBtn.title = '취소';
+  cancelBtn.textContent = '✕';
+  actionsEl.appendChild(cancelBtn);
+
   const confirmBtn = document.createElement('button');
   confirmBtn.type = 'button';
   confirmBtn.className = 'item-confirm';
@@ -4693,6 +4877,8 @@ function editOpeningItem(id) {
   inputEl.addEventListener('mousedown', stop);
   confirmBtn.addEventListener('click', stop);
   confirmBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+  cancelBtn.addEventListener('click', stop);
+  cancelBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
 
   let done = false;
   const commit = () => {
@@ -4716,6 +4902,7 @@ function editOpeningItem(id) {
   });
   inputEl.addEventListener('blur', commit);
   confirmBtn.addEventListener('click', commit);
+  cancelBtn.addEventListener('click', cancel);
 
   inputEl.focus();
   const end = inputEl.value.length;
@@ -4866,6 +5053,13 @@ function editClosingItem(id) {
   labelEl.appendChild(inputEl);
 
   actionsEl.innerHTML = '';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'item-cancel';
+  cancelBtn.title = '취소';
+  cancelBtn.textContent = '✕';
+  actionsEl.appendChild(cancelBtn);
+
   const confirmBtn = document.createElement('button');
   confirmBtn.type = 'button';
   confirmBtn.className = 'item-confirm';
@@ -4878,6 +5072,8 @@ function editClosingItem(id) {
   inputEl.addEventListener('mousedown', stop);
   confirmBtn.addEventListener('click', stop);
   confirmBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
+  cancelBtn.addEventListener('click', stop);
+  cancelBtn.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault(); });
 
   let done = false;
   const commit = () => {
@@ -4901,6 +5097,7 @@ function editClosingItem(id) {
   });
   inputEl.addEventListener('blur', commit);
   confirmBtn.addEventListener('click', commit);
+  cancelBtn.addEventListener('click', cancel);
 
   inputEl.focus();
   const end = inputEl.value.length;
@@ -6825,6 +7022,13 @@ function downloadSource() {
     setTimeout(updateTabScrollFade, 100);
   }
 
+  // 탭바 좌우 화살표 클릭 시 스크롤
+  window.scrollMainTabBar = function (dir) {
+    if (!tabBar) return;
+    const amount = Math.max(tabBar.clientWidth * 0.6, 100);
+    tabBar.scrollBy({ left: dir * amount, behavior: 'smooth' });
+  };
+
   // ── 탭바 마우스 드래그 스크롤 ──
   (function() {
     let isDragging = false, startX = 0, scrollStart = 0, dragMoved = false;
@@ -6901,6 +7105,44 @@ function downloadSource() {
     const el2 = document.getElementById('tabBarWrap');
     if (el2) new ResizeObserver(updateTabbarHeight).observe(el2);
   }
+})();
+
+// ── 전체화면 / 다크모드 토글 ──
+(function () {
+  const fsBtn = document.getElementById('fullscreenBtn');
+  const darkBtn = document.getElementById('darkModeBtn');
+
+  window.toggleFullscreen = function () {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen && document.exitFullscreen();
+    }
+  };
+  function updateFullscreenBtn() {
+    if (!fsBtn) return;
+    fsBtn.innerHTML = '<span class="icon-natural">' + (document.fullscreenElement ? '⤢' : '⛶') + '</span>';
+  }
+  document.addEventListener('fullscreenchange', updateFullscreenBtn);
+  updateFullscreenBtn();
+
+  window.toggleDarkMode = function () {
+    const isDark = document.documentElement.classList.toggle('dark-mode');
+    try { localStorage.setItem('bluepot-dark-mode', isDark ? '1' : '0'); } catch (e) {}
+    updateDarkBtn();
+  };
+  function updateDarkBtn() {
+    if (!darkBtn) return;
+    const isDark = document.documentElement.classList.contains('dark-mode');
+    darkBtn.innerHTML = '<span class="icon-natural">' + (isDark ? '☀️' : '🌙') + '</span>';
+  }
+  // 저장된 다크모드 상태 복원
+  try {
+    if (localStorage.getItem('bluepot-dark-mode') === '1') {
+      document.documentElement.classList.add('dark-mode');
+    }
+  } catch (e) {}
+  updateDarkBtn();
 })();
 </script>
 
