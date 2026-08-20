@@ -281,6 +281,12 @@
   }
   .pending-sync-btn:hover { background: #333; }
   .pending-sync-btn:disabled { background: #999; cursor: default; }
+  .pending-sync-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+  .pending-sync-cancel-btn {
+    padding: 8px 16px; font-size: 13px; font-weight: 700; border: 1px solid #d8c380; border-radius: 8px;
+    background: transparent; color: #7a5c00; cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .pending-sync-cancel-btn:hover { background: #f5e9bd; }
   .temp-row {
     margin-bottom: 5px; cursor: pointer; border-radius: 6px; padding: 2px 4px; transition: background 0.12s;
     display: flex; align-items: flex-start; gap: 6px;
@@ -1835,7 +1841,10 @@
 
   <div class="pending-sync-bar" id="pendingSync-recipes">
     <span>⚠️ 변경사항이 아직 저장되지 않았어요</span>
-    <button class="pending-sync-btn" onclick="applyRecipes()">변경사항 적용</button>
+    <div class="pending-sync-actions">
+      <button class="pending-sync-btn" onclick="applyRecipes()">변경사항 적용</button>
+      <button class="pending-sync-cancel-btn" onclick="cancelRecipesSync()">취소</button>
+    </div>
   </div>
 
   <div class="results" id="results"><div class="card">
@@ -2784,7 +2793,10 @@
     <div class="trash-panel" id="openingTrashPanel"></div>
     <div class="pending-sync-bar" id="pendingSync-opening">
       <span>⚠️ 항목 변경사항이 아직 저장되지 않았어요</span>
-      <button class="pending-sync-btn" onclick="applyOpeningStructure()">변경사항 적용</button>
+      <div class="pending-sync-actions">
+        <button class="pending-sync-btn" onclick="applyOpeningStructure()">변경사항 적용</button>
+        <button class="pending-sync-cancel-btn" onclick="cancelOpeningSync()">취소</button>
+      </div>
     </div>
     <div id="sections-opening"><div class="section">
       <div class="section-title">오픈 특이사항</div>
@@ -2895,7 +2907,10 @@
     <div class="trash-panel" id="closingTrashPanel"></div>
     <div class="pending-sync-bar" id="pendingSync-closing">
       <span>⚠️ 항목 변경사항이 아직 저장되지 않았어요</span>
-      <button class="pending-sync-btn" onclick="applyClosingStructure()">변경사항 적용</button>
+      <div class="pending-sync-actions">
+        <button class="pending-sync-btn" onclick="applyClosingStructure()">변경사항 적용</button>
+        <button class="pending-sync-cancel-btn" onclick="cancelClosingSync()">취소</button>
+      </div>
     </div>
     <div id="sections-closing"><div class="section">
       <div class="section-title">마감 특이사항</div>
@@ -3760,7 +3775,10 @@
 
     <div class="pending-sync-bar" id="pendingSync-datemanage">
       <span>⚠️ 변경사항이 아직 저장되지 않았어요</span>
-      <button class="pending-sync-btn" onclick="applyDateItems()">변경사항 적용</button>
+      <div class="pending-sync-actions">
+        <button class="pending-sync-btn" onclick="applyDateItems()">변경사항 적용</button>
+        <button class="pending-sync-cancel-btn" onclick="cancelDateItemsSync()">취소</button>
+      </div>
     </div>
     <button type="button" class="trash-toggle-btn" id="dmTrashToggleBtn" onclick="toggleDateTrash()" style="display:none; margin:0 0 12px;">🗑 삭제된 항목 (<span id="dmTrashCount">0</span>)</button>
     <div class="trash-panel" id="dmTrashPanel"></div>
@@ -3807,6 +3825,7 @@ window.addEventListener('beforeunload', function (e) {
 <script>
 // 레시피 목록은 클라우드(Firestore)에서 불러옵니다. 하드코딩된 기본 데이터는 없습니다.
 let menus = [];
+let lastSyncedMenus = []; // 마지막으로 저장(동기화)된 상태의 스냅샷 - "취소" 시 이 상태로 되돌립니다.
 
 let activeFilter = '전체';
 
@@ -3994,7 +4013,7 @@ function render() {
       const noteHtml = m.note ? `<div class="note-bar"><span class="note-label">📌 비고</span>${m.note}</div>` : '';
       const storageText = m.storage || '냉장보관';
       const recipeText = m.recipe || '';
-      return `<div class="card">
+      return `<div class="card" data-recipe-id="${m.id}">
         <div class="card-header">
           <span class="cat-badge cat-${ck}">${m.cat}</span>
           <span class="menu-name">${m.name}</span>
@@ -4026,7 +4045,7 @@ function render() {
     }).join('');
 
     const noteHtml = m.note ? `<div class="note-bar"><span class="note-label">📌 비고</span>${m.note}</div>` : '';
-    return `<div class="card">
+    return `<div class="card" data-recipe-id="${m.id}">
       <div class="card-header">
         <span class="cat-badge cat-${ck}">${m.cat}</span>
         <span class="menu-name">${m.name}</span>
@@ -4140,6 +4159,7 @@ function syncRecipesToCloud() {
     items: menus,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
+    lastSyncedMenus = JSON.parse(JSON.stringify(menus));
     updatePendingSyncUI('recipes', false);
   }).catch(e => {
     console.error('레시피 저장 실패:', e);
@@ -4155,6 +4175,16 @@ function applyRecipes() {
   syncRecipesToCloud();
 }
 window.applyRecipes = applyRecipes;
+
+// "변경사항 적용" 전까지의 로컬 편집 내용을 모두 버리고 마지막으로 저장된 상태로 되돌립니다.
+function cancelRecipesSync() {
+  if (!confirm('저장하지 않은 변경사항을 모두 취소하고 되돌릴까요?')) return;
+  menus = JSON.parse(JSON.stringify(lastSyncedMenus));
+  if (editingRecipeId !== null) cancelEditRecipeItem();
+  updatePendingSyncUI('recipes', false);
+  render();
+}
+window.cancelRecipesSync = cancelRecipesSync;
 
 let editingRecipeId = null; // 수정 중인 메뉴 id (null이면 신규 추가 모드)
 
@@ -4211,17 +4241,39 @@ function addRecipeItem() {
   }
   if (note) data.note = note;
 
+  const wasEditingId = editingRecipeId;
+  let targetId;
   if (editingRecipeId) {
     const idx = menus.findIndex(m => m.id === editingRecipeId);
     if (idx !== -1) menus[idx] = Object.assign({ id: editingRecipeId }, data);
+    targetId = editingRecipeId;
   } else {
     data.id = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     menus.push(data);
+    targetId = data.id;
   }
 
   markRecipesDirty();
   cancelEditRecipeItem();
   render();
+
+  // 수정 완료 시, 방금 수정한 레시피로 화면을 이동시킨다. 메뉴명이 상단 고정 탭바/검색창에
+  // 가려지지 않도록 두 높이를 더한 오프셋만큼 여유를 두고 스크롤한다.
+  if (wasEditingId) {
+    requestAnimationFrame(() => {
+      const card = document.querySelector(`.card[data-recipe-id="${targetId}"]`);
+      if (!card) return;
+      const nameEl = card.querySelector('.menu-name') || card;
+      const tabBarWrap = document.getElementById('tabBarWrap');
+      let offset = tabBarWrap ? tabBarWrap.getBoundingClientRect().height : 0;
+      const stickyEl = document.querySelector('.recipe-sticky');
+      if (stickyEl) offset += stickyEl.getBoundingClientRect().height;
+      offset += 16;
+      const rect = nameEl.getBoundingClientRect();
+      const targetY = window.scrollY + rect.top - offset;
+      window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+    });
+  }
 }
 window.addRecipeItem = addRecipeItem;
 
@@ -4254,7 +4306,18 @@ function editRecipeItem(id) {
   document.getElementById('rf-cancel-btn').style.display = '';
   document.getElementById('rf-delete-btn').style.display = '';
 
-  document.getElementById('recipeFormToggleBtn').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // 상단 고정 탭바 + 검색창(sticky)에 버튼이 가려지므로, 두 높이를 더한 만큼 여유를 두고 스크롤한다.
+  requestAnimationFrame(() => {
+    const toggleBtn = document.getElementById('recipeFormToggleBtn');
+    const tabBarWrap = document.getElementById('tabBarWrap');
+    let offset = tabBarWrap ? tabBarWrap.getBoundingClientRect().height : 0;
+    const stickyEl = document.querySelector('.recipe-sticky');
+    if (stickyEl) offset += stickyEl.getBoundingClientRect().height;
+    offset += 16; // 추가 여유 공간
+    const rect = toggleBtn.getBoundingClientRect();
+    const targetY = window.scrollY + rect.top - offset;
+    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+  });
   // 모바일에서 수정 버튼을 누르면 메뉴명 입력칸에 자동 포커스가 가면서
   // 키보드가 바로 튀어나와 불편하므로, 수정 진입 시에는 자동 포커스를 주지 않습니다.
 }
@@ -4415,6 +4478,7 @@ render();
     if (cloudMenus) {
       menus = cloudMenus;
       ensureMenuIds();
+      lastSyncedMenus = JSON.parse(JSON.stringify(menus));
     } else {
       // 클라우드 문서가 아직 없는 경우: 빈 배열을 업로드하지 않고 콘솔에만 경고를 남깁니다.
       // (하드코딩 데이터가 없으므로 여기서 syncRecipesToCloud()를 호출하면
@@ -4464,6 +4528,8 @@ const checklistData = {
 };
 // 삭제된 체크리스트 항목(휴지통). 실제로 지우지 않고 여기 보관해뒀다가 복구할 수 있게 합니다.
 const checklistTrash = { opening: [], closing: [] };
+// 마지막으로 저장(동기화)된 항목 구성 스냅샷 - "취소" 시 이 상태로 되돌립니다.
+let lastSyncedChecklist = { opening: null, closing: null };
 /* ============================================================ */
 
 const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
@@ -4872,6 +4938,7 @@ function syncOpeningStructure() {
     trash: checklistTrash.opening,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
+    lastSyncedChecklist.opening = JSON.parse(JSON.stringify({ days: checklistData.opening, trash: checklistTrash.opening }));
     updatePendingSyncUI('opening', false);
   }).catch(e => {
     console.error('오픈 체크리스트 항목 구성 저장 실패:', e);
@@ -4891,6 +4958,19 @@ function applyOpeningStructure() {
   syncOpeningStructure();
 }
 window.applyOpeningStructure = applyOpeningStructure;
+
+// "변경사항 적용" 전까지의 로컬 편집 내용을 모두 버리고 마지막으로 저장된 구성으로 되돌립니다.
+function cancelOpeningSync() {
+  if (!lastSyncedChecklist.opening) return;
+  if (!confirm('저장하지 않은 변경사항을 모두 취소하고 되돌릴까요?')) return;
+  const snap = JSON.parse(JSON.stringify(lastSyncedChecklist.opening));
+  checklistData.opening = snap.days;
+  checklistTrash.opening = snap.trash;
+  updatePendingSyncUI('opening', false);
+  renderChecklist('opening');
+  updateChecklistTrashUI('opening');
+}
+window.cancelOpeningSync = cancelOpeningSync;
 
 // 오픈 탭에 새 항목을 추가합니다. "직접 추가한 항목" 섹션이 없으면 새로 만듭니다.
 function addOpeningItem() {
@@ -5070,6 +5150,7 @@ function syncClosingStructure() {
     trash: checklistTrash.closing,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
+    lastSyncedChecklist.closing = JSON.parse(JSON.stringify({ days: checklistData.closing, trash: checklistTrash.closing }));
     updatePendingSyncUI('closing', false);
   }).catch(e => {
     console.error('마감 체크리스트 항목 구성 저장 실패:', e);
@@ -5083,6 +5164,19 @@ function markClosingStructureDirty() {
   try { localStorage.setItem('closing-structure-backup', JSON.stringify(checklistData.closing)); } catch (e) {}
   updatePendingSyncUI('closing', true);
 }
+
+// "변경사항 적용" 전까지의 로컬 편집 내용을 모두 버리고 마지막으로 저장된 구성으로 되돌립니다.
+function cancelClosingSync() {
+  if (!lastSyncedChecklist.closing) return;
+  if (!confirm('저장하지 않은 변경사항을 모두 취소하고 되돌릴까요?')) return;
+  const snap = JSON.parse(JSON.stringify(lastSyncedChecklist.closing));
+  checklistData.closing = snap.days;
+  checklistTrash.closing = snap.trash;
+  updatePendingSyncUI('closing', false);
+  renderChecklist('closing');
+  updateChecklistTrashUI('closing');
+}
+window.cancelClosingSync = cancelClosingSync;
 
 function applyClosingStructure() {
   syncClosingStructure();
@@ -5577,6 +5671,7 @@ window.startItemDrag = startItemDrag;
       //  클라우드가 빈 상태로 덮어써질 수 있어 안전을 위해 막아둡니다.)
       console.warn('클라우드에 오픈 체크리스트 구성이 없습니다. Firestore의 checklistStructure/opening 문서를 확인하세요.');
     }
+    lastSyncedChecklist.opening = JSON.parse(JSON.stringify({ days: checklistData.opening, trash: checklistTrash.opening }));
   } catch (e) {
     console.error('오픈 체크리스트 항목 구성 불러오기 실패:', e);
   }
@@ -5589,6 +5684,7 @@ window.startItemDrag = startItemDrag;
       // 클라우드 문서가 아직 없는 경우: 빈 구성을 업로드하지 않고 콘솔에만 경고를 남깁니다.
       console.warn('클라우드에 마감 체크리스트 구성이 없습니다. Firestore의 checklistStructure/closing 문서를 확인하세요.');
     }
+    lastSyncedChecklist.closing = JSON.parse(JSON.stringify({ days: checklistData.closing, trash: checklistTrash.closing }));
   } catch (e) {
     console.error('마감 체크리스트 항목 구성 불러오기 실패:', e);
   }
@@ -6735,6 +6831,7 @@ window.moveSelectedDown = moveSelectedDown;
       items: dateItems,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
+      lastSyncedDateItems = JSON.parse(JSON.stringify(dateItems));
       updatePendingSyncUI('datemanage', false);
     }).catch(e => {
       console.error('날짜관리 저장 실패:', e);
@@ -6747,7 +6844,21 @@ window.moveSelectedDown = moveSelectedDown;
   }
   window.applyDateItems = applyDateItems;
 
+  // "변경사항 적용" 전까지의 로컬 편집 내용을 모두 버리고 마지막으로 저장된 상태로 되돌립니다.
+  function cancelDateItemsSync() {
+    if (lastSyncedDateItems === null) return;
+    if (!confirm('저장하지 않은 변경사항을 모두 취소하고 되돌릴까요?')) return;
+    dateItems = JSON.parse(JSON.stringify(lastSyncedDateItems));
+    try { localStorage.setItem(DM_STORAGE_KEY, JSON.stringify(dateItems)); } catch (e) {}
+    if (editingId !== null) cancelEditDateItem();
+    updatePendingSyncUI('datemanage', false);
+    renderDateItems();
+    updateDateTrashUI();
+  }
+  window.cancelDateItemsSync = cancelDateItemsSync;
+
   let dateItems = loadDateItems(); // 클라우드 데이터가 도착하기 전, 로컬 캐시로 우선 화면 표시
+  let lastSyncedDateItems = null; // 마지막으로 저장(동기화)된 상태의 스냅샷 - "취소" 시 이 상태로 되돌립니다.
   let editingId = null; // 수정 중인 항목 id (null이면 신규 추가 모드)
 
   // startDate('YYYY-MM-DD') + period(unit) => 만료일 Date 객체
@@ -7050,6 +7161,7 @@ window.moveSelectedDown = moveSelectedDown;
       } else {
         console.warn('클라우드와 로컬 모두 날짜관리 데이터가 없습니다. Firestore의 dateManage/items 문서를 확인하세요.');
       }
+      if (lastSyncedDateItems === null) lastSyncedDateItems = JSON.parse(JSON.stringify(dateItems));
     } catch (e) {
       console.error('날짜관리 클라우드 불러오기 실패, 로컬 데이터 사용:', e);
     }
