@@ -10,13 +10,13 @@
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; overflow-x: clip; }
   .container { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem; }
   .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-  .brand { font-size: 12px; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
+  .brand { font-size: 13px; font-weight: 700; color: #6b6b6b; letter-spacing: 0.08em; text-transform: uppercase; }
   .top-actions { display: flex; gap: 6px; }
   .top-action-btn {
-    width: 30px; height: 30px;
+    width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
-    border: 1px solid #e0ddd6; border-radius: 8px;
-    background: #fff; color: #666; font-size: 14px;
+    border: 1px solid #ccc7bc; border-radius: 8px;
+    background: #fff; color: #333; font-size: 17px;
     cursor: pointer; transition: background 0.15s, color 0.15s;
   }
   .top-action-btn:hover { background: #f0ede8; color: #1a1a1a; }
@@ -76,14 +76,18 @@
   html.dark-mode .checklist-page .day-tab {
     background: #2b2b2b !important;
   }
+  html.dark-mode .search-row input { color: #eee !important; }
   html.dark-mode .search-row input::placeholder { color: #777 !important; }
   html.dark-mode .chip { color: #ccc !important; }
   html.dark-mode .chip:hover { background: #3a3a3a !important; color: #eee !important; }
   html.dark-mode .chip.active { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #e8e8e8 !important; }
+  html.dark-mode .top-action-btn { color: #ccc !important; }
   html.dark-mode .top-action-btn:hover { background: #3a3a3a !important; color: #eee !important; }
   html.dark-mode .reset-btn:hover,
   html.dark-mode .recipe-add-toggle-btn:hover,
   html.dark-mode .trash-toggle-btn:hover { background: #3a3a3a !important; }
+  html.dark-mode .trash-toggle-btn.active { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #e8e8e8 !important; }
+  html.dark-mode .trash-toggle-btn.active:hover { background: #d0d0d0 !important; color: #1a1a1a !important; }
   html.dark-mode .checklist-page .day-tab.active { background: #e8e8e8 !important; color: #1a1a1a !important; border-color: #e8e8e8 !important; }
   html.dark-mode .checklist-page .item.checked .checkbox { background: #e8e8e8 !important; border-color: #e8e8e8 !important; }
   /* 원래 검정 계열이라 다크 배경에서 안 보이던 텍스트만 밝게 재지정 */
@@ -890,6 +894,21 @@
         /* 영수증 박스: 8잔이 들어와도 스크롤바가 안 생기도록 높이 조정 및 여백 압축 */
         .receipt-container { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
         .receipt { background: #fff; border: 1px solid #ddd; min-height: 380px; padding: 12px 15px; font-family: 'Courier New', monospace; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+        #cafeTrainingView h3.panel-toggle-header { border-bottom: none; margin-bottom: 10px; }
+        .panel-toggle-header {
+          display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;
+          background: #f5f0e8; border: 1px solid #d8cfc0; border-radius: 8px;
+          padding: 9px 12px; transition: background 0.15s, border-color 0.15s;
+        }
+        .panel-toggle-header:hover { background: #ede4d3; border-color: #c9b8a0; }
+        .panel-toggle-header:active { background: #e3d7c0; }
+        .panel-toggle-icon {
+          font-size: 12px; color: #5d4037; font-weight: bold; white-space: nowrap;
+          background: #fff; border: 1px solid #c9b8a0; border-radius: 12px;
+          padding: 3px 10px; margin-left: 8px; transition: transform 0.2s;
+        }
+        #trainingPanelContent { overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease; }
+        #trainingPanelContent.collapsed { max-height: 0 !important; opacity: 0; margin: 0; }
         .receipt::after { content: ""; position: absolute; bottom: -10px; left: 0; right: 0; height: 10px; background: linear-gradient(-45deg, #eef2f3 5px, transparent 0), linear-gradient(45deg, #eef2f3 5px, transparent 0); background-size: 10px 10px; }
         .receipt-title { text-align: center; font-weight: bold; font-size: 15px; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 6px; }
         
@@ -1413,42 +1432,47 @@
 @media (max-width: 900px) {
   .training-split { flex-direction: column; height: auto; }
   #cafeTrainingView, #posMenuView { width: 100%; }
-  #posMenuView { height: 700px; }
-  #posMenuView .pos-top { overflow-x: auto; }
-}
-
-/* 모바일 세로화면: 상품목록(메뉴 그리드) 위, 주문패널 아래 */
-@media (max-width: 600px) {
-  #posMenuView {
-    height: auto;
-  }
+  #posMenuView { height: auto; }
   #posMenuView .pos-top {
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: visible;
     height: auto;
   }
-  /* 메뉴 그리드(상품목록)를 위쪽으로 */
-  #posMenuView .pos-top .pos-container {
+  /* 주문 패널(메뉴목록)을 위쪽으로 */
+  #posMenuView .pos-top .order-panel {
     order: -1;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 3px solid #3a4480;
+    min-height: unset;
+  }
+  /* 메뉴 그리드(포스메뉴판)를 아래쪽으로 */
+  #posMenuView .pos-top .pos-container {
+    order: 1;
     width: 100%;
     min-width: unset;
     height: auto;
     padding: 10px;
   }
-  /* 주문 패널을 아래쪽으로 */
-  #posMenuView .pos-top .order-panel {
-    order: 1;
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-top: 3px solid #3a4480;
-    min-height: unset;
-  }
   #posMenuView .pos-top .order-list {
     min-height: 100px;
     max-height: 160px;
   }
+  /* 하단 결제 버튼 줄: 폭이 좁아지면 줄바꿈 (좌우 잘림 방지) */
+  #posMenuView .payment-section {
+    flex-wrap: wrap;
+  }
+  #posMenuView .pay-btn {
+    flex: 1 1 68px !important;
+    min-width: 60px !important;
+    font-size: 0.68rem;
+  }
+}
+
+/* 좁은 화면(모바일 등): 탭/셀 글자 크기 축소 */
+@media (max-width: 600px) {
   /* 탭 너비 자동 조정 */
   #posMenuView .tab {
     width: calc((100% - 5 * 4px) / 4);
@@ -1504,27 +1528,32 @@
     <div class="panel">
         <div class="receipt-container">
             <div>
-                <h3>⚙️ 트레이닝 옵션 설정</h3>
-                <div class="count-setting">
-                    <label><b>🔢 주문당 잔 수 설정</b></label>
-                    <select id="countMode">
-                        <option value="random">1~8잔 확률형 랜덤 생성</option>
-                        <option value="1">무조건 1잔</option>
-                        <option value="2">무조건 2잔</option>
-                        <option value="3">무조건 3잔</option>
-                        <option value="4">무조건 4잔</option>
-                        <option value="5">무조건 5잔</option>
-                        <option value="6">무조건 6잔</option>
-                        <option value="7">무조건 7잔</option>
-                        <option value="8">무조건 8잔</option>
-                    </select>
-                </div>
+                <h3 class="panel-toggle-header" id="trainingPanelToggleBtn" onclick="toggleTrainingPanel()">
+                    <span>⚙️ 트레이닝 옵션 설정</span>
+                    <span class="panel-toggle-icon" id="trainingPanelToggleIcon">▲ 접기</span>
+                </h3>
+                <div id="trainingPanelContent">
+                    <div class="count-setting">
+                        <label><b>🔢 주문당 잔 수 설정</b></label>
+                        <select id="countMode">
+                            <option value="random">1~8잔 확률형 랜덤 생성</option>
+                            <option value="1">무조건 1잔</option>
+                            <option value="2">무조건 2잔</option>
+                            <option value="3">무조건 3잔</option>
+                            <option value="4">무조건 4잔</option>
+                            <option value="5">무조건 5잔</option>
+                            <option value="6">무조건 6잔</option>
+                            <option value="7">무조건 7잔</option>
+                            <option value="8">무조건 8잔</option>
+                        </select>
+                    </div>
 
-                <h3>🔔 실시간 주문서</h3>
-                <div class="receipt">
-                    <div class="receipt-title">[주문 표]</div>
-                    <div id="receiptBody">
-                        <p style="text-align: center; color: #999; margin-top: 120px; font-size: 13px;">배달 주문 버튼을 누르면<br>현실적인 확률로 주문서가 들어옵니다.</p>
+                    <h3>🔔 실시간 주문서</h3>
+                    <div class="receipt">
+                        <div class="receipt-title">[주문 표]</div>
+                        <div id="receiptBody">
+                            <p style="text-align: center; color: #999; margin-top: 120px; font-size: 13px;">배달 주문 버튼을 누르면<br>현실적인 확률로 주문서가 들어옵니다.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4225,7 +4254,7 @@ function editRecipeItem(id) {
   document.getElementById('rf-cancel-btn').style.display = '';
   document.getElementById('rf-delete-btn').style.display = '';
 
-  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('recipeFormToggleBtn').scrollIntoView({ behavior: 'smooth', block: 'start' });
   // 모바일에서 수정 버튼을 누르면 메뉴명 입력칸에 자동 포커스가 가면서
   // 키보드가 바로 튀어나와 불편하므로, 수정 진입 시에는 자동 포커스를 주지 않습니다.
 }
@@ -7168,6 +7197,17 @@ function downloadSource() {
     const el2 = document.getElementById('tabBarWrap');
     if (el2) new ResizeObserver(updateTabbarHeight).observe(el2);
   }
+})();
+
+// ── 트레이닝 옵션 패널 접기/펼치기 ──
+(function () {
+  window.toggleTrainingPanel = function () {
+    const content = document.getElementById('trainingPanelContent');
+    const icon = document.getElementById('trainingPanelToggleIcon');
+    if (!content) return;
+    const collapsed = content.classList.toggle('collapsed');
+    if (icon) icon.textContent = collapsed ? '▼ 펼치기' : '▲ 접기';
+  };
 })();
 
 // ── 전체화면 / 다크모드 토글 ──
